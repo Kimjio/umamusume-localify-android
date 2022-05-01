@@ -1,0 +1,9 @@
+[submodule "module/src/main/cpp/Dobby"]
+	path = module/src/main/cpp/Dobby
+	url = https://github.com/jmpews/Dobby.git
+[submodule "module/src/main/cpp/rapidjson"]
+	path = module/src/main/cpp/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
+[submodule "module/src/main/cpp/fmt"]
+	path = module/src/main/cpp/fmt
+	url = https://github.com/fmtlib/fmt.git

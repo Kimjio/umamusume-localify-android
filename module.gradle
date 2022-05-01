@@ -1,0 +1,9 @@
+ext {
+    moduleLibraryName = "umamusume-localify-android"
+    magiskModuleId = "zygisk_umamusume_localify"
+    moduleName = "UmamusumeLocalify"
+    moduleAuthor = "Kimjio"
+    moduleDescription = "umamusume-localify Zygisk version."
+    moduleVersion = "v1.0.0"
+    moduleVersionCode = 1
+}
