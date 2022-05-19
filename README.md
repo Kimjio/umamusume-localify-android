@@ -17,7 +17,7 @@ Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/`
   - `enableLogger` must be enabled.
 - `dumpDbEntries` Outputs DB data to `original_data/` (`true` / `false`, Default: `false`)
 - `maxFps` Max FPS settings (`-1` = Default / `0` = Unlimited / `n > 0` = Limit to n, Default: `-1`)
-- `replaceFont` Use system default fonts instead of in-game fonts. (`true` / `false`, Default: `true`)
+- `replaceFont` Use Unity builtin fonts instead of in-game fonts. (`true` / `false`, Default: `true`)
 - `dicts` Translation file list (List of translation file paths since `/sdcard/Android/data/jp.co.cygames.umamusume/`)
 
 ## Known issue

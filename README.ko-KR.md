@@ -15,7 +15,7 @@
   - `enableLogger` 가 활성화돼야 합니다.
 - `dumpDbEntries` DB 데이터를 `original_data/` 에 출력합니다. (`true` / `false`, 기본값: `false`)
 - `maxFps` 최대 프레임 설정 (`-1` = 기본값 / `0` = 무제한 / `n > 0` = n까지 제한, 기본값: `-1`)
-- `replaceFont` 게임 내 폰트를 사용하지 않고 시스템 기본 폰트를 사용합니다. (`true` / `false`, 기본값: `true`)
+- `replaceFont` 게임 내 폰트를 사용하지 않고 유니티 내장 폰트를 사용합니다. (`true` / `false`, 기본값: `true`)
 - `dicts` 번역 파일 목록 (`/sdcard/Android/data/jp.co.cygames.umamusume/` 이후의 번역 파일 경로 목록)
 
 ## 알려진 문제
