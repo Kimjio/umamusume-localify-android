@@ -16,9 +16,6 @@ typedef struct Il2CppGenericClass Il2CppGenericClass;
 typedef struct Il2CppReflectionType Il2CppReflectionType;
 typedef struct MonitorData MonitorData;
 typedef Il2CppClass Il2CppVTable;
-typedef struct EventInfo EventInfo;
-typedef struct FieldInfo FieldInfo;
-typedef struct PropertyInfo PropertyInfo;
 typedef struct Il2CppDomain Il2CppDomain;
 typedef struct Il2CppException Il2CppException;
 typedef struct Il2CppObject Il2CppObject;
@@ -109,14 +106,6 @@ typedef enum Il2CppTypeEnum {
     IL2CPP_TYPE_IL2CPP_TYPE_INDEX [[maybe_unused]] = 0xff
 } Il2CppTypeEnum;
 
-// not real Il2CppString class
-typedef struct Il2CppString {
-    void *Empty [[maybe_unused]];
-    void *WhiteChars [[maybe_unused]];
-    int32_t length [[maybe_unused]];
-    char16_t start_char [[maybe_unused]][1]; // u16string
-} Il2CppString;
-
 typedef struct Il2CppType {
     union {
         void *dummy;
@@ -132,6 +121,15 @@ typedef struct Il2CppType {
     unsigned int byref: 1;
     unsigned int pinned [[maybe_unused]]: 1;
 } Il2CppType;
+
+typedef struct FieldInfo
+{
+    const char* name;
+    const Il2CppType* type;
+    Il2CppClass *parent;
+    int32_t offset; // If offset is -1, then it's thread static
+    uint32_t token;
+} FieldInfo;
 
 typedef struct ParameterInfo {
     const char *name;
@@ -160,6 +158,27 @@ typedef struct MethodInfo {
     uint8_t is_marshaled_from_native [[maybe_unused]]: 1;
 } MethodInfo;
 
+typedef struct EventInfo
+{
+    const char* name;
+    const Il2CppType* eventType;
+    Il2CppClass* parent;
+    const MethodInfo* add;
+    const MethodInfo* remove;
+    const MethodInfo* raise;
+    uint32_t token;
+} EventInfo;
+
+typedef struct PropertyInfo
+{
+    Il2CppClass *parent;
+    const char *name;
+    const MethodInfo *get;
+    const MethodInfo *set;
+    uint32_t attrs;
+    uint32_t token;
+} PropertyInfo;
+
 typedef struct Il2CppObject {
     union {
         Il2CppClass *klass [[maybe_unused]];
@@ -174,6 +193,12 @@ typedef struct Il2CppArray {
     il2cpp_array_size_t max_length [[maybe_unused]];
     void *vector[32];
 } Il2CppArray;
+
+typedef struct Il2CppString {
+    Il2CppObject object;
+    int32_t length; ///< Length of string *excluding* the trailing null (which is included in 'chars').
+    Il2CppChar start_char[0];
+} Il2CppString;
 
 // UnityEngine.Color
 typedef struct Color_t {
