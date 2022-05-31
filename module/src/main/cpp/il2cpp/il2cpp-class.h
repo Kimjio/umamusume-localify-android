@@ -1,6 +1,6 @@
 #pragma once
 
-typedef uint16_t Il2CppChar;
+typedef char16_t Il2CppChar;
 typedef uintptr_t il2cpp_array_size_t;
 typedef int32_t TypeDefinitionIndex;
 typedef int32_t GenericParameterIndex;
@@ -118,7 +118,7 @@ typedef struct Il2CppType {
     unsigned int attrs: 16;
     Il2CppTypeEnum type: 8;
     unsigned int num_mods [[maybe_unused]]: 6;
-    unsigned int byref: 1;
+    unsigned int byref [[maybe_unused]]: 1;
     unsigned int pinned [[maybe_unused]]: 1;
 } Il2CppType;
 
@@ -191,14 +191,153 @@ typedef struct Il2CppArray {
     Il2CppObject obj;
     Il2CppArrayBounds *bounds [[maybe_unused]];
     il2cpp_array_size_t max_length [[maybe_unused]];
-    void *vector[32];
+    void *vector[0];
 } Il2CppArray;
+static const size_t kIl2CppSizeOfArray = (offsetof(Il2CppArray, vector));
 
 typedef struct Il2CppString {
     Il2CppObject object;
     int32_t length; ///< Length of string *excluding* the trailing null (which is included in 'chars').
     Il2CppChar start_char[0];
 } Il2CppString;
+
+typedef struct Il2CppDefaults
+{
+    const Il2CppImage *corlib [[maybe_unused]];
+    Il2CppClass *object_class [[maybe_unused]];
+    Il2CppClass *byte_class [[maybe_unused]];
+    Il2CppClass *void_class [[maybe_unused]];
+    Il2CppClass *boolean_class [[maybe_unused]];
+    Il2CppClass *sbyte_class [[maybe_unused]];
+    Il2CppClass *int16_class [[maybe_unused]];
+    Il2CppClass *uint16_class [[maybe_unused]];
+    Il2CppClass *int32_class [[maybe_unused]];
+    Il2CppClass *uint32_class [[maybe_unused]];
+    Il2CppClass *int_class [[maybe_unused]];
+    Il2CppClass *uint_class [[maybe_unused]];
+    Il2CppClass *int64_class [[maybe_unused]];
+    Il2CppClass *uint64_class [[maybe_unused]];
+    Il2CppClass *single_class [[maybe_unused]];
+    Il2CppClass *double_class [[maybe_unused]];
+    Il2CppClass *char_class [[maybe_unused]];
+    Il2CppClass *string_class [[maybe_unused]];
+    Il2CppClass *enum_class [[maybe_unused]];
+    Il2CppClass *array_class [[maybe_unused]];
+    Il2CppClass *delegate_class [[maybe_unused]];
+    Il2CppClass *multicastdelegate_class [[maybe_unused]];
+    Il2CppClass *asyncresult_class [[maybe_unused]];
+    Il2CppClass *manualresetevent_class [[maybe_unused]];
+    Il2CppClass *typehandle_class [[maybe_unused]];
+    Il2CppClass *fieldhandle_class [[maybe_unused]];
+    Il2CppClass *methodhandle_class [[maybe_unused]];
+    Il2CppClass *systemtype_class [[maybe_unused]];
+    Il2CppClass *monotype_class [[maybe_unused]];
+    Il2CppClass *exception_class [[maybe_unused]];
+    Il2CppClass *threadabortexception_class [[maybe_unused]];
+    Il2CppClass *thread_class [[maybe_unused]];
+    Il2CppClass *internal_thread_class [[maybe_unused]];
+    /*Il2CppClass *transparent_proxy_class;
+    Il2CppClass *real_proxy_class;
+    Il2CppClass *mono_method_message_class;*/
+    Il2CppClass *appdomain_class [[maybe_unused]];
+    Il2CppClass *appdomain_setup_class [[maybe_unused]];
+    Il2CppClass *field_info_class [[maybe_unused]];
+    Il2CppClass *method_info_class [[maybe_unused]];
+    Il2CppClass *property_info_class [[maybe_unused]];
+    Il2CppClass *event_info_class [[maybe_unused]];
+    Il2CppClass *mono_event_info_class [[maybe_unused]];
+    Il2CppClass *stringbuilder_class [[maybe_unused]];
+    /*Il2CppClass *math_class;*/
+    Il2CppClass *stack_frame_class [[maybe_unused]];
+    Il2CppClass *stack_trace_class [[maybe_unused]];
+    Il2CppClass *marshal_class [[maybe_unused]];
+    /*Il2CppClass *iserializeable_class;
+    Il2CppClass *serializationinfo_class;
+    Il2CppClass *streamingcontext_class;*/
+    Il2CppClass *typed_reference_class [[maybe_unused]];
+    /*Il2CppClass *argumenthandle_class;*/
+    Il2CppClass *marshalbyrefobject_class [[maybe_unused]];
+    /*Il2CppClass *monitor_class;
+    Il2CppClass *iremotingtypeinfo_class;
+    Il2CppClass *runtimesecurityframe_class;
+    Il2CppClass *executioncontext_class;
+    Il2CppClass *internals_visible_class;*/
+    Il2CppClass *generic_ilist_class [[maybe_unused]];
+    Il2CppClass *generic_icollection_class [[maybe_unused]];
+    Il2CppClass *generic_ienumerable_class [[maybe_unused]];
+    Il2CppClass *generic_ireadonlylist_class [[maybe_unused]];
+    Il2CppClass *generic_ireadonlycollection_class [[maybe_unused]];
+    Il2CppClass *runtimetype_class [[maybe_unused]];
+    Il2CppClass *generic_nullable_class [[maybe_unused]];
+    /*Il2CppClass *variant_class;
+    Il2CppClass *com_object_class;*/
+    Il2CppClass *il2cpp_com_object_class [[maybe_unused]];
+    /*Il2CppClass *com_interop_proxy_class;
+    Il2CppClass *iunknown_class;
+    Il2CppClass *idispatch_class;
+    Il2CppClass *safehandle_class;
+    Il2CppClass *handleref_class;*/
+    Il2CppClass *attribute_class [[maybe_unused]];
+    Il2CppClass *customattribute_data_class [[maybe_unused]];
+    //Il2CppClass *critical_finalizer_object;
+    Il2CppClass *version [[maybe_unused]];
+    Il2CppClass *culture_info [[maybe_unused]];
+    Il2CppClass *async_call_class [[maybe_unused]];
+    Il2CppClass *assembly_class [[maybe_unused]];
+    Il2CppClass *mono_assembly_class [[maybe_unused]];
+    Il2CppClass *assembly_name_class [[maybe_unused]];
+    Il2CppClass *mono_field_class [[maybe_unused]];
+    Il2CppClass *mono_method_class [[maybe_unused]];
+    Il2CppClass *mono_method_info_class [[maybe_unused]];
+    Il2CppClass *mono_property_info_class [[maybe_unused]];
+    Il2CppClass *parameter_info_class [[maybe_unused]];
+    Il2CppClass *mono_parameter_info_class [[maybe_unused]];
+    Il2CppClass *module_class [[maybe_unused]];
+    Il2CppClass *pointer_class [[maybe_unused]];
+    Il2CppClass *system_exception_class [[maybe_unused]];
+    Il2CppClass *argument_exception_class [[maybe_unused]];
+    Il2CppClass *wait_handle_class [[maybe_unused]];
+    Il2CppClass *safe_handle_class [[maybe_unused]];
+    Il2CppClass *sort_key_class [[maybe_unused]];
+    Il2CppClass *dbnull_class [[maybe_unused]];
+    Il2CppClass *error_wrapper_class [[maybe_unused]];
+    Il2CppClass *missing_class [[maybe_unused]];
+    Il2CppClass *value_type_class [[maybe_unused]];
+
+    // Stuff used by the mono code
+    Il2CppClass *threadpool_wait_callback_class;
+    MethodInfo *threadpool_perform_wait_callback_method [[maybe_unused]];
+    Il2CppClass *mono_method_message_class [[maybe_unused]];
+
+    // Windows.Foundation.IReference`1<T>
+    Il2CppClass* ireference_class [[maybe_unused]];
+    // Windows.Foundation.IReferenceArray`1<T>
+    Il2CppClass* ireferencearray_class [[maybe_unused]];
+    // Windows.Foundation.Collections.IKeyValuePair`2<K, V>
+    Il2CppClass* ikey_value_pair_class [[maybe_unused]];
+    // System.Collections.Generic.KeyValuePair`2<K, V>
+    Il2CppClass* key_value_pair_class [[maybe_unused]];
+    // Windows.Foundation.Uri
+    Il2CppClass* windows_foundation_uri_class [[maybe_unused]];
+    // Windows.Foundation.IUriRuntimeClass
+    Il2CppClass* windows_foundation_iuri_runtime_class_class [[maybe_unused]];
+    // System.Uri
+    Il2CppClass* system_uri_class [[maybe_unused]];
+    // System.Guid
+    Il2CppClass* system_guid_class [[maybe_unused]];
+
+    Il2CppClass* sbyte_shared_enum [[maybe_unused]];
+    Il2CppClass* int16_shared_enum [[maybe_unused]];
+    Il2CppClass* int32_shared_enum [[maybe_unused]];
+    Il2CppClass* int64_shared_enum [[maybe_unused]];
+
+    Il2CppClass* byte_shared_enum [[maybe_unused]];
+    Il2CppClass* uint16_shared_enum [[maybe_unused]];
+    Il2CppClass* uint32_shared_enum [[maybe_unused]];
+    Il2CppClass* uint64_shared_enum [[maybe_unused]];
+} Il2CppDefaults;
+
+extern Il2CppDefaults il2cpp_defaults;
 
 // UnityEngine.Color
 typedef struct Color_t {
@@ -232,14 +371,6 @@ public:
     // System.Single UnityEngine.Vector3::z
     float z;
 } Vector3_t [[maybe_unused]];
-
-typedef struct Resolution_t
-{
-public:
-    int width;
-    int height;
-    int herz [[maybe_unused]];
-} Resolution_t;
 
 // UnityEngine.TextGenerationSettings
 typedef struct TextGenerationSettings_t {

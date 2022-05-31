@@ -31,6 +31,10 @@
 
 extern bool g_enable_logger;
 extern int g_max_fps;
-extern bool g_replace_font;
+extern float g_ui_animation_scale;
+extern bool g_replace_to_builtin_font;
+extern bool g_replace_to_custom_font;
+extern std::string g_font_assetbundle_path;
+extern std::string g_font_asset_name;
 extern bool g_dump_entries;
 extern bool g_dump_db_entries;

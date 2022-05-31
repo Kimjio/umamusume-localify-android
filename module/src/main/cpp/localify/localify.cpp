@@ -18,11 +18,25 @@ namespace localify {
         std::vector<size_t> str_list;
     }
 
+    u16string u8_u16(const string& u8) {
+        std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+        return utf16conv.from_bytes(u8);
+    }
+
+    string u16_u8(const u16string& u16) {
+        std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
+        return utf16conv.to_bytes(u16);
+    }
+
+    wstring u8_wide(const string& mbs) {
+        std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wconv;
+        return wconv.from_bytes(mbs);
+    }
+
     wstring u16_wide(const u16string & str) {
         std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
         std::string utf8 = utf16conv.to_bytes(str);
-        std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wconv;
-        return wconv.from_bytes(utf8);
+        return u8_wide(utf8);
     }
 
     string wide_u8(const wstring& wstr) {

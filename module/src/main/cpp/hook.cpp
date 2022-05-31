@@ -17,7 +17,11 @@ using namespace logger;
 
 bool g_enable_logger = false;
 int g_max_fps = -1;
-bool g_replace_font = true;
+float g_ui_animation_scale = 1.0f;
+bool g_replace_to_builtin_font = true;
+bool g_replace_to_custom_font = false;
+std::string g_font_assetbundle_path;
+std::string g_font_asset_name;
 bool g_dump_entries = false;
 bool g_dump_db_entries = false;
 
@@ -51,9 +55,8 @@ static int GetAndroidApiLevel() {
 }
 
 void dlopen_process(const char *name, void *handle) {
-    //LOGD("dlopen: %s", name);
     if (!il2cpp_handle) {
-        if (strstr(name, "libil2cpp.so")) {
+        if (name != nullptr && strstr(name, "libil2cpp.so")) {
             il2cpp_handle = handle;
             LOGI("Got il2cpp handle!");
         }
@@ -80,7 +83,7 @@ HOOK_DEF(void*, do_dlopen_V19, const char *name, int flags, const void *extinfo)
 }
 
 std::vector<std::string> read_config() {
-    std::ifstream config_stream{string("/sdcard/Android/data/") + string(GamePackageName) + string("/config.json")};
+    std::ifstream config_stream{string("/sdcard/Android/data/").append(GamePackageName).append("/config.json")};
     std::vector<std::string> dicts{};
 
     if (!config_stream.is_open()) {
@@ -96,11 +99,30 @@ std::vector<std::string> read_config() {
     document.ParseStream(wrapper);
 
     if (!document.HasParseError()) {
-        g_enable_logger = document["enableLogger"].GetBool();
-        g_max_fps = document["maxFps"].GetInt();
-        g_replace_font = document["replaceFont"].GetBool();
-        g_dump_entries = document["dumpStaticEntries"].GetBool();
-        g_dump_db_entries = document["dumpDbEntries"].GetBool();
+        if (document.HasMember("enableLogger")) {
+            g_enable_logger = document["enableLogger"].GetBool();
+        }
+        if (document.HasMember("dumpStaticEntries")) {
+            g_dump_entries = document["dumpStaticEntries"].GetBool();
+        }
+        if (document.HasMember("maxFps")) {
+            g_max_fps = document["maxFps"].GetInt();
+        }
+        if (document.HasMember("uiAnimationScale")) {
+            g_ui_animation_scale = document["uiAnimationScale"].GetFloat();
+        }
+        if (document.HasMember("replaceFont")) {
+            g_replace_to_builtin_font = document["replaceFont"].GetBool();
+        }
+        if (document.HasMember("replaceToCustomFont")) {
+            g_replace_to_custom_font = document["replaceToCustomFont"].GetBool();
+        }
+        if (document.HasMember("fontAssetBundlePath")) {
+            g_font_assetbundle_path = std::string(document["fontAssetBundlePath"].GetString());
+        }
+        if (document.HasMember("fontAssetName")) {
+            g_font_asset_name = std::string(document["fontAssetName"].GetString());
+        }
 
         auto &dicts_arr = document["dicts"];
         auto len = dicts_arr.Size();

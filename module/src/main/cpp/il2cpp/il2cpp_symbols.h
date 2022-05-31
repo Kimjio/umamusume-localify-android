@@ -18,7 +18,7 @@ namespace il2cpp_symbols
 {
     void init(Il2CppDomain* domain);
 
-    void* get_class(const char* assemblyName, const char* namespaze, const char* klassName);
+    Il2CppClass* get_class(const char* assemblyName, const char* namespaze, const char* klassName);
 
     Il2CppMethodPointer get_method_pointer(const char* assemblyName, const char* namespaze,
                                  const char* klassName, const char* name, int argsCount);

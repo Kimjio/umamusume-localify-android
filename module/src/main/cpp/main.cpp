@@ -6,6 +6,8 @@ using zygisk::Api;
 using zygisk::AppSpecializeArgs;
 using zygisk::ServerSpecializeArgs;
 
+using namespace std;
+
 class Module : public zygisk::ModuleBase {
 public:
     void onLoad(Api *api, JNIEnv *env) override {

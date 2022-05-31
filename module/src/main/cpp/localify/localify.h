@@ -8,6 +8,9 @@
 #include "../il2cpp/il2cpp_symbols.h"
 
 namespace localify {
+    std::u16string u8_u16(const std::string& u8);
+    std::string u16_u8(const std::u16string& u16);
+    std::wstring u8_wide(const std::string& str);
     std::wstring u16_wide(const std::u16string& str);
     std::string wide_u8(const std::wstring& wstr);
     void load_textdb(const std::vector<std::string> *dicts);

@@ -30,6 +30,15 @@ DO_API(Il2CppArray*, il2cpp_array_new_specific, (Il2CppClass * arrayTypeInfo, il
 DO_API(Il2CppArray*, il2cpp_array_new_full, (Il2CppClass * array_class, il2cpp_array_size_t * lengths, il2cpp_array_size_t * lower_bounds));
 DO_API(Il2CppClass*, il2cpp_bounded_array_class_get, (Il2CppClass * element_class, uint32_t rank, bool bounded));
 DO_API(int, il2cpp_array_element_size, (const Il2CppClass * array_class));
+char* il2cpp_array_addr_with_size(Il2CppArray *array, int32_t size, uintptr_t idx);
+
+#define il2cpp_array_addr(array, type, index) ((type*)(void*) il2cpp_array_addr_with_size (array, sizeof (type), index))
+#define il2cpp_array_get(array, type, index) ( *(type*)il2cpp_array_addr ((array), type, (index)) )
+#define il2cpp_array_set(array, type, index, value)    \
+    do {    \
+        type *__p = (type *) il2cpp_array_addr ((array), type, (index));    \
+        *__p = (value); \
+    } while (0)
 
 // assembly
 DO_API(const Il2CppImage*, il2cpp_assembly_get_image, (const Il2CppAssembly * assembly));
@@ -229,8 +238,8 @@ DO_API(void, il2cpp_runtime_unhandled_exception_policy_set, (Il2CppRuntimeUnhand
 DO_API(int32_t, il2cpp_string_length, (Il2CppString * str));
 DO_API(Il2CppChar*, il2cpp_string_chars, (Il2CppString * str));
 DO_API(Il2CppString*, il2cpp_string_new, (const char* str));
-DO_API(Il2CppString*, il2cpp_string_new_len, (const char* str, uint32_t length));
-DO_API(Il2CppString*, il2cpp_string_new_utf16, (const Il2CppChar * text, int32_t len));
+DO_API(Il2CppString*, il2cpp_string_new_len, (const char* str, size_t length));
+DO_API(Il2CppString*, il2cpp_string_new_utf16, (const Il2CppChar * text, size_t len));
 DO_API(Il2CppString*, il2cpp_string_new_wrapper, (const char* str));
 DO_API(Il2CppString*, il2cpp_string_intern, (Il2CppString * str));
 DO_API(Il2CppString*, il2cpp_string_is_interned, (Il2CppString * str));
