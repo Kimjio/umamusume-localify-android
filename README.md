@@ -9,7 +9,9 @@ Android port of [umamusume-localify](https://github.com/GEEKiDoS/umamusume-local
 3. Put the `config.json` file in `/sdcard/android/data/jp.co.cygames.umamusume/` and the translation file referenced in `dicts`.
 
 ## Note
-Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/`
+Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/` 
+
+(Korean version is `/sdcard/Android/data/com.kakaogames.umamusume/`)
 
 ## Config
 - `enableLogger` Outputs an unoverwritten string to `data.txt` (`true` / `false`, Default: `false`)
@@ -17,7 +19,11 @@ Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/`
   - `enableLogger` must be enabled.
 - `dumpDbEntries` Outputs DB data to `original_data/` (`true` / `false`, Default: `false`)
 - `maxFps` Max FPS settings (`-1` = Default / `0` = Unlimited / `n > 0` = Limit to n, Default: `-1`)
-- `replaceFont` Use Unity builtin fonts instead of in-game fonts. (`true` / `false`, Default: `true`)
+- `uiAnimationScale` Change UI animation scale (0 < ~, Default: `1`)
+- `replaceToBuiltinFont` (`replaceFont`) Use Unity builtin fonts instead of in-game fonts. (`true` / `false`, Default: `true`)
+- `replaceToCustomFont` Use custom fonts instead of in-game fonts. (`true` / `false`, Default: `false`)
+- `fontAssetBundlePath` Font asset bundle path (ex: `custom_font/GyeonggiTitle_Medium/font`)
+- `fontAssetName` Font asset name (ex: `GyeonggiTitle_Medium.fontsettings`)
 - `dicts` Translation file list (List of translation file paths since `/sdcard/Android/data/jp.co.cygames.umamusume/`)
 
 ## Known issue

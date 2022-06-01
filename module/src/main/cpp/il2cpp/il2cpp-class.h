@@ -1,7 +1,7 @@
 #pragma once
 
 typedef char16_t Il2CppChar;
-typedef uintptr_t il2cpp_array_size_t;
+typedef size_t il2cpp_array_size_t;
 typedef int32_t TypeDefinitionIndex;
 typedef int32_t GenericParameterIndex;
 typedef char Il2CppNativeChar;

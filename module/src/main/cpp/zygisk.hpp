@@ -247,14 +247,14 @@ namespace internal {
 
 struct module_abi {
     long api_version;
-    ModuleBase *_this;
+    ModuleBase *thisObj;
 
     void (*preAppSpecialize)(ModuleBase *, AppSpecializeArgs *);
     void (*postAppSpecialize)(ModuleBase *, const AppSpecializeArgs *);
     void (*preServerSpecialize)(ModuleBase *, ServerSpecializeArgs *);
     void (*postServerSpecialize)(ModuleBase *, const ServerSpecializeArgs *);
 
-    module_abi(ModuleBase *module) : api_version(ZYGISK_API_VERSION), _this(module) {
+    module_abi(ModuleBase *module) : api_version(ZYGISK_API_VERSION), thisObj(module) {
         preAppSpecialize = [](auto self, auto args) { self->preAppSpecialize(args); };
         postAppSpecialize = [](auto self, auto args) { self->postAppSpecialize(args); };
         preServerSpecialize = [](auto self, auto args) { self->preServerSpecialize(args); };
@@ -264,7 +264,7 @@ struct module_abi {
 
 struct api_table {
     // These first 2 entries are permanent, shall never change
-    void *_this;
+    void *thisObj;
     bool (*registerModule)(api_table *, module_abi *);
 
     // Utility functions
@@ -274,10 +274,10 @@ struct api_table {
     bool (*pltHookCommit)();
 
     // Zygisk functions
-    int  (*connectCompanion)(void * /* _this */);
-    void (*setOption)(void * /* _this */, Option);
-    int  (*getModuleDir)(void * /* _this */);
-    uint32_t (*getFlags)(void * /* _this */);
+    int  (*connectCompanion)(void * /* thisObj */);
+    void (*setOption)(void * /* thisObj */, Option);
+    int  (*getModuleDir)(void * /* thisObj */);
+    uint32_t (*getFlags)(void * /* thisObj */);
 };
 
 template <class T>
@@ -293,16 +293,16 @@ void entry_impl(api_table *table, JNIEnv *env) {
 } // namespace internal
 
 inline int Api::connectCompanion() {
-    return impl->connectCompanion ? impl->connectCompanion(impl->_this) : -1;
+    return impl->connectCompanion ? impl->connectCompanion(impl->thisObj) : -1;
 }
 inline int Api::getModuleDir() {
-    return impl->getModuleDir ? impl->getModuleDir(impl->_this) : -1;
+    return impl->getModuleDir ? impl->getModuleDir(impl->thisObj) : -1;
 }
 inline void Api::setOption(Option opt) {
-    if (impl->setOption) impl->setOption(impl->_this, opt);
+    if (impl->setOption) impl->setOption(impl->thisObj, opt);
 }
 inline uint32_t Api::getFlags() {
-    return impl->getFlags ? impl->getFlags(impl->_this) : 0;
+    return impl->getFlags ? impl->getFlags(impl->thisObj) : 0;
 }
 inline void Api::hookJniNativeMethods(JNIEnv *env, const char *className, JNINativeMethod *methods, int numMethods) {
     if (impl->hookJniNativeMethods) impl->hookJniNativeMethods(env, className, methods, numMethods);

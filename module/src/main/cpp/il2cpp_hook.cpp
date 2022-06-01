@@ -27,14 +27,13 @@ GetRuntimeType(const char *assemblyName, const char *namespaze, const char *klas
             il2cpp_symbols::get_class(assemblyName, namespaze, klassName));
     auto (*get_type)(Il2CppObject *thisObj) = reinterpret_cast<const Il2CppType *(*)(
             Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("mscorlib.dll", "System",
-                                                                     "Object", "GetType", 0));
+                                                                       "Object", "GetType", 0));
     return get_type(dummyObj);
 }
 
 Il2CppObject *GetCustomFont() {
-    if (assets == nullptr) return nullptr;
-    auto name = localify::u8_u16(g_font_asset_name);
-    return load_assets(assets, il2cpp_string_new_utf16(name.data(), name.length()),
+    if (!assets) return nullptr;
+    return load_assets(assets, il2cpp_string_new(g_font_asset_name.data()),
                        GetRuntimeType("UnityEngine.TextRenderingModule.dll", "UnityEngine",
                                       "Font"));
 }
@@ -57,7 +56,8 @@ Il2CppString *localizeextension_text_hook(int id) {
 
 void *get_preferred_width_orig = nullptr;
 
-float get_preferred_width_hook(void *thisObj, Il2CppString *str, TextGenerationSettings_t *settings) {
+float
+get_preferred_width_hook(void *thisObj, Il2CppString *str, TextGenerationSettings_t *settings) {
     return reinterpret_cast<decltype(get_preferred_width_hook) *>(get_preferred_width_orig)(
             thisObj, localify::get_localized_string(str), settings
     );
@@ -77,7 +77,7 @@ void *an_text_set_material_to_textmesh_orig = nullptr;
 void an_text_set_material_to_textmesh_hook(Il2CppObject *thisObj) {
     reinterpret_cast<decltype(an_text_set_material_to_textmesh_hook) *>(an_text_set_material_to_textmesh_orig)(
             thisObj);
-    if (assets == nullptr) return;
+    if (!assets) return;
 
     FieldInfo *mainField = il2cpp_class_get_field_from_name(thisObj->klass, "_mainTextMesh");
     FieldInfo *mainRenderer = il2cpp_class_get_field_from_name(thisObj->klass,
@@ -105,12 +105,13 @@ void an_text_set_material_to_textmesh_hook(Il2CppObject *thisObj) {
 
     Il2CppObject *mainFont = GetCustomFont();
     Il2CppObject *mainFontMaterial = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(mainFont->klass, "get_material",
-                                                                    0)->methodPointer)(mainFont);
+            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(mainFont->klass,
+                                                                      "get_material",
+                                                                      0)->methodPointer)(mainFont);
     Il2CppObject *mainFontTexture = reinterpret_cast<Il2CppObject *(*)(
             Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(mainFontMaterial->klass,
-                                                                    "get_mainTexture",
-                                                                    0)->methodPointer)(
+                                                                      "get_mainTexture",
+                                                                      0)->methodPointer)(
             mainFontMaterial);
 
     reinterpret_cast<void (*)(Il2CppObject *thisObj,
@@ -122,8 +123,8 @@ void an_text_set_material_to_textmesh_hook(Il2CppObject *thisObj) {
     if (mainMeshRenderer != nullptr) {
         auto get_sharedMaterial = reinterpret_cast<Il2CppObject *(*)(
                 Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(mainMeshRenderer->klass,
-                                                                        "GetSharedMaterial",
-                                                                        0)->methodPointer);
+                                                                          "GetSharedMaterial",
+                                                                          0)->methodPointer);
 
         Il2CppObject *sharedMaterial = get_sharedMaterial(mainMeshRenderer);
         reinterpret_cast<void (*)(Il2CppObject *thisObj,
@@ -145,8 +146,8 @@ void an_text_set_material_to_textmesh_hook(Il2CppObject *thisObj) {
                     Il2CppObject *font = GetCustomFont();
                     meshMaterials.push_back(reinterpret_cast<Il2CppObject *(*)(
                             Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(font->klass,
-                                                                                    "get_material",
-                                                                                    0)->methodPointer)(
+                                                                                      "get_material",
+                                                                                      0)->methodPointer)(
                             font));
                     reinterpret_cast<void (*)(Il2CppObject *thisObj,
                                               Il2CppObject *font)>(il2cpp_class_get_method_from_name(
@@ -192,8 +193,8 @@ void an_text_set_material_to_textmesh_hook(Il2CppObject *thisObj) {
         Il2CppObject *shadowFont = GetCustomFont();
         Il2CppObject *shadowFontMaterial = reinterpret_cast<Il2CppObject *(*)(
                 Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(shadowFont->klass,
-                                                                        "get_material",
-                                                                        0)->methodPointer)(
+                                                                          "get_material",
+                                                                          0)->methodPointer)(
                 shadowFont);
 
         il2cpp_field_get_value(thisObj, shadowFieldRenderer, &shadowMeshRenderer);
@@ -207,8 +208,8 @@ void an_text_set_material_to_textmesh_hook(Il2CppObject *thisObj) {
 
             auto get_mainTexture = reinterpret_cast<Il2CppObject *(*)(
                     Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(sharedMaterial->klass,
-                                                                            "get_mainTexture",
-                                                                            0)->methodPointer);
+                                                                              "get_mainTexture",
+                                                                              0)->methodPointer);
 
             reinterpret_cast<void (*)(Il2CppObject *thisObj,
                                       Il2CppObject *texture)>(il2cpp_class_get_method_from_name(
@@ -278,6 +279,166 @@ Il2CppString *query_getstr_hook(void *thisObj, int32_t idx) {
     return result;
 }
 
+void *story_timeline_controller_play_orig;
+
+void *story_timeline_controller_play_hook(Il2CppObject *thisObj) {
+    FieldInfo *timelineDataField = il2cpp_class_get_field_from_name(thisObj->klass,
+                                                                    "_timelineData");
+
+    Il2CppObject *timelineData;
+    il2cpp_field_get_value(thisObj, timelineDataField, &timelineData);
+    FieldInfo *StoryTimelineDataClass_TitleField = il2cpp_class_get_field_from_name(
+            timelineData->klass, "Title");
+    FieldInfo *StoryTimelineDataClass_BlockListField = il2cpp_class_get_field_from_name(
+            timelineData->klass, "BlockList");
+
+    Il2CppClass *story_timeline_text_clip_data_class = il2cpp_symbols::get_class("umamusume.dll",
+                                                                                 "Gallop",
+                                                                                 "StoryTimelineTextClipData");
+    FieldInfo *nameField = il2cpp_class_get_field_from_name(story_timeline_text_clip_data_class,
+                                                            "Name");
+    FieldInfo *textField = il2cpp_class_get_field_from_name(story_timeline_text_clip_data_class,
+                                                            "Text");
+    FieldInfo *choiceDataListField = il2cpp_class_get_field_from_name(
+            story_timeline_text_clip_data_class, "ChoiceDataList");
+    FieldInfo *colorTextInfoListField = il2cpp_class_get_field_from_name(
+            story_timeline_text_clip_data_class, "ColorTextInfoList");
+
+    Il2CppString *title;
+    il2cpp_field_get_value(timelineData, StoryTimelineDataClass_TitleField, &title);
+    il2cpp_field_set_value(timelineData, StoryTimelineDataClass_TitleField,
+                           localify::get_localized_string(title));
+
+    Il2CppObject *blockList;
+    il2cpp_field_get_value(timelineData, StoryTimelineDataClass_BlockListField, &blockList);
+
+    Il2CppArray *blockArray;
+    il2cpp_field_get_value(blockList, il2cpp_class_get_field_from_name(blockList->klass, "_items"),
+                           &blockArray);
+
+    for (size_t blockArrayIndex = 0; blockArrayIndex < blockArray->max_length; blockArrayIndex++) {
+        auto *blockData = reinterpret_cast<Il2CppObject *>(blockArray->vector[blockArrayIndex]);
+        if (!blockData) break;
+        FieldInfo *StoryTimelineBlockDataClass_trackListField = il2cpp_class_get_field_from_name(
+                blockData->klass, "_trackList");
+        Il2CppObject *trackList;
+        il2cpp_field_get_value(blockData, StoryTimelineBlockDataClass_trackListField, &trackList);
+
+        Il2CppArray *trackArray;
+        il2cpp_field_get_value(trackList,
+                               il2cpp_class_get_field_from_name(trackList->klass, "_items"),
+                               &trackArray);
+
+        for (size_t trackArrayIndex = 0;
+             trackArrayIndex < trackArray->max_length; trackArrayIndex++) {
+            auto *trackData = reinterpret_cast<Il2CppObject *>(trackArray->vector[trackArrayIndex]);
+            if (!trackData) break;
+            FieldInfo *StoryTimelineTrackDataClass_ClipListField = il2cpp_class_get_field_from_name(
+                    trackData->klass, "ClipList");
+            Il2CppObject *clipList;
+            il2cpp_field_get_value(trackData, StoryTimelineTrackDataClass_ClipListField, &clipList);
+
+
+            Il2CppArray *clipArray;
+            il2cpp_field_get_value(clipList,
+                                   il2cpp_class_get_field_from_name(clipList->klass, "_items"),
+                                   &clipArray);
+
+            for (size_t clipArrayIndex = 0;
+                 clipArrayIndex < clipArray->max_length; clipArrayIndex++) {
+                auto *clipData = reinterpret_cast<Il2CppObject *>(clipArray->vector[clipArrayIndex]);
+                if (!clipData) break;
+                if (story_timeline_text_clip_data_class == clipData->klass) {
+                    Il2CppString *name;
+                    il2cpp_field_get_value(clipData, nameField, &name);
+                    il2cpp_field_set_value(clipData, nameField,
+                                           localify::get_localized_string(name));
+                    Il2CppString *text;
+                    il2cpp_field_get_value(clipData, textField, &text);
+                    il2cpp_field_set_value(clipData, textField,
+                                           localify::get_localized_string(text));
+                    Il2CppObject *choiceDataList;
+                    il2cpp_field_get_value(clipData, choiceDataListField, &choiceDataList);
+                    if (choiceDataList) {
+                        Il2CppArray *choiceDataArray;
+                        il2cpp_field_get_value(choiceDataList, il2cpp_class_get_field_from_name(
+                                choiceDataList->klass, "_items"), &choiceDataArray);
+
+                        for (size_t i = 0; i < choiceDataArray->max_length; i++) {
+                            auto *choiceData = reinterpret_cast<Il2CppObject *>(choiceDataArray->vector[i]);
+                            if (!choiceData) break;
+                            FieldInfo *choiceDataTextField = il2cpp_class_get_field_from_name(
+                                    choiceData->klass, "Text");
+
+                            Il2CppString *choiceDataText;
+                            il2cpp_field_get_value(choiceData, choiceDataTextField,
+                                                   &choiceDataText);
+                            il2cpp_field_set_value(choiceData, choiceDataTextField,
+                                                   localify::get_localized_string(choiceDataText));
+                        }
+                    }
+                    Il2CppObject *colorTextInfoList;
+                    il2cpp_field_get_value(clipData, colorTextInfoListField, &colorTextInfoList);
+                    if (colorTextInfoList) {
+                        Il2CppArray *colorTextInfoArray;
+                        il2cpp_field_get_value(colorTextInfoList, il2cpp_class_get_field_from_name(
+                                colorTextInfoList->klass, "_items"), &colorTextInfoArray);
+
+                        for (size_t i = 0; i < colorTextInfoArray->max_length; i++) {
+                            auto *colorTextInfo = reinterpret_cast<Il2CppObject *>(colorTextInfoArray->vector[i]);
+                            if (!colorTextInfo) break;
+                            FieldInfo *colorTextInfoTextField = il2cpp_class_get_field_from_name(
+                                    colorTextInfo->klass, "Text");
+
+                            Il2CppString *colorTextInfoText;
+                            il2cpp_field_get_value(colorTextInfo, colorTextInfoTextField,
+                                                   &colorTextInfoText);
+                            il2cpp_field_set_value(colorTextInfo, colorTextInfoTextField,
+                                                   localify::get_localized_string(
+                                                           colorTextInfoText));
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+    return reinterpret_cast<decltype(story_timeline_controller_play_hook) *>(story_timeline_controller_play_orig)(
+            thisObj);
+}
+
+void *story_race_textasset_load_orig;
+
+void story_race_textasset_load_hook(Il2CppObject *thisObj) {
+    FieldInfo *textDataField = {il2cpp_class_get_field_from_name(thisObj->klass, "textData")};
+    Il2CppObject *textData;
+    il2cpp_field_get_value(thisObj, textDataField, &textData);
+
+    auto enumerator = reinterpret_cast<Il2CppObject *(*)(
+            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(textData->klass,
+                                                                      "GetEnumerator",
+                                                                      0)->methodPointer)(textData);
+    auto get_current = reinterpret_cast<Il2CppObject *(*)(
+            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(enumerator->klass,
+                                                                      "get_Current",
+                                                                      0)->methodPointer);
+    auto move_next = reinterpret_cast<bool (*)(
+            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(enumerator->klass, "MoveNext",
+                                                                      0)->methodPointer);
+
+    while (move_next(enumerator)) {
+        auto key = get_current(enumerator);
+        FieldInfo *textField = {il2cpp_class_get_field_from_name(key->klass, "text")};
+        Il2CppString *text;
+        il2cpp_field_get_value(key, textField, &text);
+        il2cpp_field_set_value(key, textField, localify::get_localized_string(text));
+    }
+
+    reinterpret_cast<decltype(story_race_textasset_load_hook) *>(story_race_textasset_load_orig)(
+            thisObj);
+}
+
 void (*text_assign_font)(void *);
 
 Il2CppObject *(*text_set_font)(void *, Il2CppObject *);
@@ -292,24 +453,47 @@ void (*text_set_style)(void *, int);
 
 void (*text_set_linespacing)(void *, float);
 
+Il2CppString *(*text_get_text)(void *);
+
+void (*text_set_text)(void *, Il2CppString *);
+
 void *on_populate_orig = nullptr;
 
-void on_populate_hook(void *thisObj, void *toFill) {
+void on_populate_hook(Il2CppObject *thisObj, void *toFill) {
     if (g_replace_to_builtin_font && text_get_linespacing(thisObj) != 1.05f) {
-        text_assign_font(thisObj);
         text_set_style(thisObj, 1);
         text_set_size(thisObj, text_get_size(thisObj) - 4);
         text_set_linespacing(thisObj, 1.05f);
     }
 
+    return reinterpret_cast<decltype(on_populate_hook) *>(on_populate_orig)(thisObj, toFill);
+}
+
+void *textcommon_awake_orig = nullptr;
+
+void textcommon_awake_hook(Il2CppObject *thisObj) {
+    if (g_replace_to_builtin_font) {
+        text_assign_font(thisObj);
+    }
     if (g_replace_to_custom_font) {
         auto customFont = GetCustomFont();
-        if (customFont != nullptr) {
+        if (customFont) {
             text_set_font(thisObj, customFont);
         }
     }
+    text_set_text(thisObj, localify::get_localized_string(text_get_text(thisObj)));
+    reinterpret_cast<decltype(textcommon_awake_hook) *>(textcommon_awake_orig)(thisObj);
+}
 
-    return reinterpret_cast<decltype(on_populate_hook) *>(on_populate_orig)(thisObj, toFill);
+void *get_modified_string_orig = nullptr;
+
+Il2CppString *get_modified_string_hook(Il2CppString *text, Il2CppObject *input, bool allowNewLine) {
+    if (!allowNewLine) {
+        auto u8str = localify::u16_u8(text->start_char);
+        replaceAll(u8str, "\n", "");
+        return il2cpp_string_new(u8str.data());
+    }
+    return text;
 }
 
 void *set_fps_orig = nullptr;
@@ -321,9 +505,13 @@ void set_fps_hook([[maybe_unused]] int value) {
 void *load_zekken_composite_resource_orig = nullptr;
 
 void load_zekken_composite_resource_hook(Il2CppObject *thisObj) {
-    if (assets != nullptr) {
-        FieldInfo *zekkenFontField = il2cpp_class_get_field_from_name(thisObj->klass, "_fontZekken");
-        il2cpp_field_set_value(thisObj, zekkenFontField, GetCustomFont());
+    if (assets && g_replace_to_custom_font) {
+        auto font = GetCustomFont();
+        if (font) {
+            FieldInfo *zekkenFontField = il2cpp_class_get_field_from_name(thisObj->klass,
+                                                                          "_fontZekken");
+            il2cpp_field_set_value(thisObj, zekkenFontField, font);
+        }
     }
     reinterpret_cast<decltype(load_zekken_composite_resource_hook) *>(load_zekken_composite_resource_orig)(
             thisObj);
@@ -337,7 +525,7 @@ wait_resize_ui_hook(Il2CppObject *thisObj, bool isPortrait, bool isShowOrientati
             thisObj, isPortrait, isShowOrientationGuide);
     auto move_next = reinterpret_cast<void *(*)(
             Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(enumerator->klass, "MoveNext",
-                                                                    0)->methodPointer);
+                                                                      0)->methodPointer);
     /*if (thisObj != NULL)
     {
         *(int*)((uint64_t)thisObj + 0x4C) = 1;
@@ -451,9 +639,39 @@ void hookMethods() {
             "Query", "Dispose", 0
     );
 
+    auto story_timeline_controller_play_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop",
+            "StoryTimelineController", "Play", 0);
+
+    auto story_race_textasset_load_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop",
+            "StoryRaceTextAsset", "Load", 0);
+
+    auto get_modified_string_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop",
+            "GallopUtil", "GetModifiedString", -1);
+
     auto on_populate_addr = il2cpp_symbols::get_method_pointer(
             "umamusume.dll", "Gallop",
             "TextCommon", "OnPopulateMesh", 1
+    );
+
+    auto textcommon_awake_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop",
+            "TextCommon", "Awake", 0
+    );
+
+    text_get_text = reinterpret_cast<Il2CppString *(*)(void *)>(
+            il2cpp_symbols::get_method_pointer(
+                    "UnityEngine.UI.dll", "UnityEngine.UI",
+                    "Text", "get_text", 0
+            )
+    );
+    text_set_text = reinterpret_cast<void (*)(void *, Il2CppString *)>(
+            il2cpp_symbols::get_method_pointer(
+                    "UnityEngine.UI.dll", "UnityEngine.UI",
+                    "Text", "set_text", 1
+            )
     );
 
     text_assign_font = reinterpret_cast<void (*)(void *)>(
@@ -512,19 +730,20 @@ void hookMethods() {
 
     auto an_text_fix_data_addr = reinterpret_cast<void (*)(
             Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("Plugins.dll",
-                                                                     "AnimateToUnity", "AnText",
-                                                                     "_FixData", 0));
+                                                                       "AnimateToUnity", "AnText",
+                                                                       "_FixData", 0));
 
     auto an_text_set_material_to_textmesh_addr = reinterpret_cast<void (*)(
             Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("Plugins.dll",
-                                                                     "AnimateToUnity", "AnText",
-                                                                     "_SetMaterialToTextMesh", 0));
+                                                                       "AnimateToUnity", "AnText",
+                                                                       "_SetMaterialToTextMesh",
+                                                                       0));
 
     auto load_zekken_composite_resource_addr = reinterpret_cast<void (*)(
             Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
-                                                                     "ModelLoader",
-                                                                     "LoadZekkenCompositeResourceInternal",
-                                                                     0));
+                                                                       "ModelLoader",
+                                                                       "LoadZekkenCompositeResourceInternal",
+                                                                       0));
 
     auto wait_resize_ui_addr = reinterpret_cast<void (*)(Il2CppObject *thisObj, bool isPortrait,
                                                          bool isShowOrientationGuide)>(il2cpp_symbols::get_method_pointer(
@@ -540,7 +759,7 @@ void hookMethods() {
             "LoadFromMemoryAsync",
             1));*/
 
-    if (assets == nullptr) {
+    if (!assets) {
         auto assetbundlePath = localify::u8_u16(g_font_assetbundle_path);
         if (!assetbundlePath.starts_with(u"/")) {
             assetbundlePath.insert(0, u16string(u"/sdcard/Android/data/").append(
@@ -549,7 +768,7 @@ void hookMethods() {
         assets = load_from_file(
                 il2cpp_string_new_utf16(assetbundlePath.data(), assetbundlePath.length()));
 
-        if (assets == nullptr && filesystem::exists(assetbundlePath)) {
+        if (!assets && filesystem::exists(assetbundlePath)) {
             LOGW("Asset founded but not loaded. Maybe Asset BuildTarget is not for Android");
         }
 
@@ -582,7 +801,7 @@ void hookMethods() {
         load_thread.detach();*/
     }
 
-    if (assets == nullptr) {
+    if (!assets) {
         LOGI("Asset not loaded.");
     } else {
         LOGI("Asset loaded: %p", assets);
@@ -610,13 +829,25 @@ void hookMethods() {
     // Looks like they store all localized texts that used by code in a dict
     ADD_HOOK(localize_get)
 
+    ADD_HOOK(story_timeline_controller_play);
+
+    ADD_HOOK(story_race_textasset_load);
+
+    ADD_HOOK(get_modified_string);
+
     ADD_HOOK(update)
 
     ADD_HOOK(query_ctor)
     ADD_HOOK(query_getstr)
     ADD_HOOK(query_dispose)
 
-    ADD_HOOK(on_populate)
+    if (g_replace_to_builtin_font) {
+        ADD_HOOK(on_populate);
+    }
+
+    if (g_replace_to_builtin_font || g_replace_to_custom_font) {
+        ADD_HOOK(textcommon_awake);
+    }
 
     if (g_max_fps > -1) {
         ADD_HOOK(set_fps)
