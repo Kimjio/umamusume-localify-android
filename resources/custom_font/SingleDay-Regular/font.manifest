@@ -1,0 +1,24 @@
+ManifestFileVersion: 0
+CRC: 1975594682
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 8e6e40eda1207506ed8782f0ac5d7ec7
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 4de8b25cbd6d858cd4c6ce40521297b9
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 128
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/SingleDay-Regular.ttf
+- Assets/SingleDay-Regular.fontsettings
+Dependencies: []
