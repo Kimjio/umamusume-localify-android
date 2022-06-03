@@ -7,5 +7,7 @@
 
 #define GamePackageName "jp.co.cygames.umamusume"
 #define GamePackageNameKor "com.kakaogames.umamusume"
+#define GamePackageNameS "jp.co.cygames.umamusume"s
+#define GamePackageNameKorS "com.kakaogames.umamusume"s
 
 #endif //UMAMUSUMELOCALIFYANDROID_GAME_H

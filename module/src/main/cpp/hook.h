@@ -13,7 +13,7 @@ static void *il2cpp_handle = NULL;
 
 int isGame(JNIEnv *env, jstring appDataDir);
 
-void *hack_thread(void *arg);
+void hack_thread(void *arg);
 
 #define HOOK_DEF(ret, func, ...) \
   ret (*orig_##func)(__VA_ARGS__); \
