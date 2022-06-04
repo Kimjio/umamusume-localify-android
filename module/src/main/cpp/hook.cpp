@@ -90,9 +90,9 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt, const char *filename, int flag,
          struct native_bridge_namespace_t *ns) {
     if (string(filename).find(string("libmain.so")) != string::npos) {
         auto *NativeBridgeError = reinterpret_cast<bool (*)()>(DobbySymbolResolver(nullptr,
-                                                                                   "NativeBridgeError"));
+                                                                                   "_ZN7android17NativeBridgeErrorEv"));
         auto *NativeBridgeGetError = reinterpret_cast<char *(*)()>(DobbySymbolResolver(nullptr,
-                                                                                       "NativeBridgeGetError"));
+                                                                                       "_ZN7android20NativeBridgeGetErrorEv"));
 
         if (access("/data/data/jp.co.cygames.umamusume/arm64-v8a.so", F_OK) != -1) {
             std::thread load_thread([ns, NativeBridgeError, NativeBridgeGetError]() {
@@ -103,7 +103,7 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt, const char *filename, int flag,
                 LOGI("arm64_v8a: %p", arm64_v8a);
                 if (NativeBridgeError()) {
                     char *error_bridge;
-                    if ((error_bridge = reinterpret_cast<char *(*)()>(NativeBridgeGetError)()) !=
+                    if ((error_bridge = NativeBridgeGetError()) !=
                         nullptr) {
                         LOGW("error_bridge: %s", error_bridge);
                     }
@@ -117,14 +117,45 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt, const char *filename, int flag,
     return orig_NativeBridgeLoadLibraryExt(filename, flag, ns);
 }
 
-std::vector<std::string> read_config() {
+HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
+         struct native_bridge_namespace_t *ns) {
+    if (string(filename).find(string("libmain.so")) != string::npos) {
+        auto *NativeBridgeError = reinterpret_cast<bool (*)()>(DobbySymbolResolver(nullptr,
+                                                                                   "NativeBridgeError"));
+        auto *NativeBridgeGetError = reinterpret_cast<char *(*)()>(DobbySymbolResolver(nullptr,
+                                                                                       "NativeBridgeGetError"));
+
+        if (access("/data/data/jp.co.cygames.umamusume/arm64-v8a.so", F_OK) != -1) {
+            std::thread load_thread([ns, NativeBridgeError, NativeBridgeGetError]() {
+                void *arm64_v8a = reinterpret_cast<void *(*)(const char *filename, int flag,
+                                                             struct native_bridge_namespace_t *ns)>(orig_NativeBridgeLoadLibraryExt_V30)(
+                        "/data/data/jp.co.cygames.umamusume/arm64-v8a.so",
+                        RTLD_NOW, ns);
+                LOGI("arm64_v8a: %p", arm64_v8a);
+                if (NativeBridgeError()) {
+                    char *error_bridge;
+                    if ((error_bridge = NativeBridgeGetError()) !=
+                        nullptr) {
+                        LOGW("error_bridge: %s", error_bridge);
+                    }
+                }
+                DobbyDestroy((void *) new_do_dlopen_V24);
+            });
+            load_thread.detach();
+        }
+    }
+
+    return orig_NativeBridgeLoadLibraryExt_V30(filename, flag, ns);
+}
+
+std::optional<std::vector<std::string>> read_config() {
     std::ifstream config_stream{
             string("/sdcard/Android/data/").append(GamePackageName).append("/config.json")};
     std::vector<std::string> dicts{};
 
     if (!config_stream.is_open()) {
         LOGW("config.json not loaded.");
-        return dicts;
+        return nullopt;
     }
 
     LOGI("config.json loaded.");
@@ -205,16 +236,33 @@ void hack_thread(void *arg) {
                                              "NativeBridgeLoadLibraryExt");
             if (addr) {
                 LOGI("NativeBridgeLoadLibraryExt at: %p", addr);
+                DobbyHook(addr, (void *) new_NativeBridgeLoadLibraryExt_V30,
+                          (void **) &orig_NativeBridgeLoadLibraryExt_V30);
+            }
+        }
+    } else if (api_level >= 26) {
+        if (!IsABIRequiredNativeBridge()) {
+            if (IsRunningOnNativeBridge()) {
+                void *addr = (void *) dlopen;
+                LOGI("do_dlopen at: %p", addr);
+                DobbyHook(addr, (void *) new_do_dlopen,
+                          (void **) &orig_do_dlopen);
+            } else {
+                void *libdl_handle = dlopen("libdl.so", RTLD_LAZY);
+                void *addr = dlsym(libdl_handle, "__loader_dlopen");
+                LOGI("__loader_dlopen at: %p", addr);
+                DobbyHook(addr, (void *) new___loader_dlopen,
+                          (void **) &orig___loader_dlopen);
+            }
+        } else {
+            void *addr = DobbySymbolResolver(nullptr,
+                                             "_ZN7android26NativeBridgeLoadLibraryExtEPKciPNS_25native_bridge_namespace_tE");
+            if (addr) {
+                LOGI("NativeBridgeLoadLibraryExt at: %p", addr);
                 DobbyHook(addr, (void *) new_NativeBridgeLoadLibraryExt,
                           (void **) &orig_NativeBridgeLoadLibraryExt);
             }
         }
-    } else if (api_level >= 26) {
-        void *libdl_handle = dlopen("libdl.so", RTLD_LAZY);
-        void *addr = dlsym(libdl_handle, "__loader_dlopen");
-        LOGI("__loader_dlopen at: %p", addr);
-        DobbyHook(addr, (void *) new___loader_dlopen,
-                  (void **) &orig___loader_dlopen);
     } else if (api_level >= 24) {
         void *addr = DobbySymbolResolver(nullptr,
                                          "__dl__Z9do_dlopenPKciPK17android_dlextinfoPv");
@@ -241,9 +289,13 @@ void hack_thread(void *arg) {
 
     auto dict = read_config();
 
+    if (!dict.has_value()) {
+        return;
+    }
+
     std::thread init_thread([dict]() {
         logger::init_logger();
-        localify::load_textdb(&dict);
+        localify::load_textdb(&dict.value());
         il2cpp_hook(il2cpp_handle);
     });
     init_thread.detach();
