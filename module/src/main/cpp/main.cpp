@@ -2,7 +2,7 @@
 #include "hook.h"
 #include "zygisk.hpp"
 #include <dlfcn.h>
-#include "game.h"
+#include "game.hpp"
 
 using zygisk::Api;
 using zygisk::AppSpecializeArgs;
@@ -22,15 +22,18 @@ public:
             return;
         }
         auto pkgNm = env_->GetStringUTFChars(args->nice_name, nullptr);
-        if (pkgNm == GamePackageNameS || pkgNm == GamePackageNameKorS)
-            enable_hack = isGame(env_, args->app_data_dir);
+        if (strcmp(pkgNm, GamePackageName) == 0 || strcmp(pkgNm, GamePackageNameKor) == 0) {
+            enable_hack = isGame(pkgNm);
+        }
+        env_->ReleaseStringUTFChars(args->nice_name, pkgNm);
     }
 
     void postAppSpecialize(const AppSpecializeArgs *) override {
         if (enable_hack) {
             int ret;
             pthread_t ntid;
-            if ((ret = pthread_create(&ntid, nullptr, reinterpret_cast<void *(*)(void *)>(hack_thread), nullptr))) {
+            if ((ret = pthread_create(&ntid, nullptr,
+                                      reinterpret_cast<void *(*)(void *)>(hack_thread), nullptr))) {
                 LOGE("can't create thread: %s\n", strerror(ret));
             }
         }

@@ -6,7 +6,7 @@
 #include <utility>
 #include "../stdinclude.hpp"
 #include "../localify/localify.h"
-#include "../game.h"
+#include "../game.hpp"
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/prettywriter.h>

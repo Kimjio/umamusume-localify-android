@@ -536,7 +536,7 @@ wait_resize_ui_hook(Il2CppObject *thisObj, bool isPortrait, bool isShowOrientati
 
 void dump_all_entries() {
     // 0 is None
-    for (size_t i = 1;; i++) {
+    for (int i = 1;; i++) {
         auto *str = reinterpret_cast<decltype(localize_get_hook) *>(localize_get_orig)(i);
 
         if (str && *str->start_char) {
@@ -829,11 +829,11 @@ void hookMethods() {
     // Looks like they store all localized texts that used by code in a dict
     ADD_HOOK(localize_get)
 
-    ADD_HOOK(story_timeline_controller_play);
+    ADD_HOOK(story_timeline_controller_play)
 
-    ADD_HOOK(story_race_textasset_load);
+    ADD_HOOK(story_race_textasset_load)
 
-    ADD_HOOK(get_modified_string);
+    ADD_HOOK(get_modified_string)
 
     ADD_HOOK(update)
 
@@ -842,11 +842,11 @@ void hookMethods() {
     ADD_HOOK(query_dispose)
 
     if (g_replace_to_builtin_font) {
-        ADD_HOOK(on_populate);
+        ADD_HOOK(on_populate)
     }
 
     if (g_replace_to_builtin_font || g_replace_to_custom_font) {
-        ADD_HOOK(textcommon_awake);
+        ADD_HOOK(textcommon_awake)
     }
 
     if (g_max_fps > -1) {

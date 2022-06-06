@@ -2,12 +2,12 @@
 // Created by Perfare on 2020/7/4.
 //
 
-#include <iostream>
+#include <sstream>
 #include <thread>
 #include "stdinclude.hpp"
 #include "hook.h"
 #include "il2cpp_hook.h"
-#include "game.h"
+#include "game.hpp"
 #include "localify/localify.h"
 #include "logger/logger.h"
 
@@ -25,31 +25,20 @@ std::string g_font_asset_name;
 bool g_dump_entries = false;
 bool g_dump_db_entries = false;
 
-int isGame(JNIEnv *env, jstring appDataDir) {
-    if (!appDataDir)
-        return 0;
-    const char *app_data_dir = env->GetStringUTFChars(appDataDir, nullptr);
-    int user = 0;
-    static char package_name[256];
-    if (sscanf(app_data_dir, "/data/%*[^/]/%d/%s", &user, package_name) != 2) {
-        if (sscanf(app_data_dir, "/data/%*[^/]/%s", package_name) != 1) {
-            package_name[0] = '\0';
-            LOGW("can't parse %s", app_data_dir);
-            return 0;
-        }
+bool isGame(const char *pkgNm) {
+    if (!pkgNm)
+        return false;
+    if (strcmp(pkgNm, GamePackageName) == 0) {
+        gameRegion = GameRegion::JAP;
     }
-    if (strcmp(package_name, GamePackageName) == 0) {
-        LOGI("detect game: %s", package_name);
-        env->ReleaseStringUTFChars(appDataDir, app_data_dir);
-        return 1;
-    } else {
-        env->ReleaseStringUTFChars(appDataDir, app_data_dir);
-        return 0;
+    if (strcmp(pkgNm, GamePackageNameKor) == 0) {
+        gameRegion = GameRegion::KOR;
     }
-}
-
-static int GetAndroidApiLevel() {
-    return android_get_device_api_level();
+    if (gameRegion != GameRegion::UNKNOWN) {
+        LOGI("detect game: %s", pkgNm);
+        return true;
+    }
+    return false;
 }
 
 void dlopen_process(const char *name, void *handle) {
@@ -61,32 +50,65 @@ void dlopen_process(const char *name, void *handle) {
     }
 }
 
-HOOK_DEF(void*, __loader_dlopen, const char *filename, int flags, const void *caller_addr) {
-    void *handle = orig___loader_dlopen(filename, flags, caller_addr);
-    dlopen_process(filename, handle);
-    return handle;
-}
-
 HOOK_DEF(void*, do_dlopen, const char *name, int flags) {
     void *handle = orig_do_dlopen(name, flags);
     dlopen_process(name, handle);
     return handle;
 }
 
-HOOK_DEF(void*, do_dlopen_V24, const char *name, int flags, const void *extinfo,
+HOOK_DEF(void*, __loader_dlopen, const char *filename, int flags, const void *caller_addr) {
+    void *handle = orig___loader_dlopen(filename, flags, caller_addr);
+    dlopen_process(filename, handle);
+    return handle;
+}
+
+HOOK_DEF(void*, do_dlopen_V24, const char *name, int flags, const void *extinfo [[maybe_unused]],
          void *caller_addr) {
     void *handle = orig_do_dlopen_V24(name, flags, extinfo, caller_addr);
     dlopen_process(name, handle);
     return handle;
 }
 
-HOOK_DEF(void*, do_dlopen_V19, const char *name, int flags, const void *extinfo) {
+HOOK_DEF(void*, do_dlopen_V19, const char *name, int flags, const void *extinfo [[maybe_unused]]) {
     void *handle = orig_do_dlopen_V19(name, flags, extinfo);
     dlopen_process(name, handle);
     return handle;
 }
 
-HOOK_DEF(void*, NativeBridgeLoadLibraryExt, const char *filename, int flag,
+HOOK_DEF(void*, NativeBridgeLoadLibrary_V21, const char *filename, int flag) {
+    if (string(filename).find(string("libmain.so")) != string::npos) {
+        auto *NativeBridgeError = reinterpret_cast<bool (*)()>(DobbySymbolResolver(nullptr,
+                                                                                   "_ZN7android17NativeBridgeErrorEv"));
+
+        stringstream path_armV8;
+        path_armV8 << "/data/data/" << GetCurrentPackageName().data() << "/arm64-v8a.so";
+        stringstream path_armV7;
+        path_armV7 << "/data/data/" << GetCurrentPackageName().data() << "/armeabi-v7a.so";
+
+        char *path = nullptr;
+
+        if (access(path_armV8.str().data(), F_OK) != -1) {
+            path = path_armV8.str().data();
+        } else if (access(path_armV7.str().data(), F_OK) != -1) {
+            path = path_armV7.str().data();
+        }
+        if (path != nullptr) {
+            std::thread load_thread([path, NativeBridgeError]() {
+                void *lib = orig_NativeBridgeLoadLibrary_V21(path, RTLD_NOW);
+                LOGI("%s: %p", path, lib);
+                if (NativeBridgeError()) {
+                    LOGW("LoadLibrary failed");
+                }
+                DobbyDestroy((void *) new_do_dlopen_V24);
+            });
+            load_thread.detach();
+        }
+    }
+
+    return orig_NativeBridgeLoadLibrary_V21(filename, flag);
+}
+
+HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V26, const char *filename, int flag,
          struct native_bridge_namespace_t *ns) {
     if (string(filename).find(string("libmain.so")) != string::npos) {
         auto *NativeBridgeError = reinterpret_cast<bool (*)()>(DobbySymbolResolver(nullptr,
@@ -94,13 +116,22 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt, const char *filename, int flag,
         auto *NativeBridgeGetError = reinterpret_cast<char *(*)()>(DobbySymbolResolver(nullptr,
                                                                                        "_ZN7android20NativeBridgeGetErrorEv"));
 
-        if (access("/data/data/jp.co.cygames.umamusume/arm64-v8a.so", F_OK) != -1) {
-            std::thread load_thread([ns, NativeBridgeError, NativeBridgeGetError]() {
-                void *arm64_v8a = reinterpret_cast<void *(*)(const char *filename, int flag,
-                                                             struct native_bridge_namespace_t *ns)>(orig_NativeBridgeLoadLibraryExt)(
-                        "/data/data/jp.co.cygames.umamusume/arm64-v8a.so",
-                        RTLD_NOW, ns);
-                LOGI("arm64_v8a: %p", arm64_v8a);
+        stringstream path_armV8;
+        path_armV8 << "/data/data/" << GetCurrentPackageName().data() << "/arm64-v8a.so";
+        stringstream path_armV7;
+        path_armV7 << "/data/data/" << GetCurrentPackageName().data() << "/armeabi-v7a.so";
+
+        char *path = nullptr;
+
+        if (access(path_armV8.str().data(), F_OK) != -1) {
+            path = path_armV8.str().data();
+        } else if (access(path_armV7.str().data(), F_OK) != -1) {
+            path = path_armV7.str().data();
+        }
+        if (path != nullptr) {
+            std::thread load_thread([path, ns, NativeBridgeError, NativeBridgeGetError]() {
+                void *lib = orig_NativeBridgeLoadLibraryExt_V26(path, RTLD_NOW, ns);
+                LOGI("%s: %p", path, lib);
                 if (NativeBridgeError()) {
                     char *error_bridge;
                     if ((error_bridge = NativeBridgeGetError()) !=
@@ -114,7 +145,7 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt, const char *filename, int flag,
         }
     }
 
-    return orig_NativeBridgeLoadLibraryExt(filename, flag, ns);
+    return orig_NativeBridgeLoadLibraryExt_V26(filename, flag, ns);
 }
 
 HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
@@ -125,13 +156,23 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
         auto *NativeBridgeGetError = reinterpret_cast<char *(*)()>(DobbySymbolResolver(nullptr,
                                                                                        "NativeBridgeGetError"));
 
-        if (access("/data/data/jp.co.cygames.umamusume/arm64-v8a.so", F_OK) != -1) {
-            std::thread load_thread([ns, NativeBridgeError, NativeBridgeGetError]() {
-                void *arm64_v8a = reinterpret_cast<void *(*)(const char *filename, int flag,
-                                                             struct native_bridge_namespace_t *ns)>(orig_NativeBridgeLoadLibraryExt_V30)(
-                        "/data/data/jp.co.cygames.umamusume/arm64-v8a.so",
-                        RTLD_NOW, ns);
-                LOGI("arm64_v8a: %p", arm64_v8a);
+        stringstream path_armV8;
+        path_armV8 << "/data/data/" << GetCurrentPackageName().data() << "/arm64-v8a.so";
+        stringstream path_armV7;
+        path_armV7 << "/data/data/" << GetCurrentPackageName().data() << "/armeabi-v7a.so";
+
+        string path;
+
+        if (access(path_armV8.str().data(), F_OK) != -1) {
+            path = path_armV8.str();
+        } else if (access(path_armV7.str().data(), F_OK) != -1) {
+            path = path_armV7.str();
+        }
+
+        if (!path.empty()) {
+            std::thread load_thread([path, ns, NativeBridgeError, NativeBridgeGetError]() {
+                void *lib = orig_NativeBridgeLoadLibraryExt_V30(path.data(), RTLD_NOW, ns);
+                LOGI("%s: %p", path.data(), lib);
                 if (NativeBridgeError()) {
                     char *error_bridge;
                     if ((error_bridge = NativeBridgeGetError()) !=
@@ -208,7 +249,7 @@ std::optional<std::vector<std::string>> read_config() {
     return dicts;
 }
 
-void hack_thread(void *arg) {
+void hack_thread(void *arg [[maybe_unused]]) {
     LOGI("%s hack thread: %d", ABI, gettid());
     int api_level = GetAndroidApiLevel();
     LOGI("%s api level: %d", ABI, api_level);
@@ -242,45 +283,76 @@ void hack_thread(void *arg) {
         }
     } else if (api_level >= 26) {
         if (!IsABIRequiredNativeBridge()) {
+            void *addr;
             if (IsRunningOnNativeBridge()) {
-                void *addr = (void *) dlopen;
-                LOGI("do_dlopen at: %p", addr);
-                DobbyHook(addr, (void *) new_do_dlopen,
-                          (void **) &orig_do_dlopen);
+                addr = (void *) dlopen;
             } else {
                 void *libdl_handle = dlopen("libdl.so", RTLD_LAZY);
-                void *addr = dlsym(libdl_handle, "__loader_dlopen");
-                LOGI("__loader_dlopen at: %p", addr);
-                DobbyHook(addr, (void *) new___loader_dlopen,
-                          (void **) &orig___loader_dlopen);
+                addr = dlsym(libdl_handle, "__loader_dlopen");
+            }
+            if (addr) {
+                if (IsRunningOnNativeBridge()) {
+                    LOGI("do_dlopen at: %p", addr);
+                    DobbyHook(addr, (void *) new_do_dlopen,
+                              (void **) &orig_do_dlopen);
+                } else {
+                    LOGI("__loader_dlopen at: %p", addr);
+                    DobbyHook(addr, (void *) new___loader_dlopen,
+                              (void **) &orig___loader_dlopen);
+                }
             }
         } else {
             void *addr = DobbySymbolResolver(nullptr,
                                              "_ZN7android26NativeBridgeLoadLibraryExtEPKciPNS_25native_bridge_namespace_tE");
             if (addr) {
                 LOGI("NativeBridgeLoadLibraryExt at: %p", addr);
-                DobbyHook(addr, (void *) new_NativeBridgeLoadLibraryExt,
-                          (void **) &orig_NativeBridgeLoadLibraryExt);
+                DobbyHook(addr, (void *) new_NativeBridgeLoadLibraryExt_V26,
+                          (void **) &orig_NativeBridgeLoadLibraryExt_V26);
             }
         }
     } else if (api_level >= 24) {
-        void *addr = DobbySymbolResolver(nullptr,
-                                         "__dl__Z9do_dlopenPKciPK17android_dlextinfoPv");
-        if (addr) {
-            LOGI("do_dlopen at: %p", addr);
-            DobbyHook(addr, (void *) new_do_dlopen_V24,
-                      (void **) &orig_do_dlopen_V24);
+        if (!IsABIRequiredNativeBridge()) {
+            void *addr;
+            if (IsRunningOnNativeBridge()) {
+                addr = (void *) dlopen;
+            } else {
+                addr = DobbySymbolResolver(nullptr,
+                                           "__dl__Z9do_dlopenPKciPK17android_dlextinfoPv");
+            }
+            if (addr) {
+                LOGI("do_dlopen at: %p", addr);
+                DobbyHook(addr, (void *) new_do_dlopen_V24,
+                          (void **) &orig_do_dlopen_V24);
+            }
+        } else {
+            void *addr = DobbySymbolResolver(nullptr,
+                                             "_ZN7android23NativeBridgeLoadLibraryEPKci");
+            if (addr) {
+                LOGI("NativeBridgeLoadLibrary at: %p", addr);
+                DobbyHook(addr, (void *) new_NativeBridgeLoadLibrary_V21,
+                          (void **) &orig_NativeBridgeLoadLibrary_V21);
+            }
         }
     } else {
-        void *addr = DobbySymbolResolver(nullptr,
-                                         "__dl__Z9do_dlopenPKciPK17android_dlextinfo");
-        if (addr) {
-            LOGI("do_dlopen at: %p", addr);
-            DobbyHook(addr, (void *) new_do_dlopen_V19,
-                      (void **) &orig_do_dlopen_V19);
+        if (!IsABIRequiredNativeBridge()) {
+            void *addr = DobbySymbolResolver(nullptr,
+                                             "__dl__Z9do_dlopenPKciPK17android_dlextinfo");
+            if (addr) {
+                LOGI("do_dlopen at: %p", addr);
+                DobbyHook(addr, (void *) new_do_dlopen_V19,
+                          (void **) &orig_do_dlopen_V19);
+            }
+        } else {
+            void *addr = DobbySymbolResolver(nullptr,
+                                             "_ZN7android23NativeBridgeLoadLibraryEPKci");
+            if (addr) {
+                LOGI("NativeBridgeLoadLibrary at: %p", addr);
+                DobbyHook(addr, (void *) new_NativeBridgeLoadLibrary_V21,
+                          (void **) &orig_NativeBridgeLoadLibrary_V21);
+            }
         }
     }
-    if (ABI == "x86_64"s) {
+    if (IsABIRequiredNativeBridge()) {
         return;
     }
     while (!il2cpp_handle) {

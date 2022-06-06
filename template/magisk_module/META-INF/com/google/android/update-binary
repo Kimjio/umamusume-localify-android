@@ -31,14 +31,4 @@ mount /data 2>/dev/null
 
 install_module
 
-ABI=$(grep_get_prop ro.product.cpu.abi)
-
-# TODO: mount -o bind script
-
-if [ "$ARCH" = "x64" ]; then
-  ui_print "x86_64 detected. copy arm64-v8a.so to umamusume data folder."
-  mkdir /data/data/jp.co.cygames.umamusume
-  cp /data/adb/modules_update/zygisk_umamusume_localify/zygisk/arm64-v8a.so /data/data/jp.co.cygames.umamusume/
-fi
-
 exit 0

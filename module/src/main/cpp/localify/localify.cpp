@@ -5,7 +5,7 @@
 
 #include "localify.h"
 #include "../../log.h"
-#include "../../game.h"
+#include "../../game.hpp"
 #include "../../logger/logger.h"
 #include <codecvt>
 

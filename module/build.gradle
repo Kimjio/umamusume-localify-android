@@ -26,6 +26,8 @@ android {
             version "3.22.1"
         }
     }
+    buildToolsVersion '32.0.0'
+    ndkVersion '24.0.8215888'
 }
 
 repositories {
@@ -58,6 +60,7 @@ afterEvaluate {
                         versionCode: moduleVersionCode.toString(),
                         author     : moduleAuthor,
                         description: moduleDescription,
+                        updateJson : moduleUpdateJson,
                 ])
                 filter(FixCrLfFilter.class,
                         eol: FixCrLfFilter.CrLf.newInstance("lf"))

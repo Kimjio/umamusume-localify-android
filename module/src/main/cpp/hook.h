@@ -5,13 +5,12 @@
 #ifndef UMAMUSUMELOCALIFYANDROID_HOOK_H
 #define UMAMUSUMELOCALIFYANDROID_HOOK_H
 
-#include <jni.h>
 #include "log.h"
 
-static int enable_hack;
-static void *il2cpp_handle = NULL;
+static bool enable_hack;
+static void *il2cpp_handle = nullptr;
 
-int isGame(JNIEnv *env, jstring appDataDir);
+bool isGame(const char *appDataDir);
 
 void hack_thread(void *arg);
 
