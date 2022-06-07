@@ -191,7 +191,7 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
 
 std::optional<std::vector<std::string>> read_config() {
     std::ifstream config_stream{
-            string("/sdcard/Android/data/").append(GamePackageName).append("/config.json")};
+            string("/sdcard/Android/data/").append(GetCurrentPackageName()).append("/config.json")};
     std::vector<std::string> dicts{};
 
     if (!config_stream.is_open()) {

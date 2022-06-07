@@ -40,7 +40,7 @@ namespace logger {
         if (g_enable_logger) {
             enabled = true;
             log_file.open(
-                    string("/sdcard/Android/data/").append(GamePackageName).append("/dump.txt"),
+                    string("/sdcard/Android/data/").append(GetCurrentPackageName()).append("/dump.txt"),
                     ios::app | ios::out);
 
             thread t([]() {
@@ -66,7 +66,7 @@ namespace logger {
 
     void dump_db_text(sqlite3 *db, const string &tableName, const string &targetField,
                       const string &jsonPath) {
-        string jsonFolderPath = string("/sdcard/Android/data/").append(GamePackageName).append(
+        string jsonFolderPath = string("/sdcard/Android/data/").append(GetCurrentPackageName()).append(
                 "/").append(
                 "original_data/");
         if (!filesystem::exists(jsonFolderPath)) {
@@ -117,7 +117,7 @@ namespace logger {
     }
 
     void dump_db_texts() {
-        string path = string("/data/data/").append(GamePackageName).append(
+        string path = string("/data/data/").append(GetCurrentPackageName()).append(
                 "/files/master/master.mdb");
         if (filesystem::exists(path)) {
             sqlite3 *db;

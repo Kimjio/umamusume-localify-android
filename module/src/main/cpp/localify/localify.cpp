@@ -46,7 +46,7 @@ namespace localify {
     }
 
     void load_textdb(const vector <string> *dicts) {
-        string path = string("/sdcard/Android/data/").append(GamePackageName).append("/");
+        string path = string("/sdcard/Android/data/").append(GetCurrentPackageName()).append("/");
         for (const auto& dict: *dicts) {
             if (filesystem::exists(path + string(dict))) {
                 std::ifstream dict_stream{path + string(dict)};

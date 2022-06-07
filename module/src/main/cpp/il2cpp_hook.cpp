@@ -763,7 +763,7 @@ void hookMethods() {
         auto assetbundlePath = localify::u8_u16(g_font_assetbundle_path);
         if (!assetbundlePath.starts_with(u"/")) {
             assetbundlePath.insert(0, u16string(u"/sdcard/Android/data/").append(
-                    localify::u8_u16(GamePackageName)).append(u"/"));
+                    localify::u8_u16(GetCurrentPackageName())).append(u"/"));
         }
         assets = load_from_file(
                 il2cpp_string_new_utf16(assetbundlePath.data(), assetbundlePath.length()));
