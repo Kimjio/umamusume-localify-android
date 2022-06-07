@@ -6,11 +6,10 @@
 #include <utility>
 #include "../stdinclude.hpp"
 #include "../localify/localify.h"
-#include "../game.hpp"
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/prettywriter.h>
-#include "../sqlite3/sqlite3.h"
+#include <SQLiteCpp/SQLiteCpp.h>
 
 using namespace std;
 using namespace localify;
@@ -23,24 +22,13 @@ namespace logger {
     bool request_exit = false;
     bool has_change = false;
 
-    // copy-pasted from https://stackoverflow.com/questions/3418231/replace-part-of-a-string-with-another-string
-    void replaceAll(std::string &str, const std::string &from, const std::string &to) {
-        if (from.empty())
-            return;
-        size_t start_pos = 0;
-        while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-            str.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-        }
-    }
-
-
     void init_logger() {
         // only output if file exists so regular user will not see it.
         if (g_enable_logger) {
             enabled = true;
             log_file.open(
-                    string("/sdcard/Android/data/").append(GetCurrentPackageName()).append("/dump.txt"),
+                    string("/sdcard/Android/data/").append(GetCurrentPackageName()).append(
+                            "/dump.txt"),
                     ios::app | ios::out);
 
             thread t([]() {
@@ -64,9 +52,10 @@ namespace logger {
         request_exit = true;
     }
 
-    void dump_db_text(sqlite3 *db, const string &tableName, const string &targetField,
+    void dump_db_text(SQLite::Database *db, const string &tableName, const string &targetField,
                       const string &jsonPath) {
-        string jsonFolderPath = string("/sdcard/Android/data/").append(GetCurrentPackageName()).append(
+        string jsonFolderPath = string("/sdcard/Android/data/").append(
+                GetCurrentPackageName()).append(
                 "/").append(
                 "original_data/");
         if (!filesystem::exists(jsonFolderPath)) {
@@ -90,13 +79,11 @@ namespace logger {
 
         dict_stream.close();
 
-        sqlite3_stmt *stmt;
+        SQLite::Statement query(*db, string("SELECT ").append(targetField).append(" FROM ").append(
+                tableName));
 
-        sqlite3_prepare_v2(db, string("SELECT ").append(targetField).append(" FROM ").append(
-                tableName).data(), -1, &stmt, nullptr);
-
-        while (sqlite3_step(stmt) == SQLITE_ROW) {
-            u16string u16str = (char16_t *) sqlite3_column_text16(stmt, 0);
+        while (query.executeStep()) {
+            u16string u16str = u8_u16(query.getColumn(0).getString());
             wstring text = u16_wide(u16str);
             auto hash = fnv1a::fnv1a_hash_bytes(u16str.data(), u16str.length());
             if (!document.HasMember(to_string(hash).data())) {
@@ -120,19 +107,16 @@ namespace logger {
         string path = string("/data/data/").append(GetCurrentPackageName()).append(
                 "/files/master/master.mdb");
         if (filesystem::exists(path)) {
-            sqlite3 *db;
-            int resultCode;
-            resultCode = sqlite3_open(path.data(), &db);
+            try {
+                SQLite::Database db(path);
 
-            if (resultCode != SQLITE_OK) {
+                dump_db_text(&db, "text_data", "text", "common.json");
+                dump_db_text(&db, "character_system_text", "text", "chara.json");
+                dump_db_text(&db, "race_jikkyo_comment", "message", "race_comment.json");
+                dump_db_text(&db, "race_jikkyo_message", "message", "race_message.json");
+            } catch (SQLite::Exception &e) {
                 LOGW("master.mdb not found.");
             }
-
-            dump_db_text(db, "text_data", "text", "common.json");
-            dump_db_text(db, "character_system_text", "text", "chara.json");
-            dump_db_text(db, "race_jikkyo_comment", "message", "race_comment.json");
-            dump_db_text(db, "race_jikkyo_message", "message", "race_message.json");
-            sqlite3_close(db);
         }
     }
 

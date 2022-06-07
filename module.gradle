@@ -4,7 +4,7 @@ ext {
     moduleName = "UmamusumeLocalify"
     moduleAuthor = "Kimjio"
     moduleDescription = "umamusume-localify Zygisk version."
-    moduleVersion = "v1.0.0"
-    moduleVersionCode = 1
+    moduleVersion = "2.0.0"
+    moduleVersionCode = 2
     moduleUpdateJson = "https://raw.githubusercontent.com/Kimjio/umamusume-localify-android/main/update.json"
 }

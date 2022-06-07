@@ -29,9 +29,6 @@
 ## 알려진 문제
 `maxFps` 를 무제한으로 설정 시 게임의 프레임이 60FPS 에서 반토막난 30FPS 으로 재생됩니다.
 
-## TODO
-x86에서 arm 후킹 지원
-
 ## 빌드
 1. 소스 코드를 다운 받습니다.
 2. Android Studio 사용하여 gradle 작업 `:module:assembleRelease` 을 실행해서 컴파일하면, `out` 폴더에 zip 패키지가 생성됩니다.

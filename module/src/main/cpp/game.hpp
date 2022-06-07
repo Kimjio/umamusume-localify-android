@@ -14,7 +14,7 @@ enum class GameRegion {
     KOR
 };
 
-static GameRegion gameRegion = GameRegion::UNKNOWN;
+extern GameRegion gameRegion;
 
 namespace {
     std::string GetCurrentPackageName() {
@@ -22,7 +22,7 @@ namespace {
             return GamePackageName;
         if (gameRegion == GameRegion::KOR)
             return GamePackageNameKor;
-        return nullptr;
+        return "";
     }
 }
 

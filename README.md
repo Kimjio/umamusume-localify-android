@@ -29,9 +29,6 @@ Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/`
 ## Known issue
 When `maxFps` is set to unlimited, the frame of the game is played from 60 FPS to 30 FPS, which is halved. (Not a typical 30FPS)
 
-## TODO
-Arm hooking support for x86
-
 ## Build
 1. Download the source code
 2. Use Android Studio to run the gradle task `:module:assembleRelease` to compile, the zip package will be generated in the `out` folder

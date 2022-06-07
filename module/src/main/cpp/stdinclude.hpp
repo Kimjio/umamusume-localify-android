@@ -31,6 +31,8 @@
 
 #include "fnv1a_hash.hpp"
 
+#include "game.hpp"
+
 #if defined(__ARM_ARCH_7A__)
 #define ABI "armeabi-v7a"
 #elif defined(__i386__)

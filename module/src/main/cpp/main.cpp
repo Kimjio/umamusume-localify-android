@@ -1,8 +1,6 @@
 #include "stdinclude.hpp"
 #include "hook.h"
 #include "zygisk.hpp"
-#include <dlfcn.h>
-#include "game.hpp"
 
 using zygisk::Api;
 using zygisk::AppSpecializeArgs;
