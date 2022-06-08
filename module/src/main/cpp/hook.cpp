@@ -86,17 +86,18 @@ HOOK_DEF(void*, NativeBridgeLoadLibrary_V21, const char *filename, int flag) {
         stringstream path_armV7;
         path_armV7 << "/data/data/" << GetCurrentPackageName().data() << "/armeabi-v7a.so";
 
-        char *path = nullptr;
+        string path;
 
         if (access(path_armV8.str().data(), F_OK) != -1) {
-            path = path_armV8.str().data();
+            path = path_armV8.str();
         } else if (access(path_armV7.str().data(), F_OK) != -1) {
-            path = path_armV7.str().data();
+            path = path_armV7.str();
         }
-        if (path != nullptr) {
+
+        if (!path.empty()) {
             std::thread load_thread([path, NativeBridgeError]() {
-                void *lib = orig_NativeBridgeLoadLibrary_V21(path, RTLD_NOW);
-                LOGI("%s: %p", path, lib);
+                void *lib = orig_NativeBridgeLoadLibrary_V21(path.data(), RTLD_NOW);
+                LOGI("%s: %p", path.data(), lib);
                 if (NativeBridgeError()) {
                     LOGW("LoadLibrary failed");
                 }
@@ -122,17 +123,18 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V26, const char *filename, int flag,
         stringstream path_armV7;
         path_armV7 << "/data/data/" << GetCurrentPackageName().data() << "/armeabi-v7a.so";
 
-        char *path = nullptr;
+        string path;
 
         if (access(path_armV8.str().data(), F_OK) != -1) {
-            path = path_armV8.str().data();
+            path = path_armV8.str();
         } else if (access(path_armV7.str().data(), F_OK) != -1) {
-            path = path_armV7.str().data();
+            path = path_armV7.str();
         }
-        if (path != nullptr) {
+
+        if (!path.empty()) {
             std::thread load_thread([path, ns, NativeBridgeError, NativeBridgeGetError]() {
-                void *lib = orig_NativeBridgeLoadLibraryExt_V26(path, RTLD_NOW, ns);
-                LOGI("%s: %p", path, lib);
+                void *lib = orig_NativeBridgeLoadLibraryExt_V26(path.data(), RTLD_NOW, ns);
+                LOGI("%s: %p", path.data(), lib);
                 if (NativeBridgeError()) {
                     char *error_bridge;
                     if ((error_bridge = NativeBridgeGetError()) !=
