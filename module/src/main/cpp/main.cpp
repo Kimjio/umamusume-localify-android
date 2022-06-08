@@ -48,6 +48,18 @@ static void hook() __attribute__((constructor));
 
 void hook() {
     if (IsRunningOnNativeBridge()) {
+        if (access(
+                string("/data/data/")
+                        .append(GamePackageName).data(),
+                F_OK) == 0) {
+            gameRegion = GameRegion::JAP;
+        }
+        if (access(
+                string("/data/data/")
+                        .append(GamePackageNameKor).data(),
+                F_OK) == 0) {
+            gameRegion = GameRegion::KOR;
+        }
         int ret;
         pthread_t ntid;
         if ((ret = pthread_create(&ntid, nullptr,
