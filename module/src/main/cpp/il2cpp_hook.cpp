@@ -21,6 +21,8 @@ Il2CppObject *assets = nullptr;
 
 Il2CppObject *(*load_assets)(Il2CppObject *thisObj, Il2CppString *name, const Il2CppType *type);
 
+Il2CppString *(*uobject_get_name)(Il2CppObject *uObject);
+
 const Il2CppType *
 GetRuntimeType(const char *assemblyName, const char *namespaze, const char *klassName) {
     auto dummyObj = (Il2CppObject *) il2cpp_object_new(
@@ -72,6 +74,34 @@ Il2CppString *localize_get_hook(int id) {
     return result ? result : orig_result;
 }
 
+void ReplaceTextMeshFont(Il2CppObject *textMesh, Il2CppObject *meshRenderer) {
+    Il2CppObject *font = GetCustomFont();
+    Il2CppObject *fontMaterial = reinterpret_cast<Il2CppObject *(*)(
+            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(font->klass, "get_material",
+                                                                      0)->methodPointer)(font);
+    Il2CppObject *fontTexture = reinterpret_cast<Il2CppObject *(*)(
+            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(fontMaterial->klass,
+                                                                      "get_mainTexture",
+                                                                      0)->methodPointer)(
+            fontMaterial);
+
+    reinterpret_cast<void (*)(Il2CppObject *thisObj,
+                              Il2CppObject *font)>(il2cpp_class_get_method_from_name(
+            textMesh->klass, "set_font", 1)->methodPointer)(textMesh, font);
+    if (meshRenderer) {
+        auto get_sharedMaterial = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(meshRenderer->klass,
+                                                                          "GetSharedMaterial",
+                                                                          0)->methodPointer);
+
+        Il2CppObject *sharedMaterial = get_sharedMaterial(meshRenderer);
+        reinterpret_cast<void (*)(Il2CppObject *thisObj,
+                                  Il2CppObject *texture)>(il2cpp_class_get_method_from_name(
+                sharedMaterial->klass, "set_mainTexture", 1)->methodPointer)(sharedMaterial,
+                                                                             fontTexture);
+    }
+}
+
 void *an_text_set_material_to_textmesh_orig = nullptr;
 
 void an_text_set_material_to_textmesh_hook(Il2CppObject *thisObj) {
@@ -102,124 +132,45 @@ void an_text_set_material_to_textmesh_hook(Il2CppObject *thisObj) {
     Il2CppObject *shadowMeshRenderer;
 
     il2cpp_field_get_value(thisObj, mainField, &mainMesh);
-
-    Il2CppObject *mainFont = GetCustomFont();
-    Il2CppObject *mainFontMaterial = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(mainFont->klass,
-                                                                      "get_material",
-                                                                      0)->methodPointer)(mainFont);
-    Il2CppObject *mainFontTexture = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(mainFontMaterial->klass,
-                                                                      "get_mainTexture",
-                                                                      0)->methodPointer)(
-            mainFontMaterial);
-
-    reinterpret_cast<void (*)(Il2CppObject *thisObj,
-                              Il2CppObject *font)>(il2cpp_class_get_method_from_name(
-            mainMesh->klass, "set_font", 1)->methodPointer)(mainMesh, mainFont);
-
     il2cpp_field_get_value(thisObj, mainRenderer, &mainMeshRenderer);
 
-    if (mainMeshRenderer != nullptr) {
-        auto get_sharedMaterial = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(mainMeshRenderer->klass,
-                                                                          "GetSharedMaterial",
-                                                                          0)->methodPointer);
+    ReplaceTextMeshFont(mainMesh, mainMeshRenderer);
 
-        Il2CppObject *sharedMaterial = get_sharedMaterial(mainMeshRenderer);
-        reinterpret_cast<void (*)(Il2CppObject *thisObj,
-                                  Il2CppObject *texture)>(il2cpp_class_get_method_from_name(
-                sharedMaterial->klass, "set_mainTexture", 1)->methodPointer)(sharedMaterial,
-                                                                             mainFontTexture);
-    }
-
-    vector<Il2CppObject *> meshMaterials;
+    vector<Il2CppObject *> textMeshies;
     il2cpp_field_get_value(thisObj, outlineField, &outlineMeshes);
-    if (outlineMeshes != nullptr) {
+    if (outlineMeshes) {
         FieldInfo *itemsField = il2cpp_class_get_field_from_name(outlineMeshes->klass, "_items");
         Il2CppArray *arr;
         il2cpp_field_get_value(outlineMeshes, itemsField, &arr);
-        if (arr != nullptr) {
+        if (arr) {
             for (int i = 0; i < arr->max_length; i++) {
                 auto *mesh = reinterpret_cast<Il2CppObject *>(arr->vector[i]);
-                if (mesh != nullptr) {
-                    Il2CppObject *font = GetCustomFont();
-                    meshMaterials.push_back(reinterpret_cast<Il2CppObject *(*)(
-                            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(font->klass,
-                                                                                      "get_material",
-                                                                                      0)->methodPointer)(
-                            font));
-                    reinterpret_cast<void (*)(Il2CppObject *thisObj,
-                                              Il2CppObject *font)>(il2cpp_class_get_method_from_name(
-                            mesh->klass, "set_font", 1)->methodPointer)(mesh, font);
+                if (!mesh) {
+                    break;
                 }
+                textMeshies.push_back(mesh);
             }
         }
     }
 
     il2cpp_field_get_value(thisObj, outlineFieldRenderers, &outlineMeshRenderers);
-    if (outlineMeshRenderers != nullptr) {
+    if (outlineMeshRenderers) {
         FieldInfo *itemsField = il2cpp_class_get_field_from_name(outlineMeshRenderers->klass,
                                                                  "_items");
         Il2CppArray *arr;
         il2cpp_field_get_value(outlineMeshRenderers, itemsField, &arr);
-        if (arr != nullptr) {
-            for (int i = 0; i < arr->max_length; i++) {
+        if (arr) {
+            for (int i = 0; i < textMeshies.size(); i++) {
                 auto *meshRenderer = reinterpret_cast<Il2CppObject *>(arr->vector[i]);
-                if (meshRenderer != nullptr) {
-                    auto get_sharedMaterial = reinterpret_cast<Il2CppObject *(*)(
-                            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(
-                            meshRenderer->klass, "get_sharedMaterial", 0)->methodPointer);
-
-                    Il2CppObject *sharedMaterial = get_sharedMaterial(meshRenderer);
-
-                    auto get_mainTexture = reinterpret_cast<Il2CppObject *(*)(
-                            Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(
-                            sharedMaterial->klass, "get_mainTexture", 0)->methodPointer);
-
-                    reinterpret_cast<void (*)(Il2CppObject *thisObj,
-                                              Il2CppObject *texture)>(il2cpp_class_get_method_from_name(
-                            sharedMaterial->klass, "set_mainTexture", 1)->methodPointer)(
-                            sharedMaterial, get_mainTexture(meshMaterials[i]));
-
-                }
+                ReplaceTextMeshFont(textMeshies[i], meshRenderer);
             }
         }
     }
 
-
     il2cpp_field_get_value(thisObj, shadowField, &shadowMesh);
-    if (shadowMesh != nullptr) {
-        Il2CppObject *shadowFont = GetCustomFont();
-        Il2CppObject *shadowFontMaterial = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(shadowFont->klass,
-                                                                          "get_material",
-                                                                          0)->methodPointer)(
-                shadowFont);
-
+    if (shadowMesh) {
         il2cpp_field_get_value(thisObj, shadowFieldRenderer, &shadowMeshRenderer);
-
-        if (shadowMeshRenderer != nullptr) {
-            auto get_sharedMaterial = reinterpret_cast<Il2CppObject *(*)(
-                    Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(
-                    shadowMeshRenderer->klass, "get_sharedMaterial", 0)->methodPointer);
-
-            Il2CppObject *sharedMaterial = get_sharedMaterial(shadowMeshRenderer);
-
-            auto get_mainTexture = reinterpret_cast<Il2CppObject *(*)(
-                    Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(sharedMaterial->klass,
-                                                                              "get_mainTexture",
-                                                                              0)->methodPointer);
-
-            reinterpret_cast<void (*)(Il2CppObject *thisObj,
-                                      Il2CppObject *texture)>(il2cpp_class_get_method_from_name(
-                    sharedMaterial->klass, "set_mainTexture", 1)->methodPointer)(sharedMaterial,
-                                                                                 get_mainTexture(
-                                                                                         shadowFontMaterial));
-        }
-        reinterpret_cast<void (*)(Il2CppObject *thisObj,
-                                  Il2CppObject *font)>(il2cpp_class_get_method_from_name(
-                shadowMesh->klass, "set_font", 1)->methodPointer)(shadowMesh, shadowFont);
+        ReplaceTextMeshFont(shadowMesh, shadowMeshRenderer);
     }
 }
 
@@ -441,7 +392,9 @@ void story_race_textasset_load_hook(Il2CppObject *thisObj) {
 
 void (*text_assign_font)(void *);
 
-Il2CppObject *(*text_set_font)(void *, Il2CppObject *);
+void (*text_set_font)(void *, Il2CppObject *);
+
+Il2CppObject *(*text_get_font)(void *);
 
 int (*text_get_size)(void *);
 
@@ -464,6 +417,13 @@ void on_populate_hook(Il2CppObject *thisObj, void *toFill) {
         text_set_style(thisObj, 1);
         text_set_size(thisObj, text_get_size(thisObj) - 4);
         text_set_linespacing(thisObj, 1.05f);
+    }
+    if (g_replace_to_custom_font) {
+        auto font = text_get_font(thisObj);
+        Il2CppString *name = uobject_get_name(font);
+        if (g_font_asset_name.find(localify::u16_u8(name->start_char)) == string::npos) {
+            text_set_font(thisObj, GetCustomFont());
+        }
     }
 
     return reinterpret_cast<decltype(on_populate_hook) *>(on_populate_orig)(thisObj, toFill);
@@ -595,6 +555,12 @@ void hookMethods() {
                     "AssetBundle", "LoadAsset", 2)
     );
 
+    uobject_get_name = reinterpret_cast<Il2CppString *(*)(Il2CppObject *uObject)>(
+            il2cpp_symbols::get_method_pointer(
+                    "UnityEngine.CoreModule.dll", "UnityEngine",
+                    "Object", "GetName", -1)
+    );
+
     auto populate_with_errors_addr = il2cpp_symbols::get_method_pointer(
             "UnityEngine.TextRenderingModule.dll",
             "UnityEngine", "TextGenerator",
@@ -681,10 +647,17 @@ void hookMethods() {
             )
     );
 
-    text_set_font = reinterpret_cast<Il2CppObject *(*)(void *, Il2CppObject *)>(
+    text_set_font = reinterpret_cast<void (*)(void *, Il2CppObject *)>(
             il2cpp_symbols::get_method_pointer(
                     "UnityEngine.UI.dll", "UnityEngine.UI",
                     "Text", "set_font", 1
+            )
+    );
+
+    text_get_font = reinterpret_cast<Il2CppObject *(*)(void *)>(
+            il2cpp_symbols::get_method_pointer(
+                    "UnityEngine.UI.dll", "UnityEngine.UI",
+                    "Text", "get_font", 0
             )
     );
 
@@ -841,11 +814,8 @@ void hookMethods() {
     ADD_HOOK(query_getstr)
     ADD_HOOK(query_dispose)
 
-    if (g_replace_to_builtin_font) {
-        ADD_HOOK(on_populate)
-    }
-
     if (g_replace_to_builtin_font || g_replace_to_custom_font) {
+        ADD_HOOK(on_populate)
         ADD_HOOK(textcommon_awake)
     }
 
