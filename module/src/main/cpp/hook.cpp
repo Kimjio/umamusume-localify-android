@@ -17,12 +17,15 @@ using namespace logger;
 bool g_enable_logger = false;
 int g_max_fps = -1;
 float g_ui_animation_scale = 1.0f;
+bool g_ui_use_system_resolution = false;
 bool g_replace_to_builtin_font = true;
 bool g_replace_to_custom_font = false;
 std::string g_font_assetbundle_path;
 std::string g_font_asset_name;
 bool g_dump_entries = false;
 bool g_dump_db_entries = false;
+int g_graphics_quality = -1;
+int g_anti_aliasing = -1;
 
 GameRegion gameRegion = GameRegion::UNKNOWN;
 
@@ -225,6 +228,9 @@ std::optional<std::vector<std::string>> read_config() {
         if (document.HasMember("uiAnimationScale")) {
             g_ui_animation_scale = document["uiAnimationScale"].GetFloat();
         }
+        if (document.HasMember("uiUseSystemResolution")) {
+            g_ui_use_system_resolution = document["uiUseSystemResolution"].GetBool();
+        }
         if (document.HasMember("replaceFont")) {
             g_replace_to_builtin_font = document["replaceFont"].GetBool();
         }
@@ -239,6 +245,20 @@ std::optional<std::vector<std::string>> read_config() {
         }
         if (document.HasMember("fontAssetName")) {
             g_font_asset_name = std::string(document["fontAssetName"].GetString());
+        }
+        if (document.HasMember("graphicsQuality")) {
+            g_graphics_quality = document["graphicsQuality"].GetInt();
+            if (g_graphics_quality < -1) {
+                g_graphics_quality = -1;
+            }
+            if (g_graphics_quality > 4) {
+                g_graphics_quality = 4;
+            }
+        }
+        if (document.HasMember("antiAliasing")) {
+            g_anti_aliasing = document["antiAliasing"].GetInt();
+            vector<int> options = { 0, 2, 4, 8, -1 };
+            g_anti_aliasing = find(options.begin(), options.end(), g_anti_aliasing) - options.begin();
         }
 
         auto &dicts_arr = document["dicts"];

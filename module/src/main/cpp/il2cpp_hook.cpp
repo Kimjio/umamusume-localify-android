@@ -494,6 +494,34 @@ wait_resize_ui_hook(Il2CppObject *thisObj, bool isPortrait, bool isShowOrientati
     return enumerator;
 }
 
+void *set_anti_aliasing_orig = nullptr;
+
+void set_anti_aliasing_hook(int level) {
+    reinterpret_cast<decltype(set_anti_aliasing_hook) *>(set_anti_aliasing_orig)(g_anti_aliasing);
+}
+
+Il2CppObject *display_main = nullptr;
+
+Il2CppObject *(*display_get_main)();
+
+int (*get_system_width)(Il2CppObject *thisObj);
+
+int (*get_system_height)(Il2CppObject *thisObj);
+
+void *set_resolution_orig = nullptr;
+
+void set_resolution_hook(int width, int height, bool fullscreen) {
+    reinterpret_cast<decltype(set_resolution_hook) *>(set_resolution_orig)(
+            get_system_width(display_main), get_system_height(display_main),
+            fullscreen);
+}
+
+void *apply_graphics_quality_orig = nullptr;
+
+void apply_graphics_quality_hook(Il2CppObject* thisObj, int quality, bool force) {
+    reinterpret_cast<decltype(apply_graphics_quality_hook) *>(apply_graphics_quality_orig)(thisObj, g_graphics_quality, true);
+}
+
 void dump_all_entries() {
     // 0 is None
     for (int i = 1;; i++) {
@@ -722,6 +750,38 @@ void hookMethods() {
                                                          bool isShowOrientationGuide)>(il2cpp_symbols::get_method_pointer(
             "umamusume.dll", "Gallop", "UIManager", "WaitResizeUI", 2));
 
+    auto set_anti_aliasing_addr = reinterpret_cast<void (*)(
+            int)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
+                                                     "QualitySettings", "set_antiAliasing", 1));
+
+    display_get_main = reinterpret_cast<Il2CppObject *(*)()>(il2cpp_symbols::get_method_pointer(
+            "UnityEngine.CoreModule.dll",
+            "UnityEngine",
+            "Display", "get_main", -1));
+
+    display_main = display_get_main();
+
+    get_system_width = reinterpret_cast<int (*)(Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
+            "UnityEngine.CoreModule.dll",
+            "UnityEngine",
+            "Display", "get_systemWidth", 0));
+
+    get_system_height = reinterpret_cast<int (*)(
+            Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
+            "UnityEngine.CoreModule.dll",
+            "UnityEngine",
+            "Display", "get_systemHeight", 0));
+
+    auto set_resolution_addr = reinterpret_cast<void (*)(
+            int)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
+                                                     "Screen", "SetResolution", 3));
+
+    auto apply_graphics_quality_addr = reinterpret_cast<void (*)(
+            Il2CppObject *, Il2CppObject *, bool)>(il2cpp_symbols::get_method_pointer(
+            "umamusume.dll",
+            "Gallop",
+            "GraphicSettings", "ApplyGraphicsQuality", 2));
+
     auto load_from_file = reinterpret_cast<Il2CppObject *(*)(
             Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "LoadFromFile", 1));
@@ -829,6 +889,18 @@ void hookMethods() {
 
     if (g_dump_db_entries) {
         logger::dump_db_texts();
+    }
+
+    if (g_ui_use_system_resolution) {
+        ADD_HOOK(set_resolution);
+    }
+
+    if (g_graphics_quality != -1) {
+        ADD_HOOK(apply_graphics_quality);
+    }
+
+    if (g_anti_aliasing != -1) {
+        ADD_HOOK(set_anti_aliasing);
     }
 }
 
