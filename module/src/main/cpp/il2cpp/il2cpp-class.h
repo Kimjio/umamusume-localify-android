@@ -339,6 +339,10 @@ typedef struct Il2CppDefaults
 
 extern Il2CppDefaults il2cpp_defaults;
 
+typedef struct Boolean {
+    bool m_value;
+} Boolean;
+
 // UnityEngine.Color
 typedef struct Color_t {
 public:

@@ -33,6 +33,8 @@
 
 #include "game.hpp"
 
+#include "il2cpp/il2cpp-class.h"
+
 #if defined(__ARM_ARCH_7A__)
 #define ABI "armeabi-v7a"
 #elif defined(__i386__)
@@ -44,6 +46,11 @@
 #else
 #define ABI "unknown"
 #endif
+
+struct ReplaceAsset {
+    std::string path;
+    Il2CppObject* asset;
+};
 
 using namespace std;
 
@@ -74,6 +81,7 @@ extern int g_graphics_quality;
  * 8 x8
  */
 extern int g_anti_aliasing;
+extern std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 
 namespace {
     // copy-pasted from https://stackoverflow.com/questions/3418231/replace-part-of-a-string-with-another-string

@@ -26,6 +26,7 @@ bool g_dump_entries = false;
 bool g_dump_db_entries = false;
 int g_graphics_quality = -1;
 int g_anti_aliasing = -1;
+std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 
 GameRegion gameRegion = GameRegion::UNKNOWN;
 
@@ -257,17 +258,37 @@ std::optional<std::vector<std::string>> read_config() {
         }
         if (document.HasMember("antiAliasing")) {
             g_anti_aliasing = document["antiAliasing"].GetInt();
-            vector<int> options = { 0, 2, 4, 8, -1 };
-            g_anti_aliasing = find(options.begin(), options.end(), g_anti_aliasing) - options.begin();
+            vector<int> options = {0, 2, 4, 8, -1};
+            g_anti_aliasing =
+                    find(options.begin(), options.end(), g_anti_aliasing) - options.begin();
         }
 
-        auto &dicts_arr = document["dicts"];
-        auto len = dicts_arr.Size();
+        if (document.HasMember("replaceAssetsPath")) {
+            auto replaceAssetsPath = localify::u8_u16(document["replaceAssetsPath"].GetString());
+            if (!replaceAssetsPath.starts_with(u"/")) {
+                replaceAssetsPath.insert(0, u16string(u"/sdcard/Android/data/").append(
+                        localify::u8_u16(GetCurrentPackageName())).append(u"/"));
+            }
+            if (filesystem::exists(replaceAssetsPath) &&
+                filesystem::is_directory(replaceAssetsPath)) {
+                for (auto &file: filesystem::directory_iterator(replaceAssetsPath)) {
+                    if (file.is_regular_file()) {
+                        g_replace_assets.emplace(file.path().filename().string(),
+                                                 ReplaceAsset{file.path().string(), nullptr});
+                    }
+                }
+            }
+        }
 
-        for (size_t i = 0; i < len; ++i) {
-            auto dict = dicts_arr[i].GetString();
+        if (document.HasMember("dicts")) {
+            auto &dicts_arr = document["dicts"];
+            auto len = dicts_arr.Size();
 
-            dicts.emplace_back(dict);
+            for (size_t i = 0; i < len; ++i) {
+                auto dict = dicts_arr[i].GetString();
+
+                dicts.emplace_back(dict);
+            }
         }
     }
 

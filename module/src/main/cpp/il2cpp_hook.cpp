@@ -19,6 +19,8 @@ static uint64_t il2cpp_base = 0;
 
 Il2CppObject *assets = nullptr;
 
+Il2CppObject *(*load_from_file)(Il2CppString *path);
+
 Il2CppObject *(*load_assets)(Il2CppObject *thisObj, Il2CppString *name, const Il2CppType *type);
 
 Il2CppString *(*uobject_get_name)(Il2CppObject *uObject);
@@ -31,6 +33,12 @@ GetRuntimeType(const char *assemblyName, const char *namespaze, const char *klas
             Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("mscorlib.dll", "System",
                                                                        "Object", "GetType", 0));
     return get_type(dummyObj);
+}
+
+Boolean GetBoolean(bool value) {
+    return reinterpret_cast<Boolean(*)(Il2CppString *value)>(il2cpp_symbols::get_method_pointer(
+            "mscorlib.dll", "System", "Boolean", "Parse", 1))(
+            il2cpp_string_new(value ? "true" : "false"));
 }
 
 Il2CppObject *GetCustomFont() {
@@ -518,8 +526,54 @@ void set_resolution_hook(int width, int height, bool fullscreen) {
 
 void *apply_graphics_quality_orig = nullptr;
 
-void apply_graphics_quality_hook(Il2CppObject* thisObj, int quality, bool force) {
-    reinterpret_cast<decltype(apply_graphics_quality_hook) *>(apply_graphics_quality_orig)(thisObj, g_graphics_quality, true);
+void apply_graphics_quality_hook(Il2CppObject *thisObj, int quality, bool force) {
+    reinterpret_cast<decltype(apply_graphics_quality_hook) *>(apply_graphics_quality_orig)(thisObj,
+                                                                                           g_graphics_quality,
+                                                                                           true);
+}
+
+
+void *load_one_orig = nullptr;
+
+Boolean load_one_hook(Il2CppObject *thisObj, Il2CppObject *handle, Il2CppObject *request) {
+    FieldInfo *hNameField = il2cpp_class_get_field_from_name(request->klass, "hname");
+    Il2CppString *hName = nullptr;
+    il2cpp_field_get_value(request, hNameField, &hName);
+    auto hNameStr = localify::u16_u8(hName->start_char);
+
+    if (g_replace_assets.find(hNameStr) != g_replace_assets.end()) {
+        auto &replaceAsset = g_replace_assets.at(hNameStr);
+        auto set_assetBundle = reinterpret_cast<void (*)(
+                Il2CppObject *thisObj,
+                Il2CppObject *assetBundle)>(il2cpp_symbols::get_method_pointer(
+                "_Cyan.dll", "Cyan.Loader", "AssetHandle", "set_assetBundle",
+                1));
+
+        auto get_IsLoaded = reinterpret_cast<Boolean(*)(
+                Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer(
+                "_Cyan.dll", "Cyan.Loader", "AssetHandle", "get_IsLoaded",
+                0));
+
+        if (!replaceAsset.asset) {
+            replaceAsset.asset = load_from_file(il2cpp_string_new(replaceAsset.path.data()));
+        }
+        set_assetBundle(handle, replaceAsset.asset);
+        return get_IsLoaded(handle);
+
+    }
+    return reinterpret_cast<decltype(load_one_hook) *>(load_one_orig)(thisObj, handle, request);
+}
+
+void *assetbundle_unload_orig = nullptr;
+
+void assetbundle_unload_hook(Il2CppObject *thisObj, Boolean unloadAllLoadedObjects) {
+    for (auto &pair: g_replace_assets) {
+        if (pair.second.asset == thisObj) {
+            pair.second.asset = nullptr;
+        }
+    }
+    reinterpret_cast<decltype(assetbundle_unload_hook) *>(assetbundle_unload_orig)(thisObj,
+                                                                                   unloadAllLoadedObjects);
 }
 
 void dump_all_entries() {
@@ -782,7 +836,7 @@ void hookMethods() {
             "Gallop",
             "GraphicSettings", "ApplyGraphicsQuality", 2));
 
-    auto load_from_file = reinterpret_cast<Il2CppObject *(*)(
+    load_from_file = reinterpret_cast<Il2CppObject *(*)(
             Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "LoadFromFile", 1));
 
@@ -791,6 +845,10 @@ void hookMethods() {
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle",
             "LoadFromMemoryAsync",
             1));*/
+    
+    auto assetbundle_unload_addr = reinterpret_cast<Il2CppObject * (*)(Il2CppString * path)>(il2cpp_symbols::get_method_pointer("UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "Unload", 1));
+
+    auto load_one_addr = reinterpret_cast<Boolean(*)(Il2CppObject * thisObj, Il2CppObject * handle, Il2CppObject * request)>(il2cpp_symbols::get_method_pointer("_Cyan.dll", "Cyan.Loader", "AssetLoader", "LoadOne", 2));
 
     if (!assets) {
         auto assetbundlePath = localify::u8_u16(g_font_assetbundle_path);
@@ -843,6 +901,10 @@ void hookMethods() {
 #define ADD_HOOK(_name_) \
     DobbyHook((void *)_name_##_addr, (void *) _name_##_hook, (void **) &_name_##_orig);
 #pragma endregion
+
+    ADD_HOOK(assetbundle_unload);
+
+    ADD_HOOK(load_one);
 
     ADD_HOOK(get_preferred_width)
 
