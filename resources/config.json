@@ -1,0 +1,26 @@
+{
+    "enableLogger": false,
+    "dumpStaticEntries": false,
+    "dumpDbEntries": false,
+    "maxFps": 90,
+    "uiAnimationScale": 1.0,
+    "uiUseSystemResolution": true,
+    "replaceToBuiltinFont": false,
+    "replaceToCustomFont": true,
+    "fontAssetBundlePath": "custom_font/GyeonggiTitle_Medium/font",
+    "fontAssetName": "GyeonggiTitle_Medium.fontsettings",
+    "graphicsQuality": 3,
+    "antiAliasing": -1,
+	"replaceAssetsPath": "replace_assets",
+    "dicts": [
+        "localized_data/static.json",
+        "localized_data/chara.json",
+        "localized_data/race_comment.json",
+        "localized_data/race_message.json",
+        "localized_data/common.json",
+        "localized_data/kor_main.json",
+        "localized_data/kor_race.json",
+        "localized_data/kor_story.json",
+        "localized_data/kor_umastory.json"
+    ]
+}
