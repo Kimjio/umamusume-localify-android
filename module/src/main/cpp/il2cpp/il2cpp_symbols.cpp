@@ -163,7 +163,10 @@ namespace il2cpp_symbols {
     Il2CppClass *get_class(const char *assemblyName, const char *namespaze, const char *klassName) {
         auto assembly = il2cpp_domain_assembly_open(il2cpp_domain, assemblyName);
         auto image = il2cpp_assembly_get_image(assembly);
-        return il2cpp_class_from_name(image, namespaze, klassName);
+        if (assembly && image) {
+            return il2cpp_class_from_name(image, namespaze, klassName);
+        }
+        return nullptr;
     }
 
     Il2CppMethodPointer get_method_pointer(const char *assemblyName, const char *namespaze,
@@ -172,7 +175,13 @@ namespace il2cpp_symbols {
         auto image = il2cpp_assembly_get_image(assembly);
         auto klass = il2cpp_class_from_name(image, namespaze, klassName);
 
-        return il2cpp_class_get_method_from_name(klass, name, argsCount)->methodPointer;
+        if (assembly && image && klass) {
+            auto method = il2cpp_class_get_method_from_name(klass, name, argsCount);
+            if (method) {
+                return method->methodPointer;
+            }
+        }
+        return nullptr;
     }
 
     const MethodInfo *get_method(const char *assemblyName, const char *namespaze,
@@ -181,7 +190,10 @@ namespace il2cpp_symbols {
         auto image = il2cpp_assembly_get_image(assembly);
         auto klass = il2cpp_class_from_name(image, namespaze, klassName);
 
-        return il2cpp_class_get_method_from_name(klass, name, argsCount);
+        if (assembly && image && klass) {
+            return il2cpp_class_get_method_from_name(klass, name, argsCount);
+        }
+        return nullptr;
     }
 
     Il2CppMethodPointer find_method(const char *assemblyName, const char *namespaze,
@@ -191,10 +203,12 @@ namespace il2cpp_symbols {
         auto image = il2cpp_assembly_get_image(assembly);
         auto klass = il2cpp_class_from_name(image, namespaze, klassName);
 
-        void *iter = nullptr;
-        while (const MethodInfo *method = il2cpp_class_get_methods(klass, &iter)) {
-            if (predict(method))
-                return method->methodPointer;
+        if (assembly && image && klass) {
+            void *iter = nullptr;
+            while (const MethodInfo *method = il2cpp_class_get_methods(klass, &iter)) {
+                if (predict(method))
+                    return method->methodPointer;
+            }
         }
 
         return nullptr;

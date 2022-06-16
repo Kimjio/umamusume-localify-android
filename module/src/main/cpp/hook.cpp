@@ -405,6 +405,8 @@ void hack_thread(void *arg [[maybe_unused]]) {
     while (!il2cpp_handle) {
         sleep(1);
     }
+    // prevent crash
+    sleep(1);
 
     auto dict = read_config();
 
