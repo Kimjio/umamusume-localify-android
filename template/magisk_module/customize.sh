@@ -55,5 +55,9 @@ set_permissions() {
 ##########################################################################################
 
 SKIPUNZIP=1
+
+FLAVOR=@FLAVOR@
+MODULE_LIB_NAME=@MODULE_LIB_NAME@
+
 unzip -qjo "$ZIPFILE" 'common/functions.sh' -d $TMPDIR >&2
 . $TMPDIR/functions.sh

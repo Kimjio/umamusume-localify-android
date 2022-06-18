@@ -6,6 +6,10 @@ else ()
     project(${MODULE_NAME})
 endif ()
 
+add_definitions(-DRIRU_MODULE)
+
+configure_file(template/config.cpp config.cpp)
+
 macro(SET_OPTION option value)
     set(${option} ${value} CACHE INTERNAL "" FORCE)
 endmacro()
@@ -39,8 +43,18 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_FLAGS} ${CXX_FLAGS}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
-add_library(${MODULE_NAME} SHARED main.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp)
-target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3)
+
+if (${API} STREQUAL "riru")
+    find_package(riru REQUIRED CONFIG)
+
+    include_directories(include)
+
+    add_library(${MODULE_NAME} SHARED main_riru.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
+    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 riru::riru)
+elseif (${API} STREQUAL "zygisk")
+    add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp)
+    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3)
+endif()
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_custom_command(TARGET ${MODULE_NAME} POST_BUILD

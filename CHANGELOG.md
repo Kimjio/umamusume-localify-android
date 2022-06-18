@@ -1,3 +1,7 @@
+## 2.1.0
+
+- Riru Support
+
 ## 2.0.0
 
 - x86 NativeBridge Hooking support

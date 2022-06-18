@@ -1,6 +1,6 @@
 ABI=$(getprop ro.product.cpu.abi)
 
-if [ "$ABI" = "x86" ]; then
+if [ $ABI = "x86" ]; then
   if [ -d "/data/data/jp.co.cygames.umamusume" ]; then
     umount -f /data/data/jp.co.cygames.umamusume/armeabi-v7a.so
     rm /data/data/jp.co.cygames.umamusume/armeabi-v7a.so
@@ -9,7 +9,7 @@ if [ "$ABI" = "x86" ]; then
     umount -f /data/data/com.kakaogames.umamusume/armeabi-v7a.so
     rm /data/data/com.kakaogames.umamusume/armeabi-v7a.so
   fi
-elif [ "$ABI" = "x86_64" ]; then
+elif [ $ABI = "x86_64" ]; then
   if [ -d "/data/data/jp.co.cygames.umamusume" ]; then
     umount -f /data/data/jp.co.cygames.umamusume/arm64-v8a.so
     umount -f /data/data/jp.co.cygames.umamusume/armeabi-v7a.so
