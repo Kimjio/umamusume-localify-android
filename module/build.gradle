@@ -99,7 +99,7 @@ afterEvaluate {
                         versionCode: moduleVersionCode.toString(),
                         author     : moduleAuthor,
                         description: "$moduleDescription $flavorCapped version.",
-                        updateJson : moduleUpdateJson,
+                        updateJson : "${moduleUpdateJson}-${flavorLowered}.json",
                         requirement: flavorLowered == "riru" ? "Requires Riru $moduleMinRiruVersionName or above installed" :
                                 flavorLowered == "zygisk" ? "Requires Magisk 24.0+ and Zygisk enabled" : null,
                         api: flavorCapped
