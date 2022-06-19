@@ -61,7 +61,11 @@ bool populate_with_errors_hook(void *thisObj, Il2CppString *str, TextGenerationS
 void *localizeextension_text_orig = nullptr;
 
 Il2CppString *localizeextension_text_hook(int id) {
-    return localify::get_localized_string(id);
+    Il2CppString *localized = localify::get_localized_string(id);
+    return localized ? localized
+                     : reinterpret_cast<decltype(localizeextension_text_hook) *>(localizeextension_text_orig)(
+                    id
+            );
 }
 
 void *get_preferred_width_orig = nullptr;
@@ -845,12 +849,16 @@ void hookMethods() {
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle",
             "LoadFromMemoryAsync",
             1));*/
-    
-    auto assetbundle_unload_addr = reinterpret_cast<Il2CppObject * (*)(Il2CppString * path)>(il2cpp_symbols::get_method_pointer("UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "Unload", 1));
 
-    auto load_one_addr = reinterpret_cast<Boolean(*)(Il2CppObject * thisObj, Il2CppObject * handle, Il2CppObject * request)>(il2cpp_symbols::get_method_pointer("_Cyan.dll", "Cyan.Loader", "AssetLoader", "LoadOne", 2));
+    auto assetbundle_unload_addr = reinterpret_cast<Il2CppObject *(*)(
+            Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
+            "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "Unload", 1));
 
-    if (!assets) {
+    auto load_one_addr = reinterpret_cast<Boolean(*)(Il2CppObject *thisObj, Il2CppObject *handle,
+                                                     Il2CppObject *request)>(il2cpp_symbols::get_method_pointer(
+            "_Cyan.dll", "Cyan.Loader", "AssetLoader", "LoadOne", 2));
+
+    if (!assets && !g_font_assetbundle_path.empty()) {
         auto assetbundlePath = localify::u8_u16(g_font_assetbundle_path);
         if (!assetbundlePath.starts_with(u"/")) {
             assetbundlePath.insert(0, u16string(u"/sdcard/Android/data/").append(
@@ -899,6 +907,7 @@ void hookMethods() {
     }
 
 #define ADD_HOOK(_name_) \
+    LOGD("ADD_HOOK: %s", #_name_); \
     DobbyHook((void *)_name_##_addr, (void *) _name_##_hook, (void **) &_name_##_orig);
 #pragma endregion
 
@@ -912,7 +921,10 @@ void hookMethods() {
 
     ADD_HOOK(an_text_set_material_to_textmesh)
 
-    ADD_HOOK(load_zekken_composite_resource)
+    // Crashed on KOR (SEGV_ACCERR)
+    if (gameRegion == GameRegion::JAP) {
+        ADD_HOOK(load_zekken_composite_resource)
+    }
 
     ADD_HOOK(wait_resize_ui)
 
