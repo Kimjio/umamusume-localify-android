@@ -1,3 +1,19 @@
+## 2.1.4
+
+- Fix wrong landscape resolution on Korean client (Unity 2019)
+
+## 2.1.3
+
+- Fix detecting package on NativeBridge
+
+## 2.1.2
+
+- Fix crash on Korean client
+
+## 2.1.1
+
+- Fix update url
+
 ## 2.1.0
 
 - Riru Support

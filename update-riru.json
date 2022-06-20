@@ -1,6 +1,6 @@
 {
-  "version": "2.1.3",
-  "versionCode": 6,
-  "zipUrl": "https://github.com/Kimjio/umamusume-localify-android/releases/latest/download/riru-umamusume-localify-2.1.3-release.zip",
-  "changelog": "https://raw.githubusercontent.com/Kimjio/umamusume-localify-android/CHANGELOG.md"
+  "version": "2.1.4",
+  "versionCode": 7,
+  "zipUrl": "https://github.com/Kimjio/umamusume-localify-android/releases/latest/download/riru-umamusume-localify-2.1.4-release.zip",
+  "changelog": "https://raw.githubusercontent.com/Kimjio/umamusume-localify-android/main/CHANGELOG.md"
 }

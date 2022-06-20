@@ -523,8 +523,17 @@ int (*get_system_height)(Il2CppObject *thisObj);
 void *set_resolution_orig = nullptr;
 
 void set_resolution_hook(int width, int height, bool fullscreen) {
+    int systemWidth = get_system_width(display_main);
+    int systemHeight = get_system_height(display_main);
+    // Unity 2019 not invert width, height on landscape
+    if (width > height && systemWidth < systemHeight) {
+        reinterpret_cast<decltype(set_resolution_hook) *>(set_resolution_orig)(
+                systemHeight, systemWidth,
+                fullscreen);
+        return;
+    }
     reinterpret_cast<decltype(set_resolution_hook) *>(set_resolution_orig)(
-            get_system_width(display_main), get_system_height(display_main),
+            systemWidth, systemHeight,
             fullscreen);
 }
 
