@@ -79,13 +79,12 @@ void hook() {
     if (IsRunningOnNativeBridge()) {
         if (access(
                 string("/data/data/")
-                        .append(GamePackageName).data(),
+                        .append(GamePackageName).append("/cache").data(),
                 F_OK) == 0) {
             gameRegion = GameRegion::JAP;
-        }
-        if (access(
+        } else if (access(
                 string("/data/data/")
-                        .append(GamePackageNameKor).data(),
+                        .append(GamePackageNameKor).append("/cache").data(),
                 F_OK) == 0) {
             gameRegion = GameRegion::KOR;
         }
