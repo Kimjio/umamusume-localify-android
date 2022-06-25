@@ -1,3 +1,7 @@
+## 2.1.5
+
+- Fixed an issue that could cause NullReferenceException in Unity when loading some replacement assets
+
 ## 2.1.4
 
 - Fix wrong landscape resolution on Korean client (Unity 2019)

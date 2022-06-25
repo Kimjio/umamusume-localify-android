@@ -559,7 +559,7 @@ Boolean load_one_hook(Il2CppObject *thisObj, Il2CppObject *handle, Il2CppObject 
         auto set_assetBundle = reinterpret_cast<void (*)(
                 Il2CppObject *thisObj,
                 Il2CppObject *assetBundle)>(il2cpp_symbols::get_method_pointer(
-                "_Cyan.dll", "Cyan.Loader", "AssetHandle", "set_assetBundle",
+                "_Cyan.dll", "Cyan.Loader", "AssetHandle", "SetAssetBundle",
                 1));
 
         auto get_IsLoaded = reinterpret_cast<Boolean(*)(
@@ -568,6 +568,7 @@ Boolean load_one_hook(Il2CppObject *thisObj, Il2CppObject *handle, Il2CppObject 
                 0));
 
         if (!replaceAsset.asset) {
+            LOGD("%s", replaceAsset.path.data());
             replaceAsset.asset = load_from_file(il2cpp_string_new(replaceAsset.path.data()));
         }
         set_assetBundle(handle, replaceAsset.asset);
