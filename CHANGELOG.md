@@ -1,3 +1,7 @@
+## 2.1.6
+
+- BlueStacks Support
+
 ## 2.1.5
 
 - Fixed an issue that could cause NullReferenceException in Unity when loading some replacement assets

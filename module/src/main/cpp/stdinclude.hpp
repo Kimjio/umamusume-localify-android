@@ -49,7 +49,7 @@
 
 struct ReplaceAsset {
     std::string path;
-    Il2CppObject* asset;
+    Il2CppObject *asset;
 };
 
 using namespace std;
@@ -106,7 +106,9 @@ namespace {
     bool IsRunningOnNativeBridge() {
         char systemAbi[PROP_VALUE_MAX];
         __system_property_get("ro.product.cpu.abi", systemAbi);
-        return (systemAbi == "x86"s || systemAbi == "x86_64"s) &&
+        char isaArm[PROP_VALUE_MAX];
+        __system_property_get("ro.dalvik.vm.isa.arm", isaArm);
+        return ((systemAbi == "x86"s || systemAbi == "x86_64"s) || isaArm == "x86"s) &&
                (ABI == "armeabi-v7a"s || ABI == "arm64-v8a"s);
     }
 }
