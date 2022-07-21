@@ -81,6 +81,8 @@ extern int g_graphics_quality;
  * 8 x8
  */
 extern int g_anti_aliasing;
+extern bool g_force_landscape;
+extern float g_force_landscape_ui_scale;
 extern std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 
 namespace {

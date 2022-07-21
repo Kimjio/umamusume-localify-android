@@ -26,6 +26,8 @@ bool g_dump_entries = false;
 bool g_dump_db_entries = false;
 int g_graphics_quality = -1;
 int g_anti_aliasing = -1;
+bool g_force_landscape = false;
+float g_force_landscape_ui_scale = 1.8;
 std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 
 GameRegion gameRegion = GameRegion::UNKNOWN;
@@ -262,7 +264,15 @@ std::optional<std::vector<std::string>> read_config() {
             g_anti_aliasing =
                     find(options.begin(), options.end(), g_anti_aliasing) - options.begin();
         }
-
+        if (document.HasMember("forceLandscape")) {
+            g_force_landscape = document["forceLandscape"].GetBool();
+        }
+        if (document.HasMember("forceLandscapeUiScale")) {
+            g_force_landscape_ui_scale = document["forceLandscapeUiScale"].GetFloat();
+            if (g_force_landscape_ui_scale <= 0) {
+                g_force_landscape_ui_scale = 1;
+            }
+        }
         if (document.HasMember("replaceAssetsPath")) {
             auto replaceAssetsPath = localify::u8_u16(document["replaceAssetsPath"].GetString());
             if (!replaceAssetsPath.starts_with(u"/")) {

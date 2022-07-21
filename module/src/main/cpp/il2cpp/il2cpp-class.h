@@ -343,6 +343,17 @@ typedef struct Boolean {
     bool m_value;
 } Boolean;
 
+// UnityEngine.ScreenOrientation
+enum class ScreenOrientation {
+    Unknown,
+    Portrait,
+    PortraitUpsideDown,
+    LandscapeLeft,
+    LandscapeRight,
+    AutoRotation,
+    Landscape = 3
+};
+
 // UnityEngine.Color
 typedef struct Color_t {
 public:

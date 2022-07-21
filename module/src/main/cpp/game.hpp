@@ -8,6 +8,9 @@
 #define GamePackageName "jp.co.cygames.umamusume"
 #define GamePackageNameKor "com.kakaogames.umamusume"
 
+#define Unity2019 "2019.4.21f1"
+#define Unity2020 "2020.3.24f1"
+
 enum class GameRegion {
     UNKNOWN,
     JAP,

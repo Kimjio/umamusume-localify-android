@@ -1,3 +1,7 @@
+## 2.2.0
+
+- Add Force landscape mode
+
 ## 2.1.6
 
 - BlueStacks Support

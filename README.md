@@ -39,6 +39,8 @@ Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/`
   - `2`: MSAA x2
   - `4`: MSAA x4
   - `8`: MSAA x8
+- `forceLandscape` Force all screens to landscape. (`true` / `false`, Default: `false`)
+- `forceLandscapeUiScale` Sets the UI scale to use for forced landscape mode. (0 < ~, Default: `1.8`)
 - `replaceAssetsPath` Set the path to the folder containing the assets to replace the downloaded assets in the game.
   - The name of the asset file to be replaced must be the same as the hash name of the original asset file.
   - ex: `2FOXNDZ5H52B3E4JMXVAJ4FRMDE3PX7Q` (Asset containing the Home footer texture and scripts (Android))
