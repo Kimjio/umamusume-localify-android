@@ -1,10 +1,10 @@
-//
-// Created by kimji on 2022-05-01.
-//
-
 #ifndef UMAMUSUMELOCALIFYANDROID_IL2CPP_HOOK_H
 #define UMAMUSUMELOCALIFYANDROID_IL2CPP_HOOK_H
 
-void il2cpp_hook(void *handle);
+void il2cpp_hook_init(void *handle);
+
+std::string get_application_version();
+
+void il2cpp_hook();
 
 #endif //UMAMUSUMELOCALIFYANDROID_IL2CPP_HOOK_H

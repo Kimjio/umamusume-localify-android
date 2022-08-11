@@ -32,7 +32,6 @@
   - `1`: `Toon1280x2`, MSAA x2
   - `2`: `Toon1280x4`, MSAA x4
   - `3`: `ToonFull`, MSAA x8
-  - `4`: `Max`, MSAA x8
 - `antiAliasing` MSAA 설정을 변경합니다. (`-1`, `0`, `2`, `4`, `8`, 기본값: `-1`)
   - `-1`: 그래픽 설정을 따름
   - `0`: MSAA OFF

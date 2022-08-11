@@ -1,7 +1,3 @@
-//
-// Created by kimji on 2022-05-01.
-//
-
 #include <thread>
 #include <utility>
 #include "../stdinclude.hpp"

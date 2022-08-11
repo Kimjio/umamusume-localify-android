@@ -1,15 +1,9 @@
 [submodule "module/src/main/cpp/Dobby"]
 	path = module/src/main/cpp/Dobby
-	url = https://github.com/jmpews/Dobby.git
+	url = https://github.com/mskmkt0704/Dobby.git
 [submodule "module/src/main/cpp/rapidjson"]
 	path = module/src/main/cpp/rapidjson
 	url = https://github.com/Tencent/rapidjson.git
-[submodule "module/src/main/cpp/fmt"]
-	path = module/src/main/cpp/fmt
-	url = https://github.com/fmtlib/fmt.git
-[submodule "module/src/main/cpp/sqlite_orm"]
-	path = module/src/main/cpp/sqlite_orm
-	url = https://github.com/fnc12/sqlite_orm.git
 [submodule "module/src/main/cpp/SQLiteCpp"]
 	path = module/src/main/cpp/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp.git

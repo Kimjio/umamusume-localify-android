@@ -1,6 +1,3 @@
-//
-// Created by kimji on 2022-05-01.
-//
 #include "il2cpp_symbols.h"
 
 Il2CppDefaults il2cpp_defaults;

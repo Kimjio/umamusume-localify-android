@@ -1160,10 +1160,10 @@ void hookMethods() {
         ADD_HOOK(set_anti_aliasing);
     }
 
-    LOGD("Unity Version: %s", localify::u16_u8(get_unityVersion()->start_char).data());
+    LOGI("Unity Version: %s", GetUnityVersion().data());
 }
 
-void il2cpp_hook(void *handle) {
+void il2cpp_hook_init(void *handle) {
     //initialize
     LOGI("il2cpp_handle: %p", handle);
     il2cpp_handle = handle;
@@ -1185,5 +1185,25 @@ void il2cpp_hook(void *handle) {
     il2cpp_thread_attach(domain);
 
     il2cpp_symbols::init(domain);
+}
+
+string get_application_version() {
+    reinterpret_cast<void (*)()>(
+            il2cpp_symbols::get_method_pointer(
+                    "UnityEngine.AndroidJNIModule.dll",
+                    "UnityEngine",
+                    "AndroidJNI",
+                    "AttachCurrentThread",
+                    -1))();
+    auto version = string(localify::u16_u8(
+            reinterpret_cast<Il2CppString *(*)()>(
+                    il2cpp_symbols::get_method_pointer(
+                            "umamusume.dll", "Gallop",
+                            "DeviceHelper", "GetAppVersionName",
+                            -1))()->start_char));
+    return version;
+}
+
+void il2cpp_hook() {
     hookMethods();
 }

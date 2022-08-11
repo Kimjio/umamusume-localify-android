@@ -354,6 +354,34 @@ enum class ScreenOrientation {
     Landscape = 3
 };
 
+// Gallop.SceneDefine
+enum class SceneId {
+    None,
+    Title,
+    Home,
+    Race,
+    Live,
+    Story,
+    Gacha,
+    Episode,
+    SingleMode,
+    OutGame,
+    LiveTheater,
+    Circle,
+    DailyRace,
+    LegendRace,
+    TeamStadium,
+    CraneGame,
+    Champions,
+    ChampionsLobby,
+    Tutorial,
+    StoryEvent,
+    ChallengeMatch,
+    RoomMatch,
+    PracticeRace,
+    TrainingChallenge,
+};
+
 // UnityEngine.Color
 typedef struct Color_t {
 public:

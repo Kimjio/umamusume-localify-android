@@ -1,7 +1,3 @@
-//
-// Created by kimji on 2022-05-01.
-//
-
 #ifndef UMAMUSUMELOCALIFYANDROID_LOGGER_H
 #define UMAMUSUMELOCALIFYANDROID_LOGGER_H
 

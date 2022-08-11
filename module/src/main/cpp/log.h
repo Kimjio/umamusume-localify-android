@@ -1,7 +1,3 @@
-//
-// Created by Perfare on 2020/7/4.
-//
-
 #ifndef UMAMUSUMELOCALIFYANDROID_LOG_H
 #define UMAMUSUMELOCALIFYANDROID_LOG_H
 

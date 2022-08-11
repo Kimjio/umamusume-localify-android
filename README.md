@@ -32,7 +32,6 @@ Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/`
   - `1`: `Toon1280x2`, MSAA x2
   - `2`: `Toon1280x4`, MSAA x4
   - `3`: `ToonFull`, MSAA x8
-  - `4`: `Max`, MSAA x8
 - `antiAliasing` Change MSAA settings (`-1`, `0`, `2`, `4`, `8`, Default: `-1`)
   - `-1`: Follow the Graphics settings
   - `0`: MSAA OFF

@@ -1,10 +1,4 @@
-//
-// Created by kimji on 2022-05-01.
-//
-
 #pragma once
-
-#define LOGGING_DEBUG true
 
 #include <cstdio>
 #include <unistd.h>

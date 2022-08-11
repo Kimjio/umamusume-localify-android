@@ -18,7 +18,7 @@ bool g_enable_logger = false;
 int g_max_fps = -1;
 float g_ui_animation_scale = 1.0f;
 bool g_ui_use_system_resolution = false;
-bool g_replace_to_builtin_font = true;
+bool g_replace_to_builtin_font = false;
 bool g_replace_to_custom_font = false;
 std::string g_font_assetbundle_path;
 std::string g_font_asset_name;
@@ -426,8 +426,9 @@ void hack_thread(void *arg [[maybe_unused]]) {
 
     std::thread init_thread([dict]() {
         logger::init_logger();
-        localify::load_textdb(&dict.value());
-        il2cpp_hook(il2cpp_handle);
+        il2cpp_hook_init(il2cpp_handle);
+        localify::load_textdb(get_application_version(), &dict.value());
+        il2cpp_hook();
     });
     init_thread.detach();
 }
