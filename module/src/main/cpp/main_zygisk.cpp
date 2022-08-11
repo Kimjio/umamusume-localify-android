@@ -8,6 +8,8 @@ using zygisk::ServerSpecializeArgs;
 
 using namespace std;
 
+string moduleApi = "zygisk";
+
 class Module : public zygisk::ModuleBase {
 public:
     void onLoad(Api *api, JNIEnv *env) override {

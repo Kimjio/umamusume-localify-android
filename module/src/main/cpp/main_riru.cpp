@@ -4,6 +4,8 @@
 #include <riru.h>
 #include <config.hpp>
 
+string moduleApi = "riru";
+
 static void specializeAppProcessPre(
         JNIEnv *env, jclass clazz, jint *uid, jint *gid, jintArray *gids, jint *runtimeFlags,
         jobjectArray *rlimits, jint *mountExternal, jstring *seInfo, jstring *niceName,
@@ -72,7 +74,7 @@ RiruVersionedModuleInfo *init(Riru *riru) {
 }
 }
 
-[[gnu::visibility("default")]] [[gnu::used]]
+/*[[gnu::visibility("default")]] [[gnu::used]]
 static void hook() __attribute__((constructor));
 
 void hook() {
@@ -95,4 +97,4 @@ void hook() {
             LOGE("can't create thread: %s\n", strerror(ret));
         }
     }
-}
+}*/

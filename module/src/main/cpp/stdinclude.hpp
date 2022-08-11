@@ -48,6 +48,8 @@ struct ReplaceAsset {
 
 using namespace std;
 
+extern string moduleApi;
+
 extern bool g_enable_logger;
 extern int g_max_fps;
 extern float g_ui_animation_scale;
@@ -77,6 +79,7 @@ extern int g_graphics_quality;
 extern int g_anti_aliasing;
 extern bool g_force_landscape;
 extern float g_force_landscape_ui_scale;
+extern bool g_ui_loading_show_orientation_guide;
 extern std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 
 namespace {
@@ -96,6 +99,10 @@ namespace {
     }
 
     bool IsABIRequiredNativeBridge() {
+        if (moduleApi == "riru"s) {
+            // Riru is a NativeBridge, so you can`t use other NativeBridge (ex. houdini).
+            return false;
+        }
         return ABI == "x86"s || ABI == "x86_64"s;
     }
 
