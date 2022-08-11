@@ -1,7 +1,3 @@
-//
-// Created by Perfare on 2020/7/4.
-//
-
 #include <sstream>
 #include <thread>
 #include "stdinclude.hpp"
@@ -28,6 +24,7 @@ int g_graphics_quality = -1;
 int g_anti_aliasing = -1;
 bool g_force_landscape = false;
 float g_force_landscape_ui_scale = 1.8;
+bool g_ui_loading_show_orientation_guide = true;
 std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 
 GameRegion gameRegion = GameRegion::UNKNOWN;
@@ -272,6 +269,9 @@ std::optional<std::vector<std::string>> read_config() {
             if (g_force_landscape_ui_scale <= 0) {
                 g_force_landscape_ui_scale = 1;
             }
+        }
+        if (document.HasMember("uiLoadingShowOrientationGuide")) {
+            g_ui_loading_show_orientation_guide = document["uiLoadingShowOrientationGuide"].GetBool();
         }
         if (document.HasMember("replaceAssetsPath")) {
             auto replaceAssetsPath = localify::u8_u16(document["replaceAssetsPath"].GetString());

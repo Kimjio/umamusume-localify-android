@@ -22,7 +22,7 @@ Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/`
 - `uiAnimationScale` Change UI animation scale (0 < ~, Default: `1`)
   - Caution: Soft lock occurs when set to `0`.
 - `uiUseSystemResolution` Renders UI, live subtitles, and more at system resolution. (`true` / `false`, Default: `false`)
-- `replaceToBuiltinFont` (`replaceFont`) Use Unity builtin fonts instead of in-game fonts. (`true` / `false`, Default: `true`)
+- `replaceToBuiltinFont` (`replaceFont`) Use Unity builtin fonts instead of in-game fonts. (`true` / `false`, Default: `false`)
 - `replaceToCustomFont` Use custom fonts instead of in-game fonts. (`true` / `false`, Default: `false`)
 - `fontAssetBundlePath` Font asset bundle path (ex: `custom_font/GyeonggiTitle_Medium/font`)
 - `fontAssetName` Font asset name (ex: `GyeonggiTitle_Medium.fontsettings`)
@@ -40,6 +40,7 @@ Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/`
   - `8`: MSAA x8
 - `forceLandscape` Force all screens to landscape. (`true` / `false`, Default: `false`)
 - `forceLandscapeUiScale` Sets the UI scale to use for forced landscape mode. (0 < ~, Default: `1.8`)
+- `uiLoadingShowOrientationGuide` Set whether to display the loading guide when the screen is rotated (`true` / `false`, Default: `true`)
 - `replaceAssetsPath` Set the path to the folder containing the assets to replace the downloaded assets in the game.
   - The name of the asset file to be replaced must be the same as the hash name of the original asset file.
   - ex: `2FOXNDZ5H52B3E4JMXVAJ4FRMDE3PX7Q` (Asset containing the Home footer texture and scripts (Android))

@@ -1,6 +1,3 @@
-//
-// Created by kimji on 2022-05-01.
-//
 #include "stdinclude.hpp"
 #include "il2cpp_hook.h"
 #include "il2cpp/il2cpp_symbols.h"
@@ -26,6 +23,8 @@ Il2CppObject *(*load_assets)(Il2CppObject *thisObj, Il2CppString *name, const Il
 Il2CppString *(*uobject_get_name)(Il2CppObject *uObject);
 
 Il2CppString *(*get_unityVersion)();
+
+Il2CppObject *sceneManager = nullptr;
 
 const Il2CppType *
 GetRuntimeType(const char *assemblyName, const char *namespaze, const char *klassName) {
@@ -502,9 +501,13 @@ Il2CppObject *
 wait_resize_ui_hook(Il2CppObject *thisObj, bool isPortrait, bool isShowOrientationGuide) {
     if (g_force_landscape) {
         isPortrait = false;
+        isShowOrientationGuide = false;
+    }
+    if (!g_ui_loading_show_orientation_guide) {
+        isShowOrientationGuide = false;
     }
     return reinterpret_cast<decltype(wait_resize_ui_hook) *>(wait_resize_ui_orig)(
-            thisObj, isPortrait, false);
+            thisObj, isPortrait, isShowOrientationGuide);
 }
 
 void *set_anti_aliasing_orig = nullptr;
@@ -527,7 +530,6 @@ void set_resolution_hook(int width, int height, bool fullscreen) {
     int systemWidth = get_system_width(display_main);
     int systemHeight = get_system_height(display_main);
     // Unity 2019 not invert width, height on landscape
-    LOGD("set_resolution: %d %d %d", systemWidth, systemHeight, fullscreen);
     if ((width > height && systemWidth < systemHeight) || g_force_landscape) {
         reinterpret_cast<decltype(set_resolution_hook) *>(set_resolution_orig)(
                 systemHeight, systemWidth,
@@ -546,7 +548,6 @@ void apply_graphics_quality_hook(Il2CppObject *thisObj, int quality, bool force)
                                                                                            g_graphics_quality,
                                                                                            true);
 }
-
 
 void *load_one_orig = nullptr;
 
@@ -599,65 +600,40 @@ Il2CppObject *ChangeScreenOrientation_hook(ScreenOrientation targetOrientation, 
             g_force_landscape ? ScreenOrientation::Landscape : targetOrientation, isForce);
 }
 
-void *UpdateCanvasScaler_orig = nullptr;
+void *CanvasScaler_set_referenceResolution_orig = nullptr;
 
-void UpdateCanvasScaler_hook(Il2CppObject *canvasScaler) {
-    if (canvasScaler) {
-        auto setUiScaleMode = reinterpret_cast<void *(*)(Il2CppObject *thisObj,
-                                                         int ScaleMode)>(il2cpp_class_get_method_from_name(
-                canvasScaler->klass, "set_uiScaleMode", 1)->methodPointer);
-        auto setReferenceResolution = reinterpret_cast<void *(*)(Il2CppObject *thisObj,
-                                                                 Vector2_t value)>(il2cpp_class_get_method_from_name(
-                canvasScaler->klass, "set_referenceResolution", 1)->methodPointer);
-        auto setScreenMatchMode = reinterpret_cast<void *(*)(Il2CppObject *thisObj,
-                                                             int ScreenMatchMode)>(il2cpp_class_get_method_from_name(
-                canvasScaler->klass, "set_screenMatchMode", 1)->methodPointer);
-        auto setMatchWidthOrHeight = reinterpret_cast<void *(*)(Il2CppObject *thisObj,
-                                                                float value)>(il2cpp_class_get_method_from_name(
-                canvasScaler->klass, "set_matchWidthOrHeight", 1)->methodPointer);
-        if (g_force_landscape) {
-            setUiScaleMode(canvasScaler, 1);
-            int systemWidth = get_system_width(display_main);
-            int systemHeight = get_system_height(display_main);
-
-            if (systemWidth < systemHeight) {
-                setReferenceResolution(canvasScaler,
-                                       Vector2_t{.x = static_cast<float>(systemHeight) * g_force_landscape_ui_scale, .y =
-                                       static_cast<float>(systemWidth) * g_force_landscape_ui_scale});
-            } else {
-                setReferenceResolution(canvasScaler,
-                                       Vector2_t{.x = static_cast<float>(systemWidth) * g_force_landscape_ui_scale, .y =
-                                       static_cast<float>(systemHeight) * g_force_landscape_ui_scale});
-            }
-            setScreenMatchMode(canvasScaler, 0);
-            setMatchWidthOrHeight(canvasScaler, 0.5f);
-        }
-
+void CanvasScaler_set_referenceResolution_hook(Il2CppObject *thisObj, Vector2_t res) {
+    if (g_force_landscape) {
+        res.x = res.x * g_force_landscape_ui_scale;
+        res.y = res.y * g_force_landscape_ui_scale;
     }
-    reinterpret_cast<decltype(UpdateCanvasScaler_hook) *>(UpdateCanvasScaler_orig)(canvasScaler);
+    return reinterpret_cast<decltype(CanvasScaler_set_referenceResolution_hook) *>(CanvasScaler_set_referenceResolution_orig)(
+            thisObj, res);
 }
 
 void *SetResolution_orig = nullptr;
 
-void SetResolution_hook(int w, int h, bool fullScreen, bool forceUpdate) {
-    if (g_force_landscape) {
-        if (w > h && !forceUpdate) {
-            reinterpret_cast<decltype(SetResolution_hook) *>(SetResolution_orig)(
-                    h, w,
-                    fullScreen, forceUpdate);
+void SetResolution_hook(int w, int h, bool fullscreen, bool forceUpdate) {
+    if (sceneManager) {
+        SceneId sceneId = reinterpret_cast<SceneId (*)(
+                Il2CppObject *)>(il2cpp_class_get_method_from_name(sceneManager->klass,
+                                                                   "GetCurrentSceneId",
+                                                                   0)->methodPointer)(sceneManager);
+        if (sceneId == SceneId::Live) {
             return;
-        } else if (GetUnityVersion() == Unity2019) {
-            reinterpret_cast<decltype(SetResolution_hook) *>(SetResolution_orig)(
-                    h, w,
-                    fullScreen, forceUpdate);
+        }
+        if (sceneId == SceneId::Story) {
+            return;
+        }
+        if (sceneId == SceneId::Episode) {
             return;
         }
     }
-    reinterpret_cast<decltype(SetResolution_hook) *>(SetResolution_orig)(w, h, fullScreen,
+
+    reinterpret_cast<decltype(SetResolution_hook) *>(SetResolution_orig)(w, h, fullscreen,
                                                                          forceUpdate);
-    if (GetUnityVersion() == Unity2020 && g_force_landscape) {
-        reinterpret_cast<decltype(set_resolution_hook) *>(set_resolution_orig)(h, w,
-                                                                               fullScreen);
+    if (g_force_landscape) {
+        reinterpret_cast<decltype(set_resolution_hook) *>(set_resolution_orig)(h, w, fullscreen);
     }
 };
 
@@ -686,7 +662,7 @@ void *NowLoading_Show_orig = nullptr;
 void NowLoading_Show_hook(Il2CppObject *thisObj, int type, Il2CppObject *onComplete,
                           float overrideDuration) {
     // NowLoadingOrientation
-    if (type == 2 && g_force_landscape) {
+    if (type == 2 && (g_force_landscape || !g_ui_loading_show_orientation_guide)) {
         // NowLoadingTips
         type = 0;
     }
@@ -700,12 +676,20 @@ void *WaitDeviceOrientation_orig = nullptr;
 
 void WaitDeviceOrientation_hook(ScreenOrientation targetOrientation) {
     if ((targetOrientation == ScreenOrientation::Portrait ||
-        targetOrientation == ScreenOrientation::PortraitUpsideDown) && g_force_landscape) {
+         targetOrientation == ScreenOrientation::PortraitUpsideDown) && g_force_landscape) {
         targetOrientation = ScreenOrientation::Landscape;
     }
     reinterpret_cast<decltype(WaitDeviceOrientation_hook) *>(WaitDeviceOrientation_orig)(
             targetOrientation);
 }
+
+void *SceneManager_ctor_orig = nullptr;
+
+void SceneManager_ctor_hook(Il2CppObject *thisObj) {
+    sceneManager = thisObj;
+    reinterpret_cast<decltype(SceneManager_ctor_hook) *>(SceneManager_ctor_orig)(thisObj);
+}
+
 
 void dump_all_entries() {
     // 0 is None
@@ -985,14 +969,15 @@ void hookMethods() {
             "UnityEngine",
             "Screen", "set_orientation", 1));
 
-    auto UpdateCanvasScaler_addr = reinterpret_cast<void (*)()>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "UIManager", "UpdateCanvasScaler", 1));
-
     auto SetResolution_addr = reinterpret_cast<void (*)(int, int, bool,
                                                         bool)>(il2cpp_symbols::get_method_pointer(
             "umamusume.dll",
             "Gallop", "Screen", "SetResolution", 4));
+
+    auto SceneManager_ctor_addr = reinterpret_cast<void (*)(
+            Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
+            "umamusume.dll",
+            "Gallop", "SceneManager", ".ctor", 0));
 
     auto DeviceOrientationGuide_Show_addr = reinterpret_cast<void (*)(bool,
                                                                       int)>(il2cpp_symbols::get_method_pointer(
@@ -1004,10 +989,15 @@ void hookMethods() {
             "umamusume.dll",
             "Gallop", "NowLoading", "Show", 3));
 
-    auto WaitDeviceOrientation_addr = reinterpret_cast<void (*)(int, Il2CppObject *,
-                                                                float)>(il2cpp_symbols::get_method_pointer(
+    auto WaitDeviceOrientation_addr = reinterpret_cast<void (*)(
+            ScreenOrientation)>(il2cpp_symbols::get_method_pointer(
             "umamusume.dll",
             "Gallop", "Screen", "WaitDeviceOrientation", 1));
+
+    auto CanvasScaler_set_referenceResolution_addr = reinterpret_cast<void (*)(Il2CppObject *,
+                                                                               float)>(il2cpp_symbols::get_method_pointer(
+            "UnityEngine.UI.dll",
+            "UnityEngine.UI", "CanvasScaler", "set_referenceResolution", 1));
 
     load_from_file = reinterpret_cast<Il2CppObject *(*)(
             Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
@@ -1079,8 +1069,13 @@ void hookMethods() {
     LOGD("ADD_HOOK: %s", #_name_); \
     DobbyHook((void *)_name_##_addr, (void *) _name_##_hook, (void **) &_name_##_orig);
 #pragma endregion
+    ADD_HOOK(SceneManager_ctor);
+
+    ADD_HOOK(CanvasScaler_set_referenceResolution);
 
     ADD_HOOK(Screen_set_orientation);
+
+    ADD_HOOK(SetResolution);
 
     ADD_HOOK(WaitDeviceOrientation);
 
@@ -1088,11 +1083,7 @@ void hookMethods() {
 
     ADD_HOOK(DeviceOrientationGuide_Show);
 
-    ADD_HOOK(SetResolution);
-
     ADD_HOOK(ChangeScreenOrientation);
-
-    ADD_HOOK(UpdateCanvasScaler);
 
     ADD_HOOK(assetbundle_unload);
 
@@ -1104,10 +1095,7 @@ void hookMethods() {
 
     ADD_HOOK(an_text_set_material_to_textmesh)
 
-    // Crashed on KOR (SEGV_ACCERR)
-    if (gameRegion == GameRegion::JAP) {
-        ADD_HOOK(load_zekken_composite_resource)
-    }
+    ADD_HOOK(load_zekken_composite_resource)
 
     ADD_HOOK(wait_resize_ui)
 

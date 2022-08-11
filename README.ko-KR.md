@@ -22,7 +22,7 @@
 - `uiAnimationScale` UI 애니메이션 배율 변경 (0 < ~, 기본값: `1`)
   - 주의: `0` 으로 설정 시 소프트락이 발생합니다.
 - `uiUseSystemResolution` UI, 라이브 자막 등을 시스템 해상도로 렌더링합니다. (`true` / `false`, 기본값: `false`)
-- `replaceToBuiltinFont` (`replaceFont`) 게임 내 폰트를 사용하지 않고 유니티 내장 폰트를 사용합니다. (`true` / `false`, 기본값: `true`)
+- `replaceToBuiltinFont` (`replaceFont`) 게임 내 폰트를 사용하지 않고 유니티 내장 폰트를 사용합니다. (`true` / `false`, 기본값: `false`)
 - `replaceToCustomFont` 게임 내 폰트를 사용하지 않고 사용자 지정 폰트를 사용합니다. (`true` / `false`, 기본값: `false`)
 - `fontAssetBundlePath` 폰트 애셋 번들 경로 (예: `custom_font/GyeonggiTitle_Medium/font`)
 - `fontAssetName` 폰트 애셋 이름 (예: `GyeonggiTitle_Medium.fontsettings`)
@@ -40,6 +40,7 @@
   - `8`: MSAA x8
 - `forceLandscape` 모든 화면을 강제로 가로로 설정합니다. (`true` / `false`, 기본값: `false`)
 - `forceLandscapeUiScale` 강제 가로 모드에 사용할 UI 스케일을 설정합니다. (0 < ~, 기본값: `1.8`)
+- `uiLoadingShowOrientationGuide` 화면이 회전되었을 때, 로딩 중 가이드를 표시할지 여부를 설정합니다. (`true` / `false`, 기본값: `true`)
 - `replaceAssetsPath` 게임에서 다운로드한 애셋을 대체할 애셋들이 담긴 폴더의 경로를 설정합니다.
   - 대체할 애셋 파일의 이름은 원본 애셋 파일의 해시명과 동일해야 합니다.
   - 예: `2FOXNDZ5H52B3E4JMXVAJ4FRMDE3PX7Q` (홈 Footer 텍스처 및 스크립트가 포함된 애셋 (Android))
