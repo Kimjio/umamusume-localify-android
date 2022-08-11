@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Localify 설정</string>
+    <string name="error">오류</string>
+    <string name="error_readonly">Android 13 부터 설정 파일을 외부에서 삽입 시 읽기만 가능합니다.\n설정 파일을 삭제한 후 앱을 다시 실행해주세요.</string>
+    <string name="manage_translate">번역 관리</string>
+    <string name="perm_required">권한 필요</string>
+    <string name="perm_required_message">설정 파일을 생성, 수정하기 위해 데이터 폴더 접근 권한이 필요합니다.</string>
+    <string name="prem_required_messsage_simple">데이터 폴더 접근 권한이 필요합니다.</string>
+    <string name="error_wrong_path">올바른 폴더를 선택해주세요.</string>
+    <string name="support_version">지원 버전: %1$s.*</string>
+    <string name="error_file_not_in_data_folder">데이터 폴더의 파일만 추가 가능합니다.</string>
+    <string name="error_is_config">설정 파일은 추가할 수 없습니다.</string>
+    <string name="add_files">파일 추가</string>
+    <string name="error_is_data_root_folder">하위 폴더만 설정할 수 있습니다.</string>
+    <string name="error_folder_not_in_data_folder">데이터 폴더의 폴더만 선택 가능합니다.</string>
+    <string name="restart_app">앱 재시작</string>
+    <string name="files_empty">추가된 파일이 없습니다.</string>
+</resources>

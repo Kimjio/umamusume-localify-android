@@ -1,3 +1,11 @@
+## 2.3.0
+
+- Improved dict management
+- Added uiLoadingShowOrientationGuide option
+- Improved force landscape mode behavior
+- Disable NativeBridge hooking in Riru module
+- New: Add Settings App
+
 ## 2.2.0
 
 - Add Force landscape mode

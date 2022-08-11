@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <PreferenceCategory android:title="@string/pref_cate_logger">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_logger"
+            android:key="enableLogger"
+            android:title="@string/pref_enable_logger" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="dumpStaticEntries"
+            android:title="@string/oref_dump_static_entries" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="dumpDbEntries"
+            android:title="@string/oref_dump_db_entries" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_cate_graphics">
+
+        <SeekBarPreference
+            android:defaultValue="30"
+            android:icon="@drawable/ic_fps"
+            android:key="maxFps"
+            android:max="144"
+            android:title="@string/pref_max_fps"
+            app:min="30"
+            app:showSeekBarValue="true"
+            tools:defaultValue="90" />
+
+        <com.kimjio.umamusumelocalify.settings.preference.FloatSeekBarPreference
+            android:defaultValue="1.0"
+            android:icon="@drawable/ic_animation"
+            android:key="uiAnimationScale"
+            android:title="@string/pref_ui_animation_scale"
+            app:max="10.0"
+            app:minFloat="0.1"
+            app:seekBarIncrementFloat="0.1"
+            app:showSeekBarValue="true"
+            tools:defaultValue="1.0" />
+
+        <com.kimjio.umamusumelocalify.settings.preference.IntegerDropDownPreference
+            android:icon="@drawable/ic_graphics_quality"
+            android:defaultValue="-1"
+            android:key="graphicsQuality"
+            app:entries="@array/graphics_quality"
+            app:entryValues="@array/graphics_quality_value"
+            app:title="@string/pref_graphics_quality"
+            app:useSimpleSummaryProvider="true" />
+
+        <com.kimjio.umamusumelocalify.settings.preference.IntegerDropDownPreference
+            android:defaultValue="-1"
+            android:key="antiAliasing"
+            app:entries="@array/anti_aliasing"
+            app:entryValues="@array/anti_aliasing_value"
+            app:title="@string/pref_anti_aliasing"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_cate_screen">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_system_resolution"
+            android:key="uiUseSystemResolution"
+            android:title="@string/pref_use_system_resolution" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_builtin_font"
+            android:key="replaceToBuiltinFont"
+            android:title="@string/pref_replace_builtin_font" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_custom_font"
+            android:key="replaceToCustomFont"
+            android:title="@string/pref_replace_custom_font" />
+
+        <com.kimjio.umamusumelocalify.settings.preference.FilePickerPreference
+            android:key="fontAssetBundlePath"
+            android:title="@string/pref_font_asset_path" />
+
+        <EditTextPreference
+            android:key="fontAssetName"
+            android:title="@string/pref_font_asset_name"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_landscape"
+            android:key="forceLandscape"
+            android:title="@string/pref_force_landscape" />
+
+        <com.kimjio.umamusumelocalify.settings.preference.FloatSeekBarPreference
+            android:defaultValue="1.0"
+            android:icon="@drawable/ic_ui_scale"
+            android:key="forceLandscapeUiScale"
+            android:title="@string/pref_force_landscape_ui_scale"
+            app:max="2.0"
+            app:minFloat="0.1"
+            app:seekBarIncrementFloat="0.1"
+            app:showSeekBarValue="true"
+            tools:defaultValue="1.0" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            app:icon="@drawable/ic_orientation"
+            android:key="uiLoadingShowOrientationGuide"
+            android:title="@string/pref_loading_show_orientation_guide"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/pref_cate_etc">
+
+        <com.kimjio.umamusumelocalify.settings.preference.FolderPickerPreference
+            android:icon="@drawable/ic_replace_assets"
+            android:key="replaceAssetsPath"
+            android:title="@string/pref_replace_assets_path" />
+
+        <Preference
+            android:key="manageTranslate"
+            android:icon="@drawable/ic_translate"
+            android:title="@string/manage_translate" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

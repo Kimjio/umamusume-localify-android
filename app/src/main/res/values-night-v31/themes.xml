@@ -6,8 +6,9 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowTranslucentStatus">false</item>
-        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowLightNavigationBar">false</item>
         <item name="switchPreferenceStyle">@style/Preference.SwitchPreference.Material3</item>
+        <item name="android:switchPreferenceStyle">@style/Preference.SwitchPreference.Material3</item>
+        <item name="android:windowShowWallpaper">true</item>
     </style>
 </resources>
