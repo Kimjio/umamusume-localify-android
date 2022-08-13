@@ -14,6 +14,8 @@ using namespace logger;
 static void *il2cpp_handle = nullptr;
 static uint64_t il2cpp_base = 0;
 
+bool resolutionIsSet = false;
+
 Il2CppObject *assets = nullptr;
 
 Il2CppObject *(*load_from_file)(Il2CppString *path);
@@ -614,28 +616,18 @@ void CanvasScaler_set_referenceResolution_hook(Il2CppObject *thisObj, Vector2_t 
 void *SetResolution_orig = nullptr;
 
 void SetResolution_hook(int w, int h, bool fullscreen, bool forceUpdate) {
-    if (sceneManager) {
-        SceneId sceneId = reinterpret_cast<SceneId (*)(
-                Il2CppObject *)>(il2cpp_class_get_method_from_name(sceneManager->klass,
-                                                                   "GetCurrentSceneId",
-                                                                   0)->methodPointer)(sceneManager);
-        if (sceneId == SceneId::Live) {
-            return;
+    if (!resolutionIsSet || GetUnityVersion() == Unity2020) {
+        if (sceneManager) {
+            resolutionIsSet = true;
         }
-        if (sceneId == SceneId::Story) {
-            return;
-        }
-        if (sceneId == SceneId::Episode) {
-            return;
+        reinterpret_cast<decltype(SetResolution_hook) *>(SetResolution_orig)(w, h, fullscreen,
+                                                                             forceUpdate);
+        if (g_force_landscape) {
+            reinterpret_cast<decltype(set_resolution_hook) *>(set_resolution_orig)(h, w,
+                                                                                   fullscreen);
         }
     }
-
-    reinterpret_cast<decltype(SetResolution_hook) *>(SetResolution_orig)(w, h, fullscreen,
-                                                                         forceUpdate);
-    if (g_force_landscape) {
-        reinterpret_cast<decltype(set_resolution_hook) *>(set_resolution_orig)(h, w, fullscreen);
-    }
-};
+}
 
 void *Screen_set_orientation_orig = nullptr;
 
@@ -689,7 +681,6 @@ void SceneManager_ctor_hook(Il2CppObject *thisObj) {
     sceneManager = thisObj;
     reinterpret_cast<decltype(SceneManager_ctor_hook) *>(SceneManager_ctor_orig)(thisObj);
 }
-
 
 void dump_all_entries() {
     // 0 is None
@@ -1069,25 +1060,12 @@ void hookMethods() {
     LOGD("ADD_HOOK: %s", #_name_); \
     DobbyHook((void *)_name_##_addr, (void *) _name_##_hook, (void **) &_name_##_orig);
 #pragma endregion
-    ADD_HOOK(SceneManager_ctor);
 
-    ADD_HOOK(CanvasScaler_set_referenceResolution);
+    ADD_HOOK(NowLoading_Show)
 
-    ADD_HOOK(Screen_set_orientation);
+    ADD_HOOK(assetbundle_unload)
 
-    ADD_HOOK(SetResolution);
-
-    ADD_HOOK(WaitDeviceOrientation);
-
-    ADD_HOOK(NowLoading_Show);
-
-    ADD_HOOK(DeviceOrientationGuide_Show);
-
-    ADD_HOOK(ChangeScreenOrientation);
-
-    ADD_HOOK(assetbundle_unload);
-
-    ADD_HOOK(load_one);
+    ADD_HOOK(load_one)
 
     ADD_HOOK(get_preferred_width)
 
@@ -1119,6 +1097,16 @@ void hookMethods() {
     ADD_HOOK(query_getstr)
     ADD_HOOK(query_dispose)
 
+    if (g_force_landscape) {
+        ADD_HOOK(SceneManager_ctor)
+        ADD_HOOK(SetResolution)
+        ADD_HOOK(CanvasScaler_set_referenceResolution)
+        ADD_HOOK(Screen_set_orientation)
+        ADD_HOOK(WaitDeviceOrientation)
+        ADD_HOOK(DeviceOrientationGuide_Show)
+        ADD_HOOK(ChangeScreenOrientation)
+    }
+
     if (g_replace_to_builtin_font || g_replace_to_custom_font) {
         ADD_HOOK(on_populate)
         ADD_HOOK(textcommon_awake)
@@ -1137,15 +1125,15 @@ void hookMethods() {
     }
 
     if (g_ui_use_system_resolution) {
-        ADD_HOOK(set_resolution);
+        ADD_HOOK(set_resolution)
     }
 
     if (g_graphics_quality != -1) {
-        ADD_HOOK(apply_graphics_quality);
+        ADD_HOOK(apply_graphics_quality)
     }
 
     if (g_anti_aliasing != -1) {
-        ADD_HOOK(set_anti_aliasing);
+        ADD_HOOK(set_anti_aliasing)
     }
 
     LOGI("Unity Version: %s", GetUnityVersion().data());

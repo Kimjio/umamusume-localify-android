@@ -122,10 +122,9 @@ typedef struct Il2CppType {
     unsigned int pinned [[maybe_unused]]: 1;
 } Il2CppType;
 
-typedef struct FieldInfo
-{
-    const char* name;
-    const Il2CppType* type;
+typedef struct FieldInfo {
+    const char *name;
+    const Il2CppType *type;
     Il2CppClass *parent;
     int32_t offset; // If offset is -1, then it's thread static
     uint32_t token;
@@ -158,19 +157,17 @@ typedef struct MethodInfo {
     uint8_t is_marshaled_from_native [[maybe_unused]]: 1;
 } MethodInfo;
 
-typedef struct EventInfo
-{
-    const char* name;
-    const Il2CppType* eventType;
-    Il2CppClass* parent;
-    const MethodInfo* add;
-    const MethodInfo* remove;
-    const MethodInfo* raise;
+typedef struct EventInfo {
+    const char *name;
+    const Il2CppType *eventType;
+    Il2CppClass *parent;
+    const MethodInfo *add;
+    const MethodInfo *remove;
+    const MethodInfo *raise;
     uint32_t token;
 } EventInfo;
 
-typedef struct PropertyInfo
-{
+typedef struct PropertyInfo {
     Il2CppClass *parent;
     const char *name;
     const MethodInfo *get;
@@ -201,8 +198,7 @@ typedef struct Il2CppString {
     Il2CppChar start_char[0];
 } Il2CppString;
 
-typedef struct Il2CppDefaults
-{
+typedef struct Il2CppDefaults {
     const Il2CppImage *corlib [[maybe_unused]];
     Il2CppClass *object_class [[maybe_unused]];
     Il2CppClass *byte_class [[maybe_unused]];
@@ -310,31 +306,31 @@ typedef struct Il2CppDefaults
     Il2CppClass *mono_method_message_class [[maybe_unused]];
 
     // Windows.Foundation.IReference`1<T>
-    Il2CppClass* ireference_class [[maybe_unused]];
+    Il2CppClass *ireference_class [[maybe_unused]];
     // Windows.Foundation.IReferenceArray`1<T>
-    Il2CppClass* ireferencearray_class [[maybe_unused]];
+    Il2CppClass *ireferencearray_class [[maybe_unused]];
     // Windows.Foundation.Collections.IKeyValuePair`2<K, V>
-    Il2CppClass* ikey_value_pair_class [[maybe_unused]];
+    Il2CppClass *ikey_value_pair_class [[maybe_unused]];
     // System.Collections.Generic.KeyValuePair`2<K, V>
-    Il2CppClass* key_value_pair_class [[maybe_unused]];
+    Il2CppClass *key_value_pair_class [[maybe_unused]];
     // Windows.Foundation.Uri
-    Il2CppClass* windows_foundation_uri_class [[maybe_unused]];
+    Il2CppClass *windows_foundation_uri_class [[maybe_unused]];
     // Windows.Foundation.IUriRuntimeClass
-    Il2CppClass* windows_foundation_iuri_runtime_class_class [[maybe_unused]];
+    Il2CppClass *windows_foundation_iuri_runtime_class_class [[maybe_unused]];
     // System.Uri
-    Il2CppClass* system_uri_class [[maybe_unused]];
+    Il2CppClass *system_uri_class [[maybe_unused]];
     // System.Guid
-    Il2CppClass* system_guid_class [[maybe_unused]];
+    Il2CppClass *system_guid_class [[maybe_unused]];
 
-    Il2CppClass* sbyte_shared_enum [[maybe_unused]];
-    Il2CppClass* int16_shared_enum [[maybe_unused]];
-    Il2CppClass* int32_shared_enum [[maybe_unused]];
-    Il2CppClass* int64_shared_enum [[maybe_unused]];
+    Il2CppClass *sbyte_shared_enum [[maybe_unused]];
+    Il2CppClass *int16_shared_enum [[maybe_unused]];
+    Il2CppClass *int32_shared_enum [[maybe_unused]];
+    Il2CppClass *int64_shared_enum [[maybe_unused]];
 
-    Il2CppClass* byte_shared_enum [[maybe_unused]];
-    Il2CppClass* uint16_shared_enum [[maybe_unused]];
-    Il2CppClass* uint32_shared_enum [[maybe_unused]];
-    Il2CppClass* uint64_shared_enum [[maybe_unused]];
+    Il2CppClass *byte_shared_enum [[maybe_unused]];
+    Il2CppClass *uint16_shared_enum [[maybe_unused]];
+    Il2CppClass *uint32_shared_enum [[maybe_unused]];
+    Il2CppClass *uint64_shared_enum [[maybe_unused]];
 } Il2CppDefaults;
 
 extern Il2CppDefaults il2cpp_defaults;
@@ -352,34 +348,6 @@ enum class ScreenOrientation {
     LandscapeRight,
     AutoRotation,
     Landscape = 3
-};
-
-// Gallop.SceneDefine
-enum class SceneId {
-    None,
-    Title,
-    Home,
-    Race,
-    Live,
-    Story,
-    Gacha,
-    Episode,
-    SingleMode,
-    OutGame,
-    LiveTheater,
-    Circle,
-    DailyRace,
-    LegendRace,
-    TeamStadium,
-    CraneGame,
-    Champions,
-    ChampionsLobby,
-    Tutorial,
-    StoryEvent,
-    ChallengeMatch,
-    RoomMatch,
-    PracticeRace,
-    TrainingChallenge,
 };
 
 // UnityEngine.Color
