@@ -1,3 +1,7 @@
+## 2.3.1
+
+- Improved force landscape mode behavior on Unity 2019
+
 ## 2.3.0
 
 - Improved dict management

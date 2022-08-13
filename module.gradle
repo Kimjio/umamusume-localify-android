@@ -4,8 +4,8 @@ ext {
     moduleName = "UmamusumeLocalify"
     moduleAuthor = "Kimjio"
     moduleDescription = "umamusume-localify"
-    moduleVersion = "2.3.0"
-    moduleVersionCode = 11
+    moduleVersion = "2.3.1"
+    moduleVersionCode = 12
     moduleUpdateJson = "https://raw.githubusercontent.com/Kimjio/umamusume-localify-android/main/update"
 
     // Riru

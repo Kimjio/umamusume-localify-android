@@ -1,6 +1,5 @@
 package com.kimjio.umamusumelocalify.settings.activity;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.Intent;
@@ -9,13 +8,9 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.os.Parcelable;
 import android.provider.DocumentsContract;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -42,7 +37,6 @@ import com.kimjio.umamusumelocalify.settings.databinding.MainActivityBinding;
 import com.kimjio.umamusumelocalify.settings.fragment.SettingsFragment;
 import com.kimjio.umamusumelocalify.settings.preference.IActivityResultPreference;
 
-import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,8 +44,6 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
     public static final String KEY_LAST_SELECTED = "last_selected_index";
 
     public static final String KEY_LAST_SELECTED_PACKAGE = "last_selected_package";
-
-    private static final String TAG = "MainActivity";
 
     private SharedPreferences preferences;
 
@@ -61,6 +53,8 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
 
     private boolean createdAfterStateSaved = false;
 
+    private boolean hasError = false;
+
     private final ActivityResultLauncher<Uri> requestDocumentTree = registerForActivityResult(
             new ActivityResultContracts.OpenDocumentTree(), result -> {
                 if (result != null) {
@@ -68,7 +62,6 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
                         showWrongPathDialog();
                         return;
                     }
-                    Log.d(TAG, result.toString());
                     getContentResolver().takePersistableUriPermission(result,
                             Intent.FLAG_GRANT_READ_URI_PERMISSION |
                                     Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
@@ -223,14 +216,19 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
         if (file != null) {
             DocumentFile configFile = file.findFile("config.json");
             if (configFile == null) {
-                try {
-                    configFile = file.createFile("application/json", "config.json");
-                } catch (RuntimeException e) {
-                    if (e instanceof Parcelable) {
-                        new Handler().postDelayed(() -> {
-                            initFragment(file);
-                        }, 1000);
+                configFile = file.createFile("application/json", "config.json");
+                if (configFile == null) {
+                    if (!hasError) {
+                        hasError = true;
+                        // Provider is null or revoked
+                        new Handler().postDelayed(() -> initFragment(file), 1000);
+                    } else {
+                        // Permission revoked
+                        preferences.edit().remove(currentPackageName).apply();
+                        setPreferences(currentPackageName);
                     }
+                } else {
+                    hasError = false;
                 }
             }
             if (configFile != null) {

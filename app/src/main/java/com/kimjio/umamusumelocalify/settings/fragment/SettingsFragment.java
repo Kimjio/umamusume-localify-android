@@ -39,8 +39,6 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     public static final String KEY_INITIAL_PARENT_PATH = "initial_parent_path";
     public static final String KEY_PACKAGE_NAME = "package_name";
 
-    private static final String TAG = "SettingsFragment";
-
     private String packageName;
 
     private Uri path;
@@ -66,7 +64,6 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         if (file != null) {
             getPreferenceScreen().setEnabled(file.canWrite());
             if (!getPreferenceScreen().isEnabled() && Build.VERSION.SDK_INT >= 33) {
-                // 안드로이드 13에서 config.json을 외부 (adb)에서 삽입 시 읽기만 가능
                 new AlertDialog.Builder(requireContext())
                         .setIcon(R.drawable.ic_error)
                         .setTitle(R.string.error)
