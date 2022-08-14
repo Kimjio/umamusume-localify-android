@@ -9,7 +9,7 @@ android {
 
     compileSdkVersion rootProject.ext.targetSdkVersion
     buildToolsVersion '33.0.0'
-    ndkVersion '24.0.8215888'
+    ndkVersion '25.0.8775105'
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
