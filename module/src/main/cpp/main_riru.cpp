@@ -20,9 +20,7 @@ static void specializeAppProcessPre(
         return;
     }
     auto pkgNm = env->GetStringUTFChars(*niceName, nullptr);
-    if (strcmp(pkgNm, GamePackageName) == 0 || strcmp(pkgNm, GamePackageNameKor) == 0) {
-        enable_hack = isGame(pkgNm);
-    }
+    enable_hack = isGame(pkgNm);
     env->ReleaseStringUTFChars(*niceName, pkgNm);
 }
 
@@ -73,28 +71,3 @@ RiruVersionedModuleInfo *init(Riru *riru) {
     return &module;
 }
 }
-
-/*[[gnu::visibility("default")]] [[gnu::used]]
-static void hook() __attribute__((constructor));
-
-void hook() {
-    if (IsRunningOnNativeBridge()) {
-        if (access(
-                string("/data/data/")
-                        .append(GamePackageName).append("/cache").data(),
-                F_OK) == 0) {
-            gameRegion = GameRegion::JAP;
-        } else if (access(
-                string("/data/data/")
-                        .append(GamePackageNameKor).append("/cache").data(),
-                F_OK) == 0) {
-            gameRegion = GameRegion::KOR;
-        }
-        int ret;
-        pthread_t ntid;
-        if ((ret = pthread_create(&ntid, nullptr,
-                                  reinterpret_cast<void *(*)(void *)>(hack_thread), nullptr))) {
-            LOGE("can't create thread: %s\n", strerror(ret));
-        }
-    }
-}*/

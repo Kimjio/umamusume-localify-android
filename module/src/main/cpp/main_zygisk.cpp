@@ -18,13 +18,11 @@ public:
 
     void preAppSpecialize(AppSpecializeArgs *args) override {
         if (!args || !args->nice_name) {
-            LOGE("Skip unknown process");
+            LOGW("Skip unknown process");
             return;
         }
         auto pkgNm = env_->GetStringUTFChars(args->nice_name, nullptr);
-        if (strcmp(pkgNm, GamePackageName) == 0 || strcmp(pkgNm, GamePackageNameKor) == 0) {
-            enable_hack = isGame(pkgNm);
-        }
+        enable_hack = isGame(pkgNm);
         env_->ReleaseStringUTFChars(args->nice_name, pkgNm);
     }
 
@@ -50,16 +48,9 @@ static void hook() __attribute__((constructor));
 
 void hook() {
     if (IsRunningOnNativeBridge()) {
-        if (access(
-                string("/data/data/")
-                        .append(GamePackageName).append("/cache").data(),
-                F_OK) == 0) {
-            gameRegion = GameRegion::JAP;
-        } else if (access(
-                string("/data/data/")
-                        .append(GamePackageNameKor).append("/cache").data(),
-                F_OK) == 0) {
-            gameRegion = GameRegion::KOR;
+        Game::currentGameRegion = Game::CheckPackageNameByDataPath();
+        if (Game::currentGameRegion == Game::Region::UNKNOWN) {
+            return;
         }
         int ret;
         pthread_t ntid;

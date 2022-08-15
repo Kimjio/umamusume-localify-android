@@ -27,18 +27,12 @@ float g_force_landscape_ui_scale = 1.8;
 bool g_ui_loading_show_orientation_guide = true;
 std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 
-GameRegion gameRegion = GameRegion::UNKNOWN;
-
 bool isGame(const char *pkgNm) {
     if (!pkgNm)
         return false;
-    if (strcmp(pkgNm, GamePackageName) == 0) {
-        gameRegion = GameRegion::JAP;
-    }
-    if (strcmp(pkgNm, GamePackageNameKor) == 0) {
-        gameRegion = GameRegion::KOR;
-    }
-    if (gameRegion != GameRegion::UNKNOWN) {
+    if (IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::JAP) ||
+        IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::KOR) ||
+        IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::TWN)) {
         LOGI("detect game: %s", pkgNm);
         return true;
     }
@@ -85,9 +79,9 @@ HOOK_DEF(void*, NativeBridgeLoadLibrary_V21, const char *filename, int flag) {
                                                                                    "_ZN7android17NativeBridgeErrorEv"));
 
         stringstream path_armV8;
-        path_armV8 << "/data/data/" << GetCurrentPackageName().data() << "/arm64-v8a.so";
+        path_armV8 << "/data/data/" << Game::GetCurrentPackageName().data() << "/arm64-v8a.so";
         stringstream path_armV7;
-        path_armV7 << "/data/data/" << GetCurrentPackageName().data() << "/armeabi-v7a.so";
+        path_armV7 << "/data/data/" << Game::GetCurrentPackageName().data() << "/armeabi-v7a.so";
 
         string path;
 
@@ -122,9 +116,9 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V26, const char *filename, int flag,
                                                                                        "_ZN7android20NativeBridgeGetErrorEv"));
 
         stringstream path_armV8;
-        path_armV8 << "/data/data/" << GetCurrentPackageName().data() << "/arm64-v8a.so";
+        path_armV8 << "/data/data/" << Game::GetCurrentPackageName().data() << "/arm64-v8a.so";
         stringstream path_armV7;
-        path_armV7 << "/data/data/" << GetCurrentPackageName().data() << "/armeabi-v7a.so";
+        path_armV7 << "/data/data/" << Game::GetCurrentPackageName().data() << "/armeabi-v7a.so";
 
         string path;
 
@@ -163,9 +157,9 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
                                                                                        "NativeBridgeGetError"));
 
         stringstream path_armV8;
-        path_armV8 << "/data/data/" << GetCurrentPackageName().data() << "/arm64-v8a.so";
+        path_armV8 << "/data/data/" << Game::GetCurrentPackageName().data() << "/arm64-v8a.so";
         stringstream path_armV7;
-        path_armV7 << "/data/data/" << GetCurrentPackageName().data() << "/armeabi-v7a.so";
+        path_armV7 << "/data/data/" << Game::GetCurrentPackageName().data() << "/armeabi-v7a.so";
 
         string path;
 
@@ -197,7 +191,7 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
 
 std::optional<std::vector<std::string>> read_config() {
     std::ifstream config_stream{
-            string("/sdcard/Android/data/").append(GetCurrentPackageName()).append("/config.json")};
+            string("/sdcard/Android/data/").append(Game::GetCurrentPackageName()).append("/config.json")};
     std::vector<std::string> dicts{};
 
     if (!config_stream.is_open()) {
@@ -277,7 +271,7 @@ std::optional<std::vector<std::string>> read_config() {
             auto replaceAssetsPath = localify::u8_u16(document["replaceAssetsPath"].GetString());
             if (!replaceAssetsPath.starts_with(u"/")) {
                 replaceAssetsPath.insert(0, u16string(u"/sdcard/Android/data/").append(
-                        localify::u8_u16(GetCurrentPackageName())).append(u"/"));
+                        localify::u8_u16(Game::GetCurrentPackageName())).append(u"/"));
             }
             if (filesystem::exists(replaceAssetsPath) &&
                 filesystem::is_directory(replaceAssetsPath)) {

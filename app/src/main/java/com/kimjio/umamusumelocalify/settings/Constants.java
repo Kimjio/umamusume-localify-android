@@ -7,7 +7,8 @@ public final class Constants {
 
     public static final List<String> targetPackageNames = List.of(
             "jp.co.cygames.umamusume",
-            "com.kakaogames.umamusume"
+            "com.kakaogames.umamusume",
+            "com.komoe.kmumamusumegp"
             // TODO Package by region
     );
 }
