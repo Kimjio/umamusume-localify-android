@@ -30,9 +30,9 @@ std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 bool isGame(const char *pkgNm) {
     if (!pkgNm)
         return false;
-    if (IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::JAP) ||
-        IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::KOR) ||
-        IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::TWN)) {
+    if (Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::JAP) ||
+            Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::KOR) ||
+            Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::TWN)) {
         LOGI("detect game: %s", pkgNm);
         return true;
     }

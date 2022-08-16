@@ -15,11 +15,11 @@ namespace Game {
         TWN,
     };
 
-    static auto currentGameRegion = Region::UNKNOWN;
+    inline auto currentGameRegion = Region::UNKNOWN;
 
-    static std::string GamePackageName = "jp.co.cygames.umamusume";
-    static std::string GamePackageNameKor = "com.kakaogames.umamusume";
-    static std::string GamePackageNameTwn = "com.komoe.kmumamusumegp";
+    inline std::string GamePackageName = "jp.co.cygames.umamusume";
+    inline std::string GamePackageNameKor = "com.kakaogames.umamusume";
+    inline std::string GamePackageNameTwn = "com.komoe.kmumamusumegp";
 
     static bool IsPackageNameEqualsByGameRegion(const char *pkgNm, Region gameRegion) {
         std::string pkgNmStr = std::string(pkgNm);
@@ -69,21 +69,21 @@ namespace Game {
     static Region CheckPackageNameByDataPath() {
         if (access(
                 std::string("/data/data/")
-                        .append(Game::GetPackageNameByGameRegion(Game::Region::JAP)).append(
+                        .append(GetPackageNameByGameRegion(Region::JAP)).append(
                         "/cache").data(),
                 F_OK) == 0) {
             return Region::JAP;
         }
         if (access(
                 std::string("/data/data/")
-                        .append(Game::GetPackageNameByGameRegion(Game::Region::KOR)).append(
+                        .append(GetPackageNameByGameRegion(Region::KOR)).append(
                         "/cache").data(),
                 F_OK) == 0) {
             return Region::KOR;
         }
         if (access(
                 std::string("/data/data/")
-                        .append(Game::GetPackageNameByGameRegion(Game::Region::TWN)).append(
+                        .append(GetPackageNameByGameRegion(Region::TWN)).append(
                         "/cache").data(),
                 F_OK) == 0) {
             return Region::TWN;

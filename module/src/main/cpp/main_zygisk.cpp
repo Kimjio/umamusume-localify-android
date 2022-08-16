@@ -50,6 +50,7 @@ void hook() {
     if (IsRunningOnNativeBridge()) {
         Game::currentGameRegion = Game::CheckPackageNameByDataPath();
         if (Game::currentGameRegion == Game::Region::UNKNOWN) {
+            LOGW("Region UNKNOWN...");
             return;
         }
         int ret;
