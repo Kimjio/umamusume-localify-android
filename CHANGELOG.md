@@ -1,3 +1,7 @@
+## 2.3.3
+
+- Fix module not working where using NativeBridge (x86)
+
 ## 2.3.2
 
 - Add Traditional chinese package
