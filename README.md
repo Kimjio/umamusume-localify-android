@@ -5,8 +5,9 @@ Android port of [umamusume-localify](https://github.com/GEEKiDoS/umamusume-local
 
 ## How to use
 1. Install [Magisk](https://github.com/topjohnwu/Magisk) v24 or later and enable Zygisk
-2. Install module in Magisk
-3. Put the `config.json` file in `/sdcard/android/data/jp.co.cygames.umamusume/` and the translation file referenced in `dicts`.
+2. Install [Shamiko](https://github.com/LSPosed/LSPosed.github.io/releases) for bypass SafetyNet (Module not work when DenyList is enabled.)
+3. Install module in Magisk
+4. Put the `config.json` file in `/sdcard/android/data/jp.co.cygames.umamusume/` and the translation file referenced in `dicts`.
 
 ## Note
 Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/` 

@@ -5,6 +5,7 @@
 
 ## 사용법
 1. v24 이상의 [Magisk](https://github.com/topjohnwu/Magisk) 설치 후 Zygisk 를 활성화합니다.
+2. SafetyNet을 우회하기 위해 [Shamiko](https://github.com/LSPosed/LSPosed.github.io/releases)를 설치합니다. (DenyList 활성화 시 모듈이 동작하지 않습니다.)
 2. Magisk 에서 모듈을 설치합니다.
 3. `/sdcard/Android/data/jp.co.cygames.umamusume/` 에 `config.json` 파일, `dicts` 에서 참조하는 번역 파일을 넣습니다.
 
