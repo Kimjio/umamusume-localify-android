@@ -9,6 +9,11 @@
 2. Magisk 에서 모듈을 설치합니다.
 3. `/sdcard/Android/data/jp.co.cygames.umamusume/` 에 `config.json` 파일, `dicts` 에서 참조하는 번역 파일을 넣습니다.
 
+## 설정 앱
+json 파일을 직접 수정하지 않고도 설정을 변경할 수 있는 앱을 만들었습니다.
+
+[GitHub 릴리즈](https://github.com/Kimjio/umamusume-localify-android/releases) 또는 [Play Store](https://play.google.com/store/apps/details?id=com.kimjio.umamusumelocalify.settings)에서 설치 가능합니다.
+
 ## 참고사항
 작업 경로는 `/sdcard/Android/data/jp.co.cygames.umamusume/` 입니다.
 

@@ -9,6 +9,11 @@ Android port of [umamusume-localify](https://github.com/GEEKiDoS/umamusume-local
 3. Install module in Magisk
 4. Put the `config.json` file in `/sdcard/android/data/jp.co.cygames.umamusume/` and the translation file referenced in `dicts`.
 
+## Settings App
+I made an app that allows you to change settings without directly modifying the json file.
+
+You can install it from the [GitHub Releases](https://github.com/Kimjio/umamusume-localify-android/releases) or [Play Store](https://play.google.com/store/apps/details?id=com.kimjio.umamusumelocalify.settings)
+
 ## Note
 Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/` 
 
