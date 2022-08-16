@@ -19,6 +19,10 @@ if [ $ABI = "x86" ]; then
     touch /data/data/com.kakaogames.umamusume/armeabi-v7a.so
     mount -o bind "/data/adb/modules/${API}_${MODULE_ID}/lib/armeabi-v7a/lib${MODULE_LIB_NAME}.so" /data/data/com.kakaogames.umamusume/armeabi-v7a.so
   fi
+  if [ -d "/data/data/com.komoe.kmumamusumegp" ]; then
+    touch /data/data/com.komoe.kmumamusumegp/armeabi-v7a.so
+    mount -o bind "/data/adb/modules/${API}_${MODULE_ID}/lib/armeabi-v7a/lib${MODULE_LIB_NAME}.so" /data/data/com.komoe.kmumamusumegp/armeabi-v7a.so
+  fi
 elif [ $ABI = "x86_64" ]; then
   if [ -d "/data/data/jp.co.cygames.umamusume" ]; then
     touch /data/data/jp.co.cygames.umamusume/arm64-v8a.so
@@ -31,5 +35,11 @@ elif [ $ABI = "x86_64" ]; then
     touch /data/data/com.kakaogames.umamusume/armeabi-v7a.so
     mount -o bind "/data/adb/modules/${API}_${MODULE_ID}/lib/arm64-v8a/lib${MODULE_LIB_NAME}.so" /data/data/com.kakaogames.umamusume/arm64-v8a.so
     mount -o bind "/data/adb/modules/${API}_${MODULE_ID}/lib/armeabi-v7a/lib${MODULE_LIB_NAME}.so" /data/data/com.kakaogames.umamusume/armeabi-v7a.so
+  fi
+  if [ -d "/data/data/com.komoe.kmumamusumegp" ]; then
+    touch /data/data/com.komoe.kmumamusumegp/arm64-v8a.so
+    touch /data/data/com.komoe.kmumamusumegp/armeabi-v7a.so
+    mount -o bind "/data/adb/modules/${API}_${MODULE_ID}/lib/arm64-v8a/lib${MODULE_LIB_NAME}.so" /data/data/com.komoe.kmumamusumegp/arm64-v8a.so
+    mount -o bind "/data/adb/modules/${API}_${MODULE_ID}/lib/armeabi-v7a/lib${MODULE_LIB_NAME}.so" /data/data/com.komoe.kmumamusumegp/armeabi-v7a.so
   fi
 fi
