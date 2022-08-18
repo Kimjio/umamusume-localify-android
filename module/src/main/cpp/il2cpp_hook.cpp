@@ -682,6 +682,34 @@ void SceneManager_ctor_hook(Il2CppObject *thisObj) {
     reinterpret_cast<decltype(SceneManager_ctor_hook) *>(SceneManager_ctor_orig)(thisObj);
 }
 
+void *SafetyNet_OnSuccess_orig = nullptr;
+
+void SafetyNet_OnSuccess_hook(Il2CppObject *thisObj, Il2CppString *jws) {
+    reinterpret_cast<decltype(SafetyNet_OnSuccess_hook) *>(SafetyNet_OnSuccess_orig)(thisObj, jws);
+}
+
+void *SafetyNet_OnError_orig = nullptr;
+
+void SafetyNet_OnError_hook(Il2CppObject *thisObj, Il2CppString *error) {
+    reinterpret_cast<decltype(SafetyNet_OnSuccess_hook) *>(SafetyNet_OnSuccess_orig)(thisObj,
+                                                                                     error);
+}
+
+void *SafetyNet_GetSafetyNetStatus_orig = nullptr;
+
+void SafetyNet_GetSafetyNetStatus_hook(Il2CppString *apiKey, Il2CppString *nonce,
+                                       Il2CppObject *onSuccess, Il2CppObject *onError) {
+    reinterpret_cast<decltype(SafetyNet_GetSafetyNetStatus_hook) *>(SafetyNet_GetSafetyNetStatus_orig)(
+            apiKey,
+            nonce, onSuccess, onSuccess);
+}
+
+void *Device_IsIllegalUser_orig = nullptr;
+
+Boolean Device_IsIllegalUser_hook() {
+    return Boolean{.m_value = false};
+}
+
 void dump_all_entries() {
     // 0 is None
     for (int i = 1;; i++) {
@@ -990,6 +1018,26 @@ void hookMethods() {
             "UnityEngine.UI.dll",
             "UnityEngine.UI", "CanvasScaler", "set_referenceResolution", 1));
 
+    auto SafetyNet_OnSuccess_addr = reinterpret_cast<void (*)(Il2CppObject *,
+                                                              float)>(il2cpp_symbols::get_method_pointer(
+            "umamusume.dll",
+            "Gallop", "SafetyNet", "OnSuccess", 1));
+
+    auto SafetyNet_OnError_addr = reinterpret_cast<void (*)(Il2CppObject *,
+                                                            float)>(il2cpp_symbols::get_method_pointer(
+            "umamusume.dll",
+            "Gallop", "SafetyNet", "OnError", 1));
+
+    auto SafetyNet_GetSafetyNetStatus_addr = reinterpret_cast<void (*)(Il2CppObject *,
+                                                                       float)>(il2cpp_symbols::get_method_pointer(
+            "Cute.Core.Assembly.dll",
+            "Cute.Core", "SafetyNet", "GetSafetyNetStatus", 4));
+
+    auto Device_IsIllegalUser_addr = reinterpret_cast<void (*)(Il2CppObject *,
+                                                               float)>(il2cpp_symbols::get_method_pointer(
+            "Cute.Core.Assembly.dll",
+            "Cute.Core", "Device", "IsIllegalUser", -1));
+
     load_from_file = reinterpret_cast<Il2CppObject *(*)(
             Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "LoadFromFile", 1));
@@ -1060,6 +1108,14 @@ void hookMethods() {
     LOGD("ADD_HOOK: %s", #_name_); \
     DobbyHook((void *)_name_##_addr, (void *) _name_##_hook, (void **) &_name_##_orig);
 #pragma endregion
+
+    ADD_HOOK(Device_IsIllegalUser)
+
+    ADD_HOOK(SafetyNet_GetSafetyNetStatus)
+
+    ADD_HOOK(SafetyNet_OnSuccess)
+
+    ADD_HOOK(SafetyNet_OnError)
 
     ADD_HOOK(NowLoading_Show)
 
