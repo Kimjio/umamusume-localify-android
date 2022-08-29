@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.DocumentsContract;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,6 +33,7 @@ import androidx.preference.PreferenceScreen;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.kimjio.umamusumelocalify.settings.BuildConfig;
 import com.kimjio.umamusumelocalify.settings.Constants;
+import com.kimjio.umamusumelocalify.settings.ModuleUtils;
 import com.kimjio.umamusumelocalify.settings.R;
 import com.kimjio.umamusumelocalify.settings.databinding.MainActivityBinding;
 import com.kimjio.umamusumelocalify.settings.fragment.SettingsFragment;
@@ -41,6 +43,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MainActivity extends BaseActivity<MainActivityBinding> {
+
+    private static final String TAG = "MainActivity";
     public static final String KEY_LAST_SELECTED = "last_selected_index";
 
     public static final String KEY_LAST_SELECTED_PACKAGE = "last_selected_package";
@@ -78,6 +82,8 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
         super.onCreate(savedInstanceState);
         setSupportActionBar(binding.appBar);
         requireSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        Log.d(TAG, "onCreate: " + ModuleUtils.getModuleVersion());
 
         binding.appBarLayout.setBackgroundColor(backgroundColor);
 
