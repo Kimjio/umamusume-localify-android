@@ -43,17 +43,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_FLAGS} ${CXX_FLAGS}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
-
-if (${API} STREQUAL "riru")
+if (${API} STREQUAL "zygisk")
+    add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp)
+    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3)
+elseif (${API} STREQUAL "riru")
     find_package(riru REQUIRED CONFIG)
 
     include_directories(include)
 
     add_library(${MODULE_NAME} SHARED main_riru.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
     target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 riru::riru)
-elseif (${API} STREQUAL "zygisk")
-    add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp)
-    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3)
 endif()
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

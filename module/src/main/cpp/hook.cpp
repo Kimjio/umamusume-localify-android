@@ -246,7 +246,7 @@ std::optional<std::vector<std::string>> read_config() {
                 g_graphics_quality = -1;
             }
             if (g_graphics_quality > 4) {
-                g_graphics_quality = 4;
+                g_graphics_quality = 3;
             }
         }
         if (document.HasMember("antiAliasing")) {
@@ -414,14 +414,12 @@ void hack_thread(void *arg [[maybe_unused]]) {
 
     auto dict = read_config();
 
-    if (!dict.has_value()) {
-        return;
-    }
-
     std::thread init_thread([dict]() {
         logger::init_logger();
         il2cpp_hook_init(il2cpp_handle);
-        localify::load_textdb(get_application_version(), &dict.value());
+        if (dict.has_value()) {
+            localify::load_textdb(get_application_version(), &dict.value());
+        }
         il2cpp_hook();
     });
     init_thread.detach();

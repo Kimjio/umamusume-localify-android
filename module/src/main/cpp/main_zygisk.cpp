@@ -26,7 +26,7 @@ public:
         env_->ReleaseStringUTFChars(args->nice_name, pkgNm);
     }
 
-    void postAppSpecialize(const AppSpecializeArgs *) override {
+    void postAppSpecialize(const AppSpecializeArgs *args) override {
         if (enable_hack) {
             int ret;
             pthread_t ntid;

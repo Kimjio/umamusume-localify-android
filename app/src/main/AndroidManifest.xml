@@ -7,6 +7,7 @@
         <package android:name="jp.co.cygames.umamusume" />
         <package android:name="com.kakaogames.umamusume" />
         <package android:name="com.komoe.kmumamusumegp" />
+        <package android:name="com.komoe.kmumamusumemc" />
         <!-- TODO Package by region -->
     </queries>
 
