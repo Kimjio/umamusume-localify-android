@@ -530,3 +530,36 @@ public:
     // System.Boolean UnityEngine.TextGenerationSettings::generateOutOfBounds
     bool generateOutOfBounds [[maybe_unused]];
 } TextGenerationSettings_t [[maybe_unused]];
+
+enum class NotificationStyle {
+    None,
+    BigTextStyle = 2,
+};
+
+enum class GroupAlertBehaviours {
+    GroupAlertAll,
+    GroupAlertSummary,
+    GroupAlertChildren,
+};
+
+typedef struct AndroidNotification {
+    Il2CppString *Title;
+    Il2CppString *Text;
+    Il2CppString *SmallIcon;
+    DateTime FireTime;
+    Il2CppString *LargeIcon;
+    NotificationStyle Style;
+    int Number;
+    Boolean ShouldAutoCancel;
+    Boolean UsesStopwatch;
+    Il2CppString *Group;
+    Boolean GroupSummary;
+    GroupAlertBehaviours GroupAlertBehaviour;
+    Il2CppString *SortKey;
+    Il2CppString *IntentData;
+    Boolean ShowTimestamp;
+    Boolean ShowCustomTimestamp;
+    Color_t m_Color;
+    TimeSpan m_RepeatInterval;
+    DateTime m_CustomTimestamp;
+} AndroidNotification;
