@@ -751,6 +751,17 @@ void (*SendNotification)(Il2CppObject *thisObj, Il2CppString *ChannelId, Il2CppS
 
 Il2CppString *(*createFavIconFilePath)(Il2CppObject *thisObj, int _unitId);
 
+
+void *GeneratePushNotifyCharaIconPng_orig = nullptr;
+
+Il2CppString *GeneratePushNotifyCharaIconPng_hook(Il2CppObject *thisObj, int _unitId, int dressid,
+                                                  Boolean forceGen) {
+    return reinterpret_cast<decltype(GeneratePushNotifyCharaIconPng_hook) * >
+    (GeneratePushNotifyCharaIconPng_orig)(
+            thisObj, _unitId, dressid,
+            GetBoolean(true));
+}
+
 void *MasterDataManager_ctor_orig = nullptr;
 
 void MasterDataManager_ctor_hook(Il2CppObject *thisObj) {
@@ -801,25 +812,26 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
                                                                       0)->methodPointer)(
             masterDataManager);
     auto cateId = type == 0 ? 184 : 185;
-    auto messageIl2CppStr = reinterpret_cast<Il2CppString *(*)(Il2CppObject *, int category,
+    /*auto messageIl2CppStr = reinterpret_cast<Il2CppString *(*)(Il2CppObject *, int category,
                                                                int index)>(
             il2cpp_class_get_method_from_name(masterString->klass, "GetText", 2)->methodPointer
-    )(masterString, cateId, charaId);
-
+    )(masterString, cateId, charaId);*/
     // ex. 1841001
     auto messageKey = string(to_string(cateId)).append(
             to_string(charaId));
-    localify::get_localized_string(stoi(messageKey));
+    auto messageIl2CppStr = localify::get_localized_string(stoi(messageKey));
 
     auto channelId = type == 0 ? "NOTIF_Tp_0" : "NOTIF_Rp_0";
     auto id = type == 0 ? 100 : 200;
+    auto typeStr = type == 0 ? "TP" : "RP";
     if (IsDenyTime(thisObj, nullptr).m_value) {
         DeleteAllLocalPushes(thisObj);
         return;
     }
     RegisterNotificationChannel(thisObj,
-                                il2cpp_string_new(type == 0 ? "TP" : "RP"),
-                                il2cpp_string_new(channelId), il2cpp_string_new(""));
+                                il2cpp_string_new(typeStr),
+                                il2cpp_string_new(channelId),
+                                il2cpp_string_new(string(typeStr).append(" 알림").data()));
     auto dateTime = FromUnixTimeToLocaleTime(
             GetInt64Safety(reinterpret_cast<Int64 *>(Array_GetValue(unixTimes, 0))));
 
@@ -1278,19 +1290,6 @@ void hookMethods() {
                                                                          "createFavIconFilePath",
                                                                          1));
 
-        auto ScheduleLocalPushes_addr = reinterpret_cast<void (*)(
-                Il2CppObject *, int)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
-                                                                         "PushNotificationManager",
-                                                                         "ScheduleLocalPushes", 5));
-
-        auto SendNotificationWithFavoriteIcon_addr = reinterpret_cast<void (*)(
-                Il2CppObject *, int, int, Boolean)>(il2cpp_symbols::get_method_pointer(
-                "umamusume.dll",
-                "Gallop",
-                "PushNotificationManager",
-                "SendNotificationWithFavoriteIcon",
-                3));
-
         RegisterNotificationChannel = reinterpret_cast<void (*)(
                 Il2CppObject *, Il2CppString *, Il2CppString *,
                 Il2CppString *)>(il2cpp_symbols::get_method_pointer("umamusume.dll",
@@ -1313,12 +1312,25 @@ void hookMethods() {
                                                                     "RegisterNotificationChannel",
                                                                     3));
 
+        auto ScheduleLocalPushes_addr = reinterpret_cast<void (*)(
+                Il2CppObject *, int)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                         "PushNotificationManager",
+                                                                         "ScheduleLocalPushes", 5));
+
         auto SendNotificationWithExplicitID_addr = reinterpret_cast<void (*)(
                 Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
                 "Unity.Notifications.Android.dll",
                 "Unity.Notifications.Android",
                 "AndroidNotificationCenter",
                 "SendNotificationWithExplicitID",
+                3));
+
+        auto GeneratePushNotifyCharaIconPng_addr = reinterpret_cast<void (*)(
+                Il2CppObject *, int, int, Boolean)>(il2cpp_symbols::get_method_pointer(
+                "umamusume.dll",
+                "Gallop",
+                "PushNotificationManager",
+                "GeneratePushNotifyCharaIconPng",
                 3));
 
         auto MasterDataManager_ctor_addr = reinterpret_cast<void (*)(
@@ -1332,7 +1344,11 @@ void hookMethods() {
 
         ADD_HOOK(SendNotificationWithExplicitID)
 
+        ADD_HOOK(GeneratePushNotifyCharaIconPng)
+
         ADD_HOOK(ScheduleLocalPushes)
+
+        LOGD("RESTORE NOTIF");
     }
 
     ADD_HOOK(Device_IsIllegalUser)
