@@ -1,6 +1,7 @@
 #include "stdinclude.hpp"
 #include "hook.h"
 #include "zygisk.hpp"
+#include "YAHFA/yahfa.hpp"
 
 using zygisk::Api;
 using zygisk::AppSpecializeArgs;
@@ -31,6 +32,10 @@ public:
 
     void postAppSpecialize(const AppSpecializeArgs *args) override {
         if (enable_hack || enable_settings_hack) {
+            auto api = android_get_device_api_level();
+
+            yahfaInit(env_, api);
+
             int ret;
             pthread_t ntid;
             if ((ret = pthread_create(&ntid, nullptr,

@@ -22,6 +22,8 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/rapidjson/include)
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/SQLiteCpp)
 
+include_directories(include)
+
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_CXX_STANDARD 23)
@@ -44,16 +46,12 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 if (${API} STREQUAL "zygisk")
-    include_directories(include)
-
-    add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
+    add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp YAHFA/yahfa.cpp YAHFA/trampoline.cpp YAHFA/utils.cpp ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
     target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3)
 elseif (${API} STREQUAL "riru")
     find_package(riru REQUIRED CONFIG)
 
-    include_directories(include)
-
-    add_library(${MODULE_NAME} SHARED main_riru.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
+    add_library(${MODULE_NAME} SHARED main_riru.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp YAHFA/yahfa.cpp YAHFA/trampoline.cpp YAHFA/utils.cpp ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
     target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 riru::riru)
 endif()
 
