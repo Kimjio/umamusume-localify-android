@@ -23,7 +23,7 @@ bool g_dump_db_entries = false;
 int g_graphics_quality = -1;
 int g_anti_aliasing = -1;
 bool g_force_landscape = false;
-float g_force_landscape_ui_scale = 1.8;
+float g_force_landscape_ui_scale = 0.5f;
 bool g_ui_loading_show_orientation_guide = true;
 std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 

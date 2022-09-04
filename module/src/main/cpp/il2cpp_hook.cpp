@@ -606,8 +606,8 @@ void *CanvasScaler_set_referenceResolution_orig = nullptr;
 
 void CanvasScaler_set_referenceResolution_hook(Il2CppObject *thisObj, Vector2_t res) {
     if (g_force_landscape) {
-        res.x = res.x * g_force_landscape_ui_scale;
-        res.y = res.y * g_force_landscape_ui_scale;
+        res.x /= (max(1.0f, res.x / 1920.f) * g_force_landscape_ui_scale);
+        res.y /= (max(1.0f, res.y / 1080.f) * g_force_landscape_ui_scale);
     }
     return reinterpret_cast<decltype(CanvasScaler_set_referenceResolution_hook) *>(CanvasScaler_set_referenceResolution_orig)(
             thisObj, res);
