@@ -25,4 +25,6 @@
     <string name="pref_loading_show_orientation_guide">Show screen rotation guide while loading</string>
 
     <string name="pref_module_version">Module version</string>
+
+    <string name="pref_restore_notification">Restore notification</string>
 </resources>

@@ -24,6 +24,7 @@ import androidx.preference.PreferenceManager;
 import androidx.preference.SeekBarPreference;
 import androidx.preference.TwoStatePreference;
 
+import com.kimjio.umamusumelocalify.settings.Constants;
 import com.kimjio.umamusumelocalify.settings.ModuleUtils;
 import com.kimjio.umamusumelocalify.settings.R;
 import com.kimjio.umamusumelocalify.settings.activity.ManageTranslateActivity;
@@ -75,6 +76,10 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         } else {
             getPreferenceScreen().setEnabled(false);
         }
+
+        Preference restoreNotificationPreference = Objects.requireNonNull(findPreference("restoreNotification"));
+        restoreNotificationPreference.setDefaultValue(Constants.PKG_KOR.equals(packageName));
+        restoreNotificationPreference.setVisible(Constants.PKG_KOR.equals(packageName));
 
         String moduleVersion = ModuleUtils.getModuleVersion();
         if (moduleVersion != null) {
@@ -147,6 +152,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         this.packageName = packageName;
         this.parentPath = parentPath;
         this.path = path;
+        Preference restoreNotificationPreference = Objects.requireNonNull(findPreference("restoreNotification"));
+        restoreNotificationPreference.setDefaultValue(Constants.PKG_KOR.equals(packageName));
+        restoreNotificationPreference.setVisible(Constants.PKG_KOR.equals(packageName));
         getPreferenceManager().setPreferenceDataStore(new JsonPreferenceDataStore(requireContext().getContentResolver(), this.path));
         getPreferenceScreen().notifyDependencyChange(false);
         updatePreference(getPreferenceScreen());

@@ -26,6 +26,7 @@ int g_anti_aliasing = -1;
 bool g_force_landscape = false;
 float g_force_landscape_ui_scale = 0.5f;
 bool g_ui_loading_show_orientation_guide = true;
+bool g_restore_notification = true;
 std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 
 bool isGame(const char *pkgNm) {
@@ -293,6 +294,9 @@ std::optional<std::vector<std::string>> read_config() {
         }
         if (document.HasMember("uiLoadingShowOrientationGuide")) {
             g_ui_loading_show_orientation_guide = document["uiLoadingShowOrientationGuide"].GetBool();
+        }
+        if (document.HasMember("restoreNotification")) {
+            g_restore_notification = document["restoreNotification"].GetBool();
         }
         if (document.HasMember("replaceAssetsPath")) {
             auto replaceAssetsPath = localify::u8_u16(document["replaceAssetsPath"].GetString());
