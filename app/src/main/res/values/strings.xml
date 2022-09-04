@@ -15,4 +15,5 @@
     <string name="error_folder_not_in_data_folder">Only folders in the data folder can be selected.</string>
     <string name="restart_app">Restart app</string>
     <string name="files_empty">No files have been added.</string>
+    <string name="unknown">Unknown</string>
 </resources>

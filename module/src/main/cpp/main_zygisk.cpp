@@ -23,15 +23,18 @@ public:
         }
         auto pkgNm = env_->GetStringUTFChars(args->nice_name, nullptr);
         enable_hack = isGame(pkgNm);
+        if (!enable_hack) {
+            enable_settings_hack = isSettings(pkgNm);
+        }
         env_->ReleaseStringUTFChars(args->nice_name, pkgNm);
     }
 
     void postAppSpecialize(const AppSpecializeArgs *args) override {
-        if (enable_hack) {
+        if (enable_hack || enable_settings_hack) {
             int ret;
             pthread_t ntid;
             if ((ret = pthread_create(&ntid, nullptr,
-                                      reinterpret_cast<void *(*)(void *)>(hack_thread), nullptr))) {
+                                      reinterpret_cast<void *(*)(void *)>(enable_settings_hack ? hack_settings_thread : hack_thread), nullptr))) {
                 LOGE("can't create thread: %s\n", strerror(ret));
             }
         }

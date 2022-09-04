@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +24,7 @@ import androidx.preference.PreferenceManager;
 import androidx.preference.SeekBarPreference;
 import androidx.preference.TwoStatePreference;
 
+import com.kimjio.umamusumelocalify.settings.ModuleUtils;
 import com.kimjio.umamusumelocalify.settings.R;
 import com.kimjio.umamusumelocalify.settings.activity.ManageTranslateActivity;
 import com.kimjio.umamusumelocalify.settings.preference.FilePickerPreference;
@@ -74,6 +74,12 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             }
         } else {
             getPreferenceScreen().setEnabled(false);
+        }
+
+        String moduleVersion = ModuleUtils.getModuleVersion();
+        if (moduleVersion != null) {
+            Preference versionPreference = Objects.requireNonNull(findPreference("version"));
+            versionPreference.setSummary(moduleVersion);
         }
 
         TwoStatePreference enableLoggerPreference = Objects.requireNonNull(findPreference("enableLogger"));

@@ -38,9 +38,10 @@ android {
             dimension = "api"
             externalNativeBuild {
                 cmake {
+                    arguments += "-DMODULE_VERSION=$moduleVersionCode"
+                    arguments += "-DMODULE_VERSION_NAME:STRING=$moduleVersion"
+                    arguments += "-DRIRU_MODULE=true"
                     arguments += "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion"
-                    arguments += "-DRIRU_MODULE_VERSION=$moduleVersionCode"
-                    arguments += "-DRIRU_MODULE_VERSION_NAME:STRING=$moduleVersion"
                     arguments += "-DRIRU_MODULE_MIN_API_VERSION=$moduleMinRiruApiVersion"
                 }
             }
@@ -48,6 +49,14 @@ android {
 
         create("Zygisk") {
             dimension = "api"
+            externalNativeBuild {
+                cmake {
+                    arguments += "-DMODULE_VERSION=$moduleVersionCode"
+                    arguments += "-DMODULE_VERSION_NAME:STRING=$moduleVersion"
+                    arguments += "-DRIRU_MODULE_API_VERSION=-1"
+                    arguments += "-DRIRU_MODULE_MIN_API_VERSION=-1"
+                }
+            }
         }
     }
 }

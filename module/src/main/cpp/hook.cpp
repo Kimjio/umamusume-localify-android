@@ -5,6 +5,7 @@
 #include "il2cpp_hook.h"
 #include "localify/localify.h"
 #include "logger/logger.h"
+#include "config.hpp"
 
 using namespace std;
 using namespace localify;
@@ -31,12 +32,29 @@ bool isGame(const char *pkgNm) {
     if (!pkgNm)
         return false;
     if (Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::JAP) ||
-            Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::KOR) ||
-            Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::TWN)) {
+        Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::KOR) ||
+        Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::TWN)) {
         LOGI("detect game: %s", pkgNm);
         return true;
     }
     return false;
+}
+
+bool isSettings(const char *pkgNm) {
+    if (!pkgNm)
+        return false;
+    if ("com.kimjio.umamusumelocalify.settings"s == pkgNm) {
+        LOGI("detect settings: %s", pkgNm);
+        return true;
+    }
+    return false;
+
+}
+
+HOOK_DEF(jstring, getModuleVersion,
+         JNIEnv *env,
+         jclass) {
+    return env->NewStringUTF(Module::moduleVersionName);
 }
 
 void dlopen_process(const char *name, void *handle) {
@@ -44,6 +62,14 @@ void dlopen_process(const char *name, void *handle) {
         if (name != nullptr && strstr(name, "libil2cpp.so")) {
             il2cpp_handle = handle;
             LOGI("Got il2cpp handle!");
+        }
+    }
+    if (!il2cpp_handle && !app_handle) {
+        if (name != nullptr && strstr(name, "libapp.so")) {
+            app_handle = handle;
+            auto getModuleVersion = dlsym(app_handle,
+                                          "Java_com_kimjio_umamusumelocalify_settings_ModuleUtils_getModuleVersion");
+            DobbyHook(getModuleVersion, (void *) new_getModuleVersion, (void **) &orig_getModuleVersion);
         }
     }
 }
@@ -191,7 +217,8 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
 
 std::optional<std::vector<std::string>> read_config() {
     std::ifstream config_stream{
-            string("/sdcard/Android/data/").append(Game::GetCurrentPackageName()).append("/config.json")};
+            string("/sdcard/Android/data/").append(Game::GetCurrentPackageName()).append(
+                    "/config.json")};
     std::vector<std::string> dicts{};
 
     if (!config_stream.is_open()) {
@@ -423,4 +450,45 @@ void hack_thread(void *arg [[maybe_unused]]) {
         il2cpp_hook();
     });
     init_thread.detach();
+}
+
+void hack_settings_thread(void *arg [[maybe_unused]]) {
+    int api_level = GetAndroidApiLevel();
+    LOGI("%s api level: %d", ABI, api_level);
+    if (api_level >= 30) {
+        void *addr = DobbySymbolResolver(nullptr,
+                                         "__dl__Z9do_dlopenPKciPK17android_dlextinfoPKv");
+        if (addr) {
+            LOGI("%s do_dlopen at: %p", ABI, addr);
+            DobbyHook(addr, (void *) new_do_dlopen_V24,
+                      (void **) &orig_do_dlopen_V24);
+
+        }
+    } else if (api_level >= 26) {
+        void *libdl_handle = dlopen("libdl.so", RTLD_LAZY);
+        void *addr = dlsym(libdl_handle, "__loader_dlopen");
+
+        if (addr) {
+            LOGI("__loader_dlopen at: %p", addr);
+            DobbyHook(addr, (void *) new___loader_dlopen,
+                      (void **) &orig___loader_dlopen);
+
+        }
+    } else if (api_level >= 24) {
+        void *addr = DobbySymbolResolver(nullptr,
+                                         "__dl__Z9do_dlopenPKciPK17android_dlextinfoPv");
+        if (addr) {
+            LOGI("do_dlopen at: %p", addr);
+            DobbyHook(addr, (void *) new_do_dlopen_V24,
+                      (void **) &orig_do_dlopen_V24);
+        }
+    } else {
+        void *addr = DobbySymbolResolver(nullptr,
+                                         "__dl__Z9do_dlopenPKciPK17android_dlextinfo");
+        if (addr) {
+            LOGI("do_dlopen at: %p", addr);
+            DobbyHook(addr, (void *) new_do_dlopen_V19,
+                      (void **) &orig_do_dlopen_V19);
+        }
+    }
 }

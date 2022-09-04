@@ -3,6 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <Preference
+        android:key="version"
+        android:summary="@string/unknown"
+        android:title="@string/pref_module_version" />
+
     <PreferenceCategory android:title="@string/pref_cate_logger">
 
         <SwitchPreference
@@ -44,8 +49,8 @@
             tools:defaultValue="1.0" />
 
         <com.kimjio.umamusumelocalify.settings.preference.IntegerDropDownPreference
-            android:icon="@drawable/ic_graphics_quality"
             android:defaultValue="-1"
+            android:icon="@drawable/ic_graphics_quality"
             android:key="graphicsQuality"
             app:entries="@array/graphics_quality"
             app:entryValues="@array/graphics_quality_value"
@@ -110,13 +115,12 @@
 
         <SwitchPreference
             android:defaultValue="true"
-            app:icon="@drawable/ic_orientation"
             android:key="uiLoadingShowOrientationGuide"
-            android:title="@string/pref_loading_show_orientation_guide"/>
+            android:title="@string/pref_loading_show_orientation_guide"
+            app:icon="@drawable/ic_orientation" />
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:title="@string/pref_cate_etc">
+    <PreferenceCategory android:title="@string/pref_cate_etc">
 
         <com.kimjio.umamusumelocalify.settings.preference.FolderPickerPreference
             android:icon="@drawable/ic_replace_assets"
@@ -124,8 +128,8 @@
             android:title="@string/pref_replace_assets_path" />
 
         <Preference
-            android:key="manageTranslate"
             android:icon="@drawable/ic_translate"
+            android:key="manageTranslate"
             android:title="@string/manage_translate" />
     </PreferenceCategory>
 

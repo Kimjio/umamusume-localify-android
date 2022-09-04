@@ -23,4 +23,6 @@
     <string name="pref_cate_etc">기타</string>
     <string name="pref_replace_assets_path">교체할 에셋이 들어있는 폴더 경로</string>
     <string name="pref_loading_show_orientation_guide">로딩 중 화면 회전 가이드 표시</string>
+
+    <string name="pref_module_version">모듈 버전</string>
 </resources>

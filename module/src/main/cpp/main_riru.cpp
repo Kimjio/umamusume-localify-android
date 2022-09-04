@@ -21,17 +21,20 @@ static void specializeAppProcessPre(
     }
     auto pkgNm = env->GetStringUTFChars(*niceName, nullptr);
     enable_hack = isGame(pkgNm);
+    if (!enable_hack) {
+        enable_settings_hack = isSettings(pkgNm);
+    }
     env->ReleaseStringUTFChars(*niceName, pkgNm);
 }
 
 static void specializeAppProcessPost(
         JNIEnv *env, jclass clazz) {
     // Called "after" com_android_internal_os_Zygote_nativeSpecializeAppProcess in frameworks/base/core/jni/com_android_internal_os_Zygote.cpp
-    if (enable_hack) {
+    if (enable_hack || enable_settings_hack) {
         int ret;
         pthread_t ntid;
         if ((ret = pthread_create(&ntid, nullptr,
-                                  reinterpret_cast<void *(*)(void *)>(hack_thread), nullptr))) {
+                                  reinterpret_cast<void *(*)(void *)>(enable_settings_hack ? hack_settings_thread : hack_thread), nullptr))) {
             LOGE("can't create thread: %s\n", strerror(ret));
         }
     }
@@ -51,8 +54,8 @@ static auto module = RiruVersionedModuleInfo{
         .moduleApiVersion = riru::moduleApiVersion,
         .moduleInfo= RiruModuleInfo{
                 .supportHide = true,
-                .version = riru::moduleVersionCode,
-                .versionName = riru::moduleVersionName,
+                .version = Module::moduleVersionCode,
+                .versionName = Module::moduleVersionName,
                 .specializeAppProcessPre = specializeAppProcessPre,
                 .specializeAppProcessPost = specializeAppProcessPost
         }
