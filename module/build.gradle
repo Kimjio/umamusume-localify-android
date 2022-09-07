@@ -106,7 +106,7 @@ afterEvaluate {
                         updateJson : "${moduleUpdateJson}-${flavorLowered}.json",
                         requirement: flavorLowered == "riru" ? "Requires Riru $moduleMinRiruVersionName or above installed" :
                                 flavorLowered == "zygisk" ? "Requires Magisk 24.0+ and Zygisk enabled" : null,
-                        api: flavorCapped
+                        api        : flavorCapped
                 ])
                 filter(FixCrLfFilter.class,
                         eol: FixCrLfFilter.CrLf.newInstance("lf"))
@@ -114,7 +114,7 @@ afterEvaluate {
             from(templatePath) {
                 include("customize.sh")
                 filter(ReplaceTokens.class, tokens: [
-                        "FLAVOR": flavorLowered,
+                        "FLAVOR"         : flavorLowered,
                         "MODULE_LIB_NAME": moduleLibraryName
                 ])
                 filter(FixCrLfFilter.class,
@@ -123,8 +123,8 @@ afterEvaluate {
             from(templatePath) {
                 include("service.sh")
                 filter(ReplaceTokens.class, tokens: [
-                        "API": flavorLowered,
-                        "MODULE_ID": magiskModuleId,
+                        "API"            : flavorLowered,
+                        "MODULE_ID"      : magiskModuleId,
                         "MODULE_LIB_NAME": moduleLibraryName
                 ])
                 filter(FixCrLfFilter.class,
@@ -134,11 +134,11 @@ afterEvaluate {
                 from(templatePath) {
                     include "riru.sh"
                     filter(ReplaceTokens.class, tokens: [
-                            "MODULE_LIB_NAME": moduleLibraryName,
+                            "MODULE_LIB_NAME"                  : moduleLibraryName,
                             "RIRU_MODULE_API_VERSION"          : moduleRiruApiVersion.toString(),
                             "RIRU_MODULE_MIN_API_VERSION"      : moduleMinRiruApiVersion.toString(),
                             "RIRU_MODULE_MIN_RIRU_VERSION_NAME": moduleMinRiruVersionName,
-                            "RIRU_MODULE_DEBUG":  buildTypeLowered == "debug" ? "true" : "false"
+                            "RIRU_MODULE_DEBUG"                : buildTypeLowered == "debug" ? "true" : "false"
                     ])
                     filter(FixCrLfFilter.class,
                             eol: FixCrLfFilter.CrLf.newInstance("lf"))
@@ -147,18 +147,20 @@ afterEvaluate {
             from("$buildDir/intermediates/stripped_native_libs/$variantLowered/out/lib") {
                 into 'lib'
             }
-            /*doLast {
-                fileTree("$magiskDir").visit { f ->
-                    if (f.directory) return
-                    if (f.file.name == '.gitattributes') return
 
-                    def md = MessageDigest.getInstance("SHA-256")
-                    f.file.eachByte 4096, { bytes, size ->
-                        md.update(bytes, 0, size)
+            from("$buildDir/intermediates/javac/$variantLowered/") {
+                exclude 'classes'
+                doFirst {
+                    def sdkDir = project.android.sdkDirectory;
+                    def buildToolVersion = project.android.buildToolsVersion;
+                    exec {
+                        workingDir "$buildDir/intermediates/javac/$variantLowered"
+                        commandLine "$sdkDir/build-tools/$buildToolVersion/d8",
+                                "$buildDir/intermediates/javac/$variantLowered/classes/com/kimjio/umamusumelocalify/Hooker.class",
+                            "$buildDir/intermediates/javac/$variantLowered/classes/com/kimjio/umamusumelocalify/MethodCallback.class"
                     }
-                    file(f.file.path + ".sha256sum").text = md.digest().encodeHex()
                 }
-            }*/
+            }
         }
 
         task("zip${variantCapped}", type: Zip) {

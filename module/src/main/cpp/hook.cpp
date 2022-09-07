@@ -35,7 +35,7 @@ bool isGame(const char *pkgNm) {
     if (Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::JAP) ||
         Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::KOR) ||
         Game::IsPackageNameEqualsByGameRegion(pkgNm, Game::Region::TWN)) {
-        LOGI("detect game: %s", pkgNm);
+        LOGI("detect package: %s", pkgNm);
         return true;
     }
     return false;
@@ -45,7 +45,6 @@ bool isSettings(const char *pkgNm) {
     if (!pkgNm)
         return false;
     if ("com.kimjio.umamusumelocalify.settings"s == pkgNm) {
-        LOGI("detect settings: %s", pkgNm);
         return true;
     }
     return false;

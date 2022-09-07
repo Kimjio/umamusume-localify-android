@@ -7,3 +7,6 @@
 [submodule "module/src/main/cpp/SQLiteCpp"]
 	path = module/src/main/cpp/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp.git
+[submodule "module/src/main/cpp/LSPlant"]
+	path = module/src/main/cpp/LSPlant
+	url = https://github.com/LSPosed/LSPlant.git

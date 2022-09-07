@@ -802,6 +802,7 @@ void *ScheduleLocalPushes_orig = nullptr;
 
 void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unixTimes,
                               Il2CppArray *values, int _priority, Il2CppString *imgPath) {
+
     auto charaId = GetInt64Safety(reinterpret_cast<Int64 *>(Array_GetValue(values, 0)));
     if (!masterDataManager) {
         return;
@@ -812,14 +813,17 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
                                                                       0)->methodPointer)(
             masterDataManager);
     auto cateId = type == 0 ? 184 : 185;
-    /*auto messageIl2CppStr = reinterpret_cast<Il2CppString *(*)(Il2CppObject *, int category,
+    auto messageIl2CppStrOrig = reinterpret_cast<Il2CppString *(*)(Il2CppObject *, int category,
                                                                int index)>(
             il2cpp_class_get_method_from_name(masterString->klass, "GetText", 2)->methodPointer
-    )(masterString, cateId, charaId);*/
+    )(masterString, cateId, (int)charaId);
     // ex. 1841001
     auto messageKey = string(to_string(cateId)).append(
             to_string(charaId));
     auto messageIl2CppStr = localify::get_localized_string(stoi(messageKey));
+    if (!messageIl2CppStr) {
+        messageIl2CppStr = messageIl2CppStrOrig;
+    }
 
     auto channelId = type == 0 ? "NOTIF_Tp_0" : "NOTIF_Rp_0";
     auto id = type == 0 ? 100 : 200;
@@ -1347,8 +1351,6 @@ void hookMethods() {
         ADD_HOOK(GeneratePushNotifyCharaIconPng)
 
         ADD_HOOK(ScheduleLocalPushes)
-
-        LOGD("RESTORE NOTIF");
     }
 
     ADD_HOOK(Device_IsIllegalUser)

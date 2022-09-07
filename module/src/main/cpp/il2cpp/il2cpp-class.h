@@ -424,7 +424,12 @@ typedef struct Il2CppDefaults {
 
 extern Il2CppDefaults il2cpp_defaults;
 
+typedef struct UInt64 {
+    unsigned long m_value;
+} UInt64;
+
 typedef struct DateTime {
+    UInt64 dateData;
 } DateTime;
 
 typedef struct TimeSpan {

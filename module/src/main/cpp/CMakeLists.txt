@@ -16,11 +16,17 @@ endmacro()
 
 SET_OPTION(DOBBY_DEBUG OFF)
 SET_OPTION(DOBBY_GENERATE_SHARED OFF)
+SET_OPTION(LSPLANT_BUILD_SHARED OFF)
+
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/Dobby)
 
 include_directories(${CMAKE_CURRENT_LIST_DIR}/rapidjson/include)
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/SQLiteCpp)
+
+include_directories(${CMAKE_CURRENT_LIST_DIR}/LSPlant/lsplant/src/main/jni/include)
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/LSPlant/lsplant/src/main/jni)
 
 include_directories(include)
 
@@ -45,15 +51,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_FLAGS} ${CXX_FLAGS}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
+
 if (${API} STREQUAL "zygisk")
-    add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp YAHFA/yahfa.cpp YAHFA/trampoline.cpp YAHFA/utils.cpp ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
-    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3)
+    add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
+    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static)
 elseif (${API} STREQUAL "riru")
     find_package(riru REQUIRED CONFIG)
 
-    add_library(${MODULE_NAME} SHARED main_riru.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp YAHFA/yahfa.cpp YAHFA/trampoline.cpp YAHFA/utils.cpp ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
-    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 riru::riru)
-endif()
+    add_library(${MODULE_NAME} SHARED main_riru.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
+    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static riru::riru)
+endif ()
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_custom_command(TARGET ${MODULE_NAME} POST_BUILD
