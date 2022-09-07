@@ -1,3 +1,9 @@
+## 2.4.0
+
+- Bypass root check
+- Add Traditional chinese package (MyCard version)
+- Restore notification on korean version
+
 ## 2.3.3
 
 - Fix module not working where using NativeBridge (x86)
