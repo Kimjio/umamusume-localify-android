@@ -199,7 +199,11 @@ public class ManageTranslateActivity extends BaseActivity<ManageTranslateActivit
             });
         }).start();
 
-        binding.addButton.setOnClickListener(v -> openMultipleDocuments.launch(new String[]{"application/json"}));
+        binding.addButton.setOnClickListener(v ->
+                openMultipleDocuments.launch(new String[]{
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ?
+                                "application/json" :
+                                "application/octet-stream"}));
     }
 
     private void toggleFileEnabled(Runnable setViewEnabled, Uri path, boolean enabled) {
