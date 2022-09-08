@@ -1,3 +1,9 @@
+## 1.1.1
+
+- Fix cannot select json files on Android Pie and earlier
+- Fix crash when file does not exist in dict list
+- Fix wrong background color when blur disabled on Android S and later
+- 
 ## 1.1.0
 
 - Add Traditional chinese package (MyCard version)
