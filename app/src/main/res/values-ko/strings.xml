@@ -16,4 +16,5 @@
     <string name="restart_app">앱 재시작</string>
     <string name="files_empty">추가된 파일이 없습니다.</string>
     <string name="unknown">알 수 없음</string>
+    <string name="error_occurred">오류가 발생했습니다</string>
 </resources>

@@ -16,4 +16,5 @@
     <string name="restart_app">Restart app</string>
     <string name="files_empty">No files have been added.</string>
     <string name="unknown">Unknown</string>
+    <string name="error_occurred">Error occurred</string>
 </resources>

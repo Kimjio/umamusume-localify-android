@@ -41,6 +41,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -118,7 +119,7 @@ public class ManageTranslateActivity extends BaseActivity<ManageTranslateActivit
                         if (object.has("_supportVersion")) {
                             supportVersion = object.getString("_supportVersion");
                         }
-                        TranslateFile file = new TranslateFile(item.getName(), item.getUri(), supportVersion, enabled, item.canWrite());
+                        TranslateFile file = new TranslateFile(item.getName(), item.getUri(), supportVersion, enabled, item.canWrite(), false);
                         Set<String> set = Objects.requireNonNull(dataStore.getStringSet("dicts", new ArraySet<>()));
                         String[] split = file.path.getPath().split(packageName + "/");
                         boolean added = set.add(split[split.length - 1]);
@@ -158,32 +159,43 @@ public class ManageTranslateActivity extends BaseActivity<ManageTranslateActivit
         Set<String> dictSet = Objects.requireNonNull(dataStore.getStringSet("dicts", new ArraySet<>()));
         new Thread(() -> {
             List<TranslateFile> files = dictSet.stream()
-                    .map(item ->
-                            DocumentFile.fromSingleUri(this, Uri.parse(path.toString() + "%2F" + item.replaceAll("/", "%2F"))))
                     .map(item -> {
-                        try (InputStream is = getContentResolver().openInputStream(item.getUri())) {
-                            StringBuilder builder = new StringBuilder();
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                        DocumentFile file =DocumentFile.fromSingleUri(this, Uri.parse(path.toString() + "%2F" + item.replaceAll("/", "%2F")));
+                        if (file != null) return Map.of("origPath", item, "file", file);
+                        return Map.of("origPath", item);
+                    })
+                    .map(map -> {
+                        if (map.containsKey("file")) {
+                            DocumentFile item = (DocumentFile) Objects.requireNonNull(map.get("file"));
+                            if (item.exists()) {
+                                try (InputStream is = getContentResolver().openInputStream(item.getUri())) {
+                                    StringBuilder builder = new StringBuilder();
+                                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                builder.append(line);
-                            }
-                            JSONObject object = new JSONObject(builder.toString());
-                            boolean enabled = true;
-                            if (object.has("_enabled")) {
-                                enabled = object.getBoolean("_enabled");
-                            }
+                                    String line;
+                                    while ((line = reader.readLine()) != null) {
+                                        builder.append(line);
+                                    }
+                                    JSONObject object = new JSONObject(builder.toString());
+                                    boolean enabled = true;
+                                    if (object.has("_enabled")) {
+                                        enabled = object.getBoolean("_enabled");
+                                    }
 
-                            String supportVersion = null;
-                            if (object.has("_supportVersion")) {
-                                supportVersion = object.getString("_supportVersion");
+                                    String supportVersion = null;
+                                    if (object.has("_supportVersion")) {
+                                        supportVersion = object.getString("_supportVersion");
+                                    }
+                                    return new TranslateFile(item.getName(), item.getUri(), supportVersion, enabled, item.canWrite(), false);
+                                } catch (IOException | JSONException e) {
+                                    e.printStackTrace();
+                                    return new TranslateFile(item.getName(), item.getUri(), null, false, false, true);
+                                }
+                            } else {
+                                return new TranslateFile(Objects.requireNonNull(map.get("origPath")).toString(), null, null, false, false, true);
                             }
-                            return new TranslateFile(item.getName(), item.getUri(), supportVersion, enabled, item.canWrite());
-                        } catch (IOException | JSONException e) {
-                            e.printStackTrace();
-                            return null;
                         }
+                        return null;
                     })
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
@@ -267,15 +279,16 @@ public class ManageTranslateActivity extends BaseActivity<ManageTranslateActivit
         public final Uri path;
         public String supportVersion;
         public boolean enabled;
-
         public boolean canWrite;
+        public boolean hasError;
 
-        public TranslateFile(String fileName, Uri path, String supportVersion, boolean enabled, boolean canWrite) {
+        public TranslateFile(String fileName, Uri path, String supportVersion, boolean enabled, boolean canWrite, boolean hasError) {
             this.fileName = fileName;
             this.path = path;
             this.supportVersion = supportVersion;
             this.enabled = enabled;
             this.canWrite = canWrite;
+            this.hasError = hasError;
         }
     }
 
@@ -327,21 +340,30 @@ public class ManageTranslateActivity extends BaseActivity<ManageTranslateActivit
             String supportedVersion = file.supportVersion;
             holder.binding.supportVersion.setVisibility(supportedVersion == null ? View.GONE : View.VISIBLE);
             holder.binding.supportVersion.setText(Objects.requireNonNullElse(context.getString(R.string.support_version, supportedVersion), ""));
-            holder.binding.useTranslate.setChecked(file.enabled);
-            holder.binding.useTranslate.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                holder.itemView.setEnabled(false);
-                holder.binding.fileName.setEnabled(false);
-                holder.binding.supportVersion.setEnabled(false);
-                holder.binding.removeButton.setEnabled(false);
-                holder.binding.useTranslate.setEnabled(false);
-                useTranslateCheckedChangeListener.onCheckedChangeListener(() -> {
-                    holder.itemView.setEnabled(true);
-                    holder.binding.fileName.setEnabled(true);
-                    holder.binding.supportVersion.setEnabled(true);
-                    holder.binding.removeButton.setEnabled(true);
-                    holder.binding.useTranslate.setEnabled(true);
-                }, file.path, isChecked);
-            });
+            if (file.hasError) {
+                holder.binding.errorIcon.setVisibility(View.VISIBLE);
+                holder.binding.useTranslate.setVisibility(View.GONE);
+                holder.binding.supportVersion.setVisibility(View.VISIBLE);
+                holder.binding.supportVersion.setText(context.getString(R.string.error_occurred));
+            } else {
+                holder.binding.errorIcon.setVisibility(View.GONE);
+                holder.binding.useTranslate.setVisibility(View.VISIBLE);
+                holder.binding.useTranslate.setChecked(file.enabled);
+                holder.binding.useTranslate.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    holder.itemView.setEnabled(false);
+                    holder.binding.fileName.setEnabled(false);
+                    holder.binding.supportVersion.setEnabled(false);
+                    holder.binding.removeButton.setEnabled(false);
+                    holder.binding.useTranslate.setEnabled(false);
+                    useTranslateCheckedChangeListener.onCheckedChangeListener(() -> {
+                        holder.itemView.setEnabled(true);
+                        holder.binding.fileName.setEnabled(true);
+                        holder.binding.supportVersion.setEnabled(true);
+                        holder.binding.removeButton.setEnabled(true);
+                        holder.binding.useTranslate.setEnabled(true);
+                    }, file.path, isChecked);
+                });
+            }
             holder.binding.removeButton.setEnabled(true);
             holder.binding.removeButton.setOnClickListener(v -> {
                 v.setEnabled(false);

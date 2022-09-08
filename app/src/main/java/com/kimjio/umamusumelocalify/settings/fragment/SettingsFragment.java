@@ -22,6 +22,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceGroup;
 import androidx.preference.PreferenceManager;
 import androidx.preference.SeekBarPreference;
+import androidx.preference.SwitchPreference;
 import androidx.preference.TwoStatePreference;
 
 import com.kimjio.umamusumelocalify.settings.Constants;
@@ -77,9 +78,10 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             getPreferenceScreen().setEnabled(false);
         }
 
-        Preference restoreNotificationPreference = Objects.requireNonNull(findPreference("restoreNotification"));
+        SwitchPreference restoreNotificationPreference = Objects.requireNonNull(findPreference("restoreNotification"));
         restoreNotificationPreference.setDefaultValue(Constants.PKG_KOR.equals(packageName));
         restoreNotificationPreference.setVisible(Constants.PKG_KOR.equals(packageName));
+        dataStore.putBoolean(restoreNotificationPreference.getKey(), Constants.PKG_KOR.equals(packageName));
 
         String moduleVersion = ModuleUtils.getModuleVersion();
         if (moduleVersion != null) {
