@@ -34,8 +34,9 @@ public abstract class BaseActivity<VB extends ViewDataBinding> extends AppCompat
     protected int backgroundColor;
 
     private final Consumer<Boolean> crossWindowBlurEnabledListener = enabled -> {
-        getWindow().setBackgroundDrawable(
-                enabled ? new ColorDrawable(backgroundColor) : new ColorDrawable(backgroundColor & (0xFF << 24)));
+        if (enabled) {
+            getWindow().setBackgroundDrawable(new ColorDrawable(backgroundColor));
+        }
     };
 
     @Override
