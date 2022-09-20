@@ -152,7 +152,7 @@ void an_text_set_material_to_textmesh_hook(Il2CppObject *thisObj) {
     reinterpret_cast<decltype(an_text_set_material_to_textmesh_hook) * >
     (an_text_set_material_to_textmesh_orig)(
             thisObj);
-    if (!assets) return;
+    if (!(assets && g_replace_to_custom_font)) return;
 
     FieldInfo *mainField = il2cpp_class_get_field_from_name(thisObj->klass, "_mainTextMesh");
     FieldInfo *mainRenderer = il2cpp_class_get_field_from_name(thisObj->klass,
