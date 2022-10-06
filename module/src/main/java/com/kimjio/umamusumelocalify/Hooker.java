@@ -1,9 +1,13 @@
 package com.kimjio.umamusumelocalify;
 
 import android.app.Notification;
+import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Icon;
 import android.util.Log;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -51,11 +55,38 @@ public final class Hooker {
 
     Notification build(MethodCallback callback) throws InvocationTargetException, IllegalAccessException {
         Notification.Builder thiz = (Notification.Builder) callback.args[0];
-        String largeIcon = thiz.getExtras().getString(KEY_LARGE_ICON);
-        if (largeIcon != null) {
-            thiz.setLargeIcon(BitmapFactory.decodeFile(largeIcon));
+        Icon largeIcon = null;
+        String largeIconPath = thiz.getExtras().getString(KEY_LARGE_ICON);
+        try {
+            Field contextField = thiz.getClass().getField("mContext");
+            Context context = (Context) contextField.get(thiz);
+            largeIcon = Icon.createWithResource(context, findResourceIdInContextByName(context, largeIconPath));
+        } catch (Exception ignore) {
         }
+        if (largeIconPath != null && largeIcon == null) {
+            largeIcon = Icon.createWithBitmap(BitmapFactory.decodeFile(largeIconPath));
+        }
+        thiz.setLargeIcon(largeIcon);
         return (Notification) callback.backup.invoke(thiz);
+    }
+
+    private int findResourceIdInContextByName(Context context, String name) {
+        if (name == null)
+            return 0;
+
+        try {
+            Resources res = context.getResources();
+            if (res != null) {
+                int id = res.getIdentifier(name, "mipmap", context.getPackageName());
+                if (id == 0)
+                    return res.getIdentifier(name, "drawable", context.getPackageName());
+                else
+                    return id;
+            }
+            return 0;
+        } catch (Resources.NotFoundException e) {
+            return 0;
+        }
     }
 
     public static void load() throws NoSuchMethodException, SecurityException {
