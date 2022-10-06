@@ -122,12 +122,12 @@
 
     <PreferenceCategory android:title="@string/pref_cate_etc">
 
-        <SwitchPreference
+        <!--<SwitchPreference
             app:isPreferenceVisible="false"
             android:defaultValue="true"
             app:icon="@drawable/ic_notification"
             android:key="restoreNotification"
-            android:title="@string/pref_restore_notification" />
+            android:title="@string/pref_restore_notification" />-->
 
         <com.kimjio.umamusumelocalify.settings.preference.FolderPickerPreference
             android:icon="@drawable/ic_replace_assets"
