@@ -92,12 +92,11 @@ bool populate_with_errors_hook(void *thisObj, Il2CppString *str, TextGenerationS
 void *localizeextension_text_orig = nullptr;
 
 Il2CppString *localizeextension_text_hook(int id) {
-    Il2CppString *localized = localify::get_localized_string(id);
-    return localized ? localized
-                     : reinterpret_cast<decltype(localizeextension_text_hook) * >
-           (localizeextension_text_orig)(
-                    id
-            );
+    auto orig_result = reinterpret_cast<decltype(localizeextension_text_hook) *>(localizeextension_text_orig)(
+            id);
+    auto result = g_static_entries_use_hash ? localify::get_localized_string(orig_result)
+                                            : localify::get_localized_string(id);
+    return result ? result : orig_result;
 }
 
 void *get_preferred_width_orig = nullptr;
@@ -113,7 +112,8 @@ void *localize_get_orig = nullptr;
 
 Il2CppString *localize_get_hook(int id) {
     auto orig_result = reinterpret_cast<decltype(localize_get_hook) * > (localize_get_orig)(id);
-    auto result = localify::get_localized_string(id);
+    auto result = g_static_entries_use_hash ? localify::get_localized_string(orig_result)
+                                            : localify::get_localized_string(id);
 
     return result ? result : orig_result;
 }
@@ -814,9 +814,9 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
             masterDataManager);
     auto cateId = type == 0 ? 184 : 185;
     auto messageIl2CppStrOrig = reinterpret_cast<Il2CppString *(*)(Il2CppObject *, int category,
-                                                               int index)>(
+                                                                   int index)>(
             il2cpp_class_get_method_from_name(masterString->klass, "GetText", 2)->methodPointer
-    )(masterString, cateId, (int)charaId);
+    )(masterString, cateId, (int) charaId);
     // ex. 1841001
     auto messageKey = string(to_string(cateId)).append(
             to_string(charaId));
@@ -861,12 +861,17 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
 }
 
 void dump_all_entries() {
-// 0 is None
+    vector<const u16string> static_entries;
+    // 0 is None
     for (int i = 1;; i++) {
         auto *str = reinterpret_cast<decltype(localize_get_hook) * > (localize_get_orig)(i);
 
         if (str && *str->start_char) {
-            logger::write_entry(i, str->start_char);
+            if (g_static_entries_use_hash) {
+                static_entries.emplace_back(str->start_char);
+            } else {
+                logger::write_entry(i, str->start_char);
+            }
         } else {
             // check next string, if it's still empty, then we are done!
             auto *nextStr = reinterpret_cast<decltype(localize_get_hook) * > (localize_get_orig)(
@@ -874,6 +879,9 @@ void dump_all_entries() {
             if (!(nextStr && *nextStr->start_char))
                 break;
         }
+    }
+    if (g_static_entries_use_hash) {
+        logger::write_static_dict(static_entries);
     }
 }
 
@@ -1424,7 +1432,7 @@ void hookMethods() {
         logger::dump_db_texts();
     }
 
-    if (g_ui_use_system_resolution) {
+    if (g_ui_use_system_resolution || g_force_landscape) {
         ADD_HOOK(set_resolution)
     }
 

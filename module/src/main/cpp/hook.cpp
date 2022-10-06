@@ -21,6 +21,7 @@ std::string g_font_assetbundle_path;
 std::string g_font_asset_name;
 bool g_dump_entries = false;
 bool g_dump_db_entries = false;
+bool g_static_entries_use_hash = false;
 int g_graphics_quality = -1;
 int g_anti_aliasing = -1;
 bool g_force_landscape = false;
@@ -242,6 +243,9 @@ std::optional<std::vector<std::string>> read_config() {
         }
         if (document.HasMember("dumpDbEntries")) {
             g_dump_db_entries = document["dumpDbEntries"].GetBool();
+        }
+        if (document.HasMember("staticEntriesUseHash")) {
+            g_static_entries_use_hash = document["staticEntriesUseHash"].GetBool();
         }
         if (document.HasMember("maxFps")) {
             g_max_fps = document["maxFps"].GetInt();

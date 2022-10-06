@@ -27,4 +27,6 @@
     <string name="pref_module_version">모듈 버전</string>
 
     <string name="pref_restore_notification">알림 복원</string>
+
+    <string name="pref_static_entries_use_hash">정적 항목 로드 시 해시 사용</string>
 </resources>

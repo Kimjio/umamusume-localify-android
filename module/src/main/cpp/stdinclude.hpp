@@ -60,6 +60,7 @@ extern string g_font_assetbundle_path;
 extern string g_font_asset_name;
 extern bool g_dump_entries;
 extern bool g_dump_db_entries;
+extern bool g_static_entries_use_hash;
 /**
  * -1 Auto (Default behavior)
  * 0 Toon1280, Anti: 0

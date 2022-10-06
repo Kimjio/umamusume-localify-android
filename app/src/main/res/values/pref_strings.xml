@@ -27,4 +27,6 @@
     <string name="pref_module_version">Module version</string>
 
     <string name="pref_restore_notification">Restore notification</string>
+
+    <string name="pref_static_entries_use_hash">Using hash when loading static entries</string>
 </resources>

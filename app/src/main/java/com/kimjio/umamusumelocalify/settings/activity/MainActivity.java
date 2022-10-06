@@ -258,6 +258,10 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
                     }
                 }
             }
+        } else {
+            // Permission revoked
+            preferences.edit().remove(currentPackageName).apply();
+            setPreferences(currentPackageName);
         }
     }
 

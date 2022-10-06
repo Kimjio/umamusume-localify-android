@@ -115,9 +115,9 @@
 
         <SwitchPreference
             android:defaultValue="true"
+            android:icon="@drawable/ic_orientation"
             android:key="uiLoadingShowOrientationGuide"
-            android:title="@string/pref_loading_show_orientation_guide"
-            app:icon="@drawable/ic_orientation" />
+            android:title="@string/pref_loading_show_orientation_guide" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_cate_etc">
@@ -133,6 +133,12 @@
             android:icon="@drawable/ic_replace_assets"
             android:key="replaceAssetsPath"
             android:title="@string/pref_replace_assets_path" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_static_hash"
+            android:key="staticEntriesUseHash"
+            android:title="@string/pref_static_entries_use_hash" />
 
         <Preference
             android:icon="@drawable/ic_translate"

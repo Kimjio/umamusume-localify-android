@@ -13,6 +13,7 @@ using namespace rapidjson;
 
 namespace logger {
     fstream log_file;
+    fstream static_json;
 
     bool enabled = false;
     bool request_exit = false;
@@ -127,5 +128,32 @@ namespace logger {
         log_file << "\"" << hash << "\": \"" << u8str << "\",\n";
 
         has_change = true;
+    }
+
+    void write_static_dict(const vector<const u16string>& dict) {
+        if (g_enable_logger) {
+            string jsonPath = string("/sdcard/Android/data/").append(
+                    Game::GetCurrentPackageName()).append(
+                    "/static.json");
+            static_json.open(jsonPath, ios::out);
+            static_json << "{\n";
+            thread t([dict]() {
+                for (int i = 0; i < dict.size(); i++) {
+                    auto hash = std::hash<u16string>{}(dict[i]);
+                    auto u8str = localify::u16_u8(dict[i]);
+                    replaceAll(u8str, "\n", "\\n");
+                    replaceAll(u8str, "\"", "\\\"");
+                    if (i == dict.size() - 1) {
+                        static_json << "\"" << hash << "\": \"" << u8str << "\"\n";
+                    } else {
+                        static_json << "\"" << hash << "\": \"" << u8str << "\",\n";
+                    }
+                }
+                static_json << "}\n";
+                static_json.close();
+            });
+
+            t.detach();
+        }
     }
 }
