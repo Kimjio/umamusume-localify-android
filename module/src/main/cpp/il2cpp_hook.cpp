@@ -655,6 +655,10 @@ void SetResolution_hook(int w, int h, bool fullscreen, bool forceUpdate) {
     }
 }
 
+int (*Screen_get_width)();
+
+int (*Screen_get_height)();
+
 void *Screen_set_orientation_orig = nullptr;
 
 void Screen_set_orientation_hook(ScreenOrientation orientation) {
@@ -736,6 +740,34 @@ void *Device_IsIllegalUser_orig = nullptr;
 
 Boolean Device_IsIllegalUser_hook() {
     return Boolean{.m_value = false};
+}
+
+void *MoviePlayerForUI_AdjustScreenSize_orig = nullptr;
+
+void MoviePlayerForUI_AdjustScreenSize_hook(Il2CppObject *thisObj, Vector2_t dispRectWH,
+                                            bool isPanScan) {
+    auto width = static_cast<float>(Screen_get_width());
+    auto height = static_cast<float>(Screen_get_height());
+    if (roundf(1080 / (max(1.0f, height / 1080.f) * g_force_landscape_ui_scale)) == dispRectWH.y) {
+        dispRectWH.y = width;
+    }
+    dispRectWH.x = height;
+    reinterpret_cast<decltype(MoviePlayerForUI_AdjustScreenSize_hook) *>(MoviePlayerForUI_AdjustScreenSize_orig)(
+            thisObj, dispRectWH, isPanScan);
+}
+
+void *MoviePlayerForObj_AdjustScreenSize_orig = nullptr;
+
+void MoviePlayerForObj_AdjustScreenSize_hook(Il2CppObject *thisObj, Vector2_t dispRectWH,
+                                             bool isPanScan) {
+    auto width = static_cast<float>(Screen_get_width());
+    auto height = static_cast<float>(Screen_get_height());
+    if (roundf(1080 / (max(1.0f, height / 1080.f) * g_force_landscape_ui_scale)) == dispRectWH.y) {
+        dispRectWH.y = width;
+    }
+    dispRectWH.x = height;
+    reinterpret_cast<decltype(MoviePlayerForObj_AdjustScreenSize_hook) *>(MoviePlayerForObj_AdjustScreenSize_orig)(
+            thisObj, dispRectWH, isPanScan);
 }
 
 void (*SendNotification)(Il2CppObject *thisObj, Il2CppString *ChannelId, Il2CppString *title,
@@ -1157,6 +1189,16 @@ void hookMethods() {
             "Gallop",
             "Screen", "ChangeScreenOrientation", 2));
 
+    Screen_get_width = reinterpret_cast<int (*)()>(il2cpp_symbols::get_method_pointer(
+            "UnityEngine.CoreModule.dll",
+            "UnityEngine",
+            "Screen", "get_width", -1));
+
+    Screen_get_height = reinterpret_cast<int (*)()>(il2cpp_symbols::get_method_pointer(
+            "UnityEngine.CoreModule.dll",
+            "UnityEngine",
+            "Screen", "get_height", -1));
+
     auto Screen_set_orientation_addr = reinterpret_cast<void (*)(
             ScreenOrientation)>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.CoreModule.dll",
@@ -1212,6 +1254,16 @@ void hookMethods() {
                                                                float)>(il2cpp_symbols::get_method_pointer(
             "Cute.Core.Assembly.dll",
             "Cute.Core", "Device", "IsIllegalUser", -1));
+
+    auto MoviePlayerForUI_AdjustScreenSize_addr = reinterpret_cast<void (*)(Il2CppObject *,
+                                                                            Vector2_t,
+                                                                            bool)>(il2cpp_symbols::get_method_pointer(
+            "Cute.Cri.Assembly.dll", "Cute.Cri", "MoviePlayerForUI", "AdjustScreenSize", 2));
+
+    auto MoviePlayerForObj_AdjustScreenSize_addr = reinterpret_cast<void (*)(Il2CppObject *,
+                                                                             Vector2_t,
+                                                                             bool)>(il2cpp_symbols::get_method_pointer(
+            "Cute.Cri.Assembly.dll", "Cute.Cri", "MoviePlayerForObj", "AdjustScreenSize", 2));
 
     load_from_file = reinterpret_cast<Il2CppObject *(*)(
             Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
@@ -1413,6 +1465,8 @@ void hookMethods() {
         ADD_HOOK(WaitDeviceOrientation)
         ADD_HOOK(DeviceOrientationGuide_Show)
         ADD_HOOK(ChangeScreenOrientation)
+        ADD_HOOK(MoviePlayerForUI_AdjustScreenSize);
+        ADD_HOOK(MoviePlayerForObj_AdjustScreenSize);
     }
 
     if (g_replace_to_builtin_font || g_replace_to_custom_font) {
