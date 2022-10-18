@@ -298,9 +298,9 @@ std::optional<std::vector<std::string>> read_config() {
         if (document.HasMember("uiLoadingShowOrientationGuide")) {
             g_ui_loading_show_orientation_guide = document["uiLoadingShowOrientationGuide"].GetBool();
         }
-        if (document.HasMember("restoreNotification")) {
+        /*if (document.HasMember("restoreNotification")) {
             g_restore_notification = document["restoreNotification"].GetBool();
-        }
+        }*/
         if (document.HasMember("replaceAssetsPath")) {
             auto replaceAssetsPath = localify::u8_u16(document["replaceAssetsPath"].GetString());
             if (!replaceAssetsPath.starts_with(u"/")) {

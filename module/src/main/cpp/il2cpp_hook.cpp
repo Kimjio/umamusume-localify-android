@@ -1337,7 +1337,7 @@ void hookMethods() {
     DobbyHook((void *)_name_##_addr, (void *) _name_##_hook, (void **) &_name_##_orig);
 #pragma endregion
 
-    if (Game::currentGameRegion == Game::Region::KOR && g_restore_notification) {
+    if (Game::currentGameRegion == Game::Region::KOR && g_restore_notification && false) {
         SendNotification = reinterpret_cast<void (*)(
                 Il2CppObject *, Il2CppString *, Il2CppString *,
                 Il2CppString *,

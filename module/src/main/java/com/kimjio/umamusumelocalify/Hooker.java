@@ -3,6 +3,7 @@ package com.kimjio.umamusumelocalify;
 import android.app.Notification;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
 import android.util.Log;
@@ -64,7 +65,10 @@ public final class Hooker {
         } catch (Exception ignore) {
         }
         if (largeIconPath != null && largeIcon == null) {
-            largeIcon = Icon.createWithBitmap(BitmapFactory.decodeFile(largeIconPath));
+            Bitmap bitmap = BitmapFactory.decodeFile(largeIconPath);
+            if (bitmap != null) {
+                largeIcon = Icon.createWithBitmap(bitmap);
+            }
         }
         thiz.setLargeIcon(largeIcon);
         return (Notification) callback.backup.invoke(thiz);
