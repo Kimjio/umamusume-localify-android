@@ -54,6 +54,7 @@ extern bool g_enable_logger;
 extern int g_max_fps;
 extern float g_ui_animation_scale;
 extern bool g_ui_use_system_resolution;
+extern float g_resolution_3d_scale;
 extern bool g_replace_to_builtin_font;
 extern bool g_replace_to_custom_font;
 extern string g_font_assetbundle_path;
@@ -61,13 +62,13 @@ extern string g_font_asset_name;
 extern bool g_dump_entries;
 extern bool g_dump_db_entries;
 extern bool g_static_entries_use_hash;
+extern bool g_static_entries_use_text_id_name;
 /**
  * -1 Auto (Default behavior)
  * 0 Toon1280, Anti: 0
  * 1 Toon1280x2, Anti: 2
  * 2 Toon1280x4, Anti: 4
  * 3 ToonFull, Anti: 8
- * 4 Max, Anti: 8
  */
 extern int g_graphics_quality;
 /**
@@ -83,6 +84,7 @@ extern float g_force_landscape_ui_scale;
 extern bool g_ui_loading_show_orientation_guide;
 extern bool g_restore_notification;
 extern std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
+extern std::string g_replace_assetbundle_file_path;
 
 namespace {
     // copy-pasted from https://stackoverflow.com/questions/3418231/replace-part-of-a-string-with-another-string

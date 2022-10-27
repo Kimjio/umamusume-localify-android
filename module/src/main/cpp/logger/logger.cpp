@@ -14,6 +14,7 @@ using namespace rapidjson;
 namespace logger {
     fstream log_file;
     fstream static_json;
+    fstream not_matched_json;
 
     bool enabled = false;
     bool request_exit = false;
@@ -130,7 +131,7 @@ namespace logger {
         has_change = true;
     }
 
-    void write_static_dict(const vector<const u16string>& dict) {
+    void write_static_dict(const vector<const u16string> &dict) {
         if (g_enable_logger) {
             string jsonPath = string("/sdcard/Android/data/").append(
                     Game::GetCurrentPackageName()).append(
@@ -154,6 +155,53 @@ namespace logger {
             });
 
             t.detach();
+        }
+    }
+
+    void write_text_id_static_dict(const vector<pair<const string, const u16string>> &dict,
+                                   const vector<pair<const string, const u16string>> &not_matched) {
+        if (g_enable_logger) {
+            string jsonPath = string("/sdcard/Android/data/").append(
+                    Game::GetCurrentPackageName()).append(
+                    "/");
+            static_json.open(jsonPath + "text_id_static.json", ios::out);
+            static_json << "{\n";
+            thread t([dict]() {
+                for (auto pair = dict.begin(); pair != dict.end(); pair++) {
+                    auto u8str = localify::u16_u8(pair->second);
+                    replaceAll(u8str, "\n", "\\n");
+                    replaceAll(u8str, "\"", "\\\"");
+                    if (next(pair) == dict.end()) {
+                        static_json << "\"" << pair->first << "\": \"" << u8str << "\"\n";
+                    } else {
+                        static_json << "\"" << pair->first << "\": \"" << u8str << "\",\n";
+                    }
+                }
+                static_json << "}\n";
+                static_json.close();
+            });
+
+            t.detach();
+            if (!not_matched.empty()) {
+                not_matched_json.open(jsonPath + "text_id_not_matched.json", ios::out);
+                not_matched_json << "{\n";
+                thread t1([not_matched]() {
+                    for (auto pair = not_matched.begin(); pair != not_matched.end(); pair++) {
+                        auto u8str = localify::u16_u8(pair->second);
+                        replaceAll(u8str, "\n", "\\n");
+                        replaceAll(u8str, "\"", "\\\"");
+                        if (next(pair) == not_matched.end()) {
+                            not_matched_json << "\"" << pair->first << "\": \"" << u8str << "\"\n";
+                        } else {
+                            not_matched_json << "\"" << pair->first << "\": \"" << u8str << "\",\n";
+                        }
+                    }
+                    not_matched_json << "}\n";
+                    not_matched_json.close();
+                });
+
+                t1.detach();
+            }
         }
     }
 }

@@ -15,6 +15,7 @@ bool g_enable_logger = false;
 int g_max_fps = -1;
 float g_ui_animation_scale = 1.0f;
 bool g_ui_use_system_resolution = false;
+float g_resolution_3d_scale = 1.0f;
 bool g_replace_to_builtin_font = false;
 bool g_replace_to_custom_font = false;
 std::string g_font_assetbundle_path;
@@ -22,6 +23,7 @@ std::string g_font_asset_name;
 bool g_dump_entries = false;
 bool g_dump_db_entries = false;
 bool g_static_entries_use_hash = false;
+bool g_static_entries_use_text_id_name = false;
 int g_graphics_quality = -1;
 int g_anti_aliasing = -1;
 bool g_force_landscape = false;
@@ -29,6 +31,8 @@ float g_force_landscape_ui_scale = 0.5f;
 bool g_ui_loading_show_orientation_guide = true;
 bool g_restore_notification = true;
 std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
+std::string g_replace_assetbundle_file_path;
+std::string text_id_dict;
 
 bool isGame(const char *pkgNm) {
     if (!pkgNm)
@@ -247,6 +251,9 @@ std::optional<std::vector<std::string>> read_config() {
         if (document.HasMember("staticEntriesUseHash")) {
             g_static_entries_use_hash = document["staticEntriesUseHash"].GetBool();
         }
+        if (document.HasMember("staticEntriesUseTextIdName")) {
+            g_static_entries_use_text_id_name = document["staticEntriesUseTextIdName"].GetBool();
+        }
         if (document.HasMember("maxFps")) {
             g_max_fps = document["maxFps"].GetInt();
         }
@@ -255,6 +262,9 @@ std::optional<std::vector<std::string>> read_config() {
         }
         if (document.HasMember("uiUseSystemResolution")) {
             g_ui_use_system_resolution = document["uiUseSystemResolution"].GetBool();
+        }
+        if (document.HasMember("resolution3dScale")) {
+            g_resolution_3d_scale = document["resolution3dScale"].GetFloat();
         }
         if (document.HasMember("replaceFont")) {
             g_replace_to_builtin_font = document["replaceFont"].GetBool();
@@ -316,6 +326,16 @@ std::optional<std::vector<std::string>> read_config() {
                     }
                 }
             }
+        }
+
+        if (document.HasMember("replaceAssetBundleFilePath"))
+        {
+            g_replace_assetbundle_file_path = document["replaceAssetBundleFilePath"].GetString();
+        }
+
+        if (document.HasMember("textIdDict"))
+        {
+            text_id_dict = document["textIdDict"].GetString();
         }
 
         if (document.HasMember("dicts")) {
@@ -453,6 +473,9 @@ void hack_thread(void *arg [[maybe_unused]]) {
         il2cpp_hook_init(il2cpp_handle);
         if (dict.has_value()) {
             localify::load_textdb(get_application_version(), &dict.value());
+        }
+        if (!text_id_dict.empty()) {
+            localify::load_textId_textdb(text_id_dict);
         }
         il2cpp_hook();
     });

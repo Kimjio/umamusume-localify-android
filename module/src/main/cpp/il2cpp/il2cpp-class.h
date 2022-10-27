@@ -424,6 +424,8 @@ typedef struct Il2CppDefaults {
 
 extern Il2CppDefaults il2cpp_defaults;
 
+struct Int32Object;
+
 typedef struct UInt64 {
     unsigned long m_value;
 } UInt64;
@@ -448,7 +450,7 @@ typedef struct Boolean {
 } Boolean;
 
 typedef struct IntPtr {
-    void * m_value;
+    void *m_value;
 } IntPtr;
 
 // UnityEngine.ScreenOrientation
@@ -483,6 +485,15 @@ public:
     // System.Single UnityEngine.Vector2::y
     float y;
 } Vector2_t;
+
+// UnityEngine.Vector2Int
+struct Vector2Int_t {
+public:
+    // System.Int32 UnityEngine.Vector2Int::m_X
+    int x;
+    // System.Int32 UnityEngine.Vector2Int::m_Y
+    int y;
+};
 
 // UnityEngine.Vector3
 typedef struct Vector3_t {

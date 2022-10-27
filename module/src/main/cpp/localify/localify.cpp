@@ -11,6 +11,7 @@ using namespace logger;
 namespace localify {
     namespace {
         unordered_map<size_t, string> text_db;
+        unordered_map<string, string> textId_text_db;
         std::vector<size_t> str_list;
     }
 
@@ -41,8 +42,9 @@ namespace localify {
         return mbs;
     }
 
-    void load_textdb(const string& version, const vector<string> *dicts) {
-        string path = string("/sdcard/Android/data/").append(Game::GetCurrentPackageName()).append("/");
+    void load_textdb(const string &version, const vector<string> *dicts) {
+        string path = string("/sdcard/Android/data/").append(Game::GetCurrentPackageName()).append(
+                "/");
         for (const auto &dict: *dicts) {
             if (filesystem::exists(path + string(dict))) {
                 std::ifstream dict_stream{path + string(dict)};
@@ -91,6 +93,36 @@ namespace localify {
         LOGI("loaded %lu localized entries.\n", text_db.size() + 0l);
     }
 
+    void load_textId_textdb(const std::string &dict) {
+        string path = string("/sdcard/Android/data/").append(Game::GetCurrentPackageName()).append(
+                "/");
+        if (filesystem::exists(path + dict)) {
+            std::ifstream dict_stream{dict};
+
+            if (!dict_stream.is_open())
+                return;
+
+            printf("Reading %s...\n", dict.data());
+
+            rapidjson::IStreamWrapper wrapper{dict_stream};
+            rapidjson::Document document;
+
+            document.ParseStream(wrapper);
+
+            for (auto iter = document.MemberBegin();
+                 iter != document.MemberEnd(); ++iter) {
+                auto key = iter->name.GetString();
+                auto value = iter->value.GetString();
+
+                textId_text_db.emplace(key, value);
+            }
+
+            dict_stream.close();
+        }
+
+        LOGI("loaded %lu TextId localized entries.", textId_text_db.size() + 0l);
+    }
+
     /*void reload_textdb(const vector<string> *dicts) {
         text_db.clear();
         load_textdb(dicts);
@@ -102,6 +134,14 @@ namespace localify {
             return true;
         }
 
+        return false;
+    }
+
+    bool localify_text_by_textId_name(const string &textIdName, string **result) {
+        if (textId_text_db.contains(textIdName)) {
+            *result = &textId_text_db[textIdName];
+            return true;
+        }
         return false;
     }
 
@@ -132,5 +172,15 @@ namespace localify {
         }
 
         return str;
+    }
+
+    Il2CppString *get_localized_string(const string &textIdName) {
+        string *result;
+
+        if (localify::localify_text_by_textId_name(textIdName, &result)) {
+            return il2cpp_string_new(result->data());
+        }
+
+        return nullptr;
     }
 }
