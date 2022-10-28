@@ -8,6 +8,7 @@
     <string name="pref_cate_graphics">Graphics</string>
     <string name="pref_max_fps">Max FPS</string>
     <string name="pref_ui_animation_scale">UI animation scale</string>
+    <string name="pref_3d_resolution_scale">3D rendering resolution scale</string>
     <string name="pref_graphics_quality">Graphics quality</string>
     <string name="pref_anti_aliasing">Anti-aliasing</string>
 
@@ -20,13 +21,16 @@
     <string name="pref_force_landscape">Force landscape</string>
     <string name="pref_force_landscape_ui_scale">UI scale on force landscape</string>
 
-    <string name="pref_cate_etc">Etc</string>
-    <string name="pref_replace_assets_path">Path to the folder containing the asset to be replaced</string>
+    <string name="pref_cate_etc">ETC</string>
+    <string name="pref_replace_assets_path">The folder containing the asset to be replaced</string>
+    <string name="pref_replace_asset_bundle">Asset bundle for replacement</string>
     <string name="pref_loading_show_orientation_guide">Show screen rotation guide while loading</string>
 
     <string name="pref_module_version">Module version</string>
 
     <string name="pref_restore_notification">Restore notification</string>
 
-    <string name="pref_static_entries_use_hash">Using hash when loading static entries</string>
+    <string name="pref_static_entries_use_hash">Using hash for static entries</string>
+    <string name="pref_static_entries_use_text_id">Using TextId for static entries</string>
+    <string name="pref_text_id_file">TextId file</string>
 </resources>

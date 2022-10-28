@@ -48,6 +48,17 @@
             app:showSeekBarValue="true"
             tools:defaultValue="1.0" />
 
+        <com.kimjio.umamusumelocalify.settings.preference.FloatSeekBarPreference
+            android:defaultValue="1.0"
+            android:icon="@drawable/ic_resolution_3d_scale"
+            android:key="resolution3dScale"
+            android:title="@string/pref_3d_resolution_scale"
+            app:max="3.0"
+            app:minFloat="0.1"
+            app:seekBarIncrementFloat="0.1"
+            app:showSeekBarValue="true"
+            tools:defaultValue="1.0" />
+
         <com.kimjio.umamusumelocalify.settings.preference.IntegerDropDownPreference
             android:defaultValue="-1"
             android:icon="@drawable/ic_graphics_quality"
@@ -130,15 +141,31 @@
             android:title="@string/pref_restore_notification" />-->
 
         <com.kimjio.umamusumelocalify.settings.preference.FolderPickerPreference
-            android:icon="@drawable/ic_replace_assets"
+            android:icon="@drawable/ic_replace_assets_folder"
             android:key="replaceAssetsPath"
             android:title="@string/pref_replace_assets_path" />
+
+        <com.kimjio.umamusumelocalify.settings.preference.FilePickerPreference
+            android:icon="@drawable/ic_replace_asset_bundle"
+            android:key="replaceAssetBundleFilePath"
+            android:title="@string/pref_replace_asset_bundle" />
 
         <CheckBoxPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_static_hash"
             android:key="staticEntriesUseHash"
             android:title="@string/pref_static_entries_use_hash" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_static_text_id"
+            android:key="staticEntriesUseTextIdName"
+            android:title="@string/pref_static_entries_use_text_id" />
+
+        <com.kimjio.umamusumelocalify.settings.preference.JsonFilePickerPreference
+            android:icon="@drawable/ic_json"
+            android:key="textIdDict"
+            android:title="@string/pref_text_id_file" />
 
         <Preference
             android:icon="@drawable/ic_translate"

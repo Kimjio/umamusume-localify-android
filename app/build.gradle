@@ -18,7 +18,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            pseudoLocalesEnabled true
+        }
         release {
+            pseudoLocalesEnabled true
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

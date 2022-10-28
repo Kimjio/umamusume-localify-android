@@ -22,23 +22,25 @@ import com.kimjio.umamusumelocalify.settings.Constants;
 import com.kimjio.umamusumelocalify.settings.R;
 import com.kimjio.umamusumelocalify.settings.activity.MainActivity;
 
-public class FilePickerPreference extends Preference implements IActivityResultPreference {
+import java.util.Objects;
+
+public class JsonFilePickerPreference extends Preference implements IActivityResultPreference {
     private String mText;
 
-    public FilePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public JsonFilePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         setSummaryProvider(SimpleSummaryProvider.getInstance());
     }
 
-    public FilePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public JsonFilePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         this(context, attrs, defStyleAttr, 0);
     }
 
-    public FilePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public JsonFilePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, R.attr.preferenceStyle);
     }
 
-    public FilePickerPreference(@NonNull Context context) {
+    public JsonFilePickerPreference(@NonNull Context context) {
         this(context, null);
     }
 
@@ -47,7 +49,10 @@ public class FilePickerPreference extends Preference implements IActivityResultP
         Activity activity = getActivity();
         if (activity != null) {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT)
-                    .setType("application/octet-stream");
+                    .setType(
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ?
+                                    "application/json" :
+                                    "application/octet-stream");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 String currentPackageName = getContext().getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE)
                         .getString(MainActivity.KEY_LAST_SELECTED_PACKAGE, null);
@@ -143,13 +148,13 @@ public class FilePickerPreference extends Preference implements IActivityResultP
         public static final Creator<SavedState> CREATOR =
                 new Creator<>() {
                     @Override
-                    public FilePickerPreference.SavedState createFromParcel(Parcel in) {
-                        return new FilePickerPreference.SavedState(in);
+                    public JsonFilePickerPreference.SavedState createFromParcel(Parcel in) {
+                        return new JsonFilePickerPreference.SavedState(in);
                     }
 
                     @Override
-                    public FilePickerPreference.SavedState[] newArray(int size) {
-                        return new FilePickerPreference.SavedState[size];
+                    public JsonFilePickerPreference.SavedState[] newArray(int size) {
+                        return new JsonFilePickerPreference.SavedState[size];
                     }
                 };
 
@@ -171,7 +176,7 @@ public class FilePickerPreference extends Preference implements IActivityResultP
         }
     }
 
-    public static final class SimpleSummaryProvider implements SummaryProvider<FilePickerPreference> {
+    public static final class SimpleSummaryProvider implements SummaryProvider<JsonFilePickerPreference> {
 
         private static SimpleSummaryProvider sSimpleSummaryProvider;
 
@@ -179,9 +184,9 @@ public class FilePickerPreference extends Preference implements IActivityResultP
         }
 
         @NonNull
-        public static FilePickerPreference.SimpleSummaryProvider getInstance() {
+        public static JsonFilePickerPreference.SimpleSummaryProvider getInstance() {
             if (sSimpleSummaryProvider == null) {
-                sSimpleSummaryProvider = new FilePickerPreference.SimpleSummaryProvider();
+                sSimpleSummaryProvider = new JsonFilePickerPreference.SimpleSummaryProvider();
             }
             return sSimpleSummaryProvider;
         }
@@ -189,7 +194,7 @@ public class FilePickerPreference extends Preference implements IActivityResultP
         @SuppressLint("PrivateResource")
         @Nullable
         @Override
-        public CharSequence provideSummary(@NonNull FilePickerPreference preference) {
+        public CharSequence provideSummary(@NonNull JsonFilePickerPreference preference) {
             if (TextUtils.isEmpty(preference.getText())) {
                 return (preference.getContext().getString(R.string.not_set));
             } else {

@@ -8,6 +8,7 @@
     <string name="pref_cate_graphics">그래픽</string>
     <string name="pref_max_fps">최대 FPS</string>
     <string name="pref_ui_animation_scale">UI 애니메이션 배율</string>
+    <string name="pref_3d_resolution_scale">3D 렌더링 해상도 배율</string>
     <string name="pref_graphics_quality">그래픽 품질</string>
     <string name="pref_anti_aliasing">안티 엘리어싱</string>
 
@@ -21,7 +22,8 @@
     <string name="pref_force_landscape_ui_scale">강제 가로화면에서의 UI 배율</string>
 
     <string name="pref_cate_etc">기타</string>
-    <string name="pref_replace_assets_path">교체할 에셋이 들어있는 폴더 경로</string>
+    <string name="pref_replace_assets_path">교체할 에셋이 들어있는 폴더</string>
+    <string name="pref_replace_asset_bundle">교체용 에셋 번들</string>
     <string name="pref_loading_show_orientation_guide">로딩 중 화면 회전 가이드 표시</string>
 
     <string name="pref_module_version">모듈 버전</string>
@@ -29,4 +31,6 @@
     <string name="pref_restore_notification">알림 복원</string>
 
     <string name="pref_static_entries_use_hash">정적 항목 로드 시 해시 사용</string>
+    <string name="pref_static_entries_use_text_id">정적 항목 로드 시 TextId 사용</string>
+    <string name="pref_text_id_file">TextId 파일</string>
 </resources>
