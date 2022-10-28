@@ -29,7 +29,7 @@ int g_anti_aliasing = -1;
 bool g_force_landscape = false;
 float g_force_landscape_ui_scale = 0.5f;
 bool g_ui_loading_show_orientation_guide = true;
-bool g_restore_notification = true;
+bool g_restore_notification = false;
 std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
 std::string g_replace_assetbundle_file_path;
 std::string text_id_dict;

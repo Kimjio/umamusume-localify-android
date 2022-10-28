@@ -724,13 +724,6 @@ void apply_graphics_quality_hook(Il2CppObject *thisObj, int quality, bool force)
     (apply_graphics_quality_orig)(thisObj,
                                   g_graphics_quality,
                                   true);
-    if (g_graphics_quality >= 3) {
-        set_shadowResolution_hook(3);
-        set_anisotropicFiltering_hook(2);
-        set_shadows_hook(2);
-        set_softVegetation_hook(true);
-        set_realtimeReflectionProbes_hook(true);
-    }
 }
 
 void *assetbundle_LoadFromFile_orig = nullptr;
@@ -1973,8 +1966,11 @@ void hookMethods() {
             )
     );
 
-    auto set_fps_addr = il2cpp_resolve_icall(
-            "UnityEngine.Application::set_targetFrameRate(System.Int32)");
+    auto set_fps_addr = GetUnityVersion() == Unity2020 ? il2cpp_resolve_icall(
+            "UnityEngine.Application::set_targetFrameRate(System.Int32)")
+                                                       : il2cpp_symbols::get_method_pointer(
+                    "UnityEngine.CoreModule.dll", "UnityEngine",
+                    "Application", "set_targetFrameRate", 1);
 
     auto an_text_fix_data_addr = reinterpret_cast<void (*)(
             Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("Plugins.dll",
@@ -1999,21 +1995,6 @@ void hookMethods() {
 
     auto set_anti_aliasing_addr = il2cpp_resolve_icall(
             "UnityEngine.QualitySettings::set_antiAliasing(System.Int32)");
-
-    auto set_shadowResolution_addr = il2cpp_resolve_icall(
-            "UnityEngine.QualitySettings::set_shadowResolution(UnityEngine.ShadowResolution)");
-
-    auto set_anisotropicFiltering_addr = il2cpp_resolve_icall(
-            "UnityEngine.QualitySettings::set_anisotropicFiltering(UnityEngine.AnisotropicFiltering)");
-
-    auto set_shadows_addr = il2cpp_resolve_icall(
-            "UnityEngine.QualitySettings::set_shadows(UnityEngine.ShadowQuality)");
-
-    auto set_softVegetation_addr = il2cpp_resolve_icall(
-            "UnityEngine.QualitySettings::set_softVegetation(System.Boolean)");
-
-    auto set_realtimeReflectionProbes_addr = il2cpp_resolve_icall(
-            "UnityEngine.QualitySettings::set_realtimeReflectionProbes(System.Boolean)");
 
     auto Light_set_shadowResolution_addr = il2cpp_resolve_icall(
             "UnityEngine.Light::set_shadowResolution(UnityEngine.Light,UnityEngine.Rendering.LightShadowResolution)");
@@ -2078,11 +2059,6 @@ void hookMethods() {
                                                         bool)>(il2cpp_symbols::get_method_pointer(
             "umamusume.dll",
             "Gallop", "Screen", "SetResolution", 4));
-
-    auto SceneManager_ctor_addr = reinterpret_cast<void (*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "SceneManager", ".ctor", 0));
 
     auto DeviceOrientationGuide_Show_addr = reinterpret_cast<void (*)(bool,
                                                                       int)>(il2cpp_symbols::get_method_pointer(
@@ -2440,16 +2416,6 @@ void hookMethods() {
     ADD_HOOK(DialogCommon_Close);
 
     ADD_HOOK(GallopUtil_GotoTitleOnError);
-
-    ADD_HOOK(set_shadowResolution);
-
-    ADD_HOOK(set_anisotropicFiltering);
-
-    ADD_HOOK(set_shadows);
-
-    ADD_HOOK(set_softVegetation);
-
-    ADD_HOOK(set_realtimeReflectionProbes);
 
     ADD_HOOK(Light_set_shadowResolution);
 
