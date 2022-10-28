@@ -131,7 +131,7 @@ namespace logger {
         has_change = true;
     }
 
-    void write_static_dict(const vector<const u16string> &dict) {
+    void write_static_dict(const vector<u16string> &dict) {
         if (g_enable_logger) {
             string jsonPath = string("/sdcard/Android/data/").append(
                     Game::GetCurrentPackageName()).append(

@@ -1562,6 +1562,13 @@ void GallopUtil_GotoTitleOnError_hook(Il2CppString *text) {
     auto dialogData = il2cpp_object_new(
             il2cpp_symbols::get_class("umamusume.dll", "Gallop", "DialogCommon/Data"));
     il2cpp_runtime_object_init(dialogData);
+    auto message = GotoTitleError;
+    if (Game::currentGameRegion == Game::Region::JAP) {
+        message = GotoTitleErrorJa;
+    }
+    if (Game::currentGameRegion == Game::Region::TWN) {
+        message = GotoTitleErrorHan;
+    }
     dialogData = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *thisObj,
                                                     unsigned long headerTextId,
                                                     Il2CppString *message,
@@ -1570,7 +1577,7 @@ void GallopUtil_GotoTitleOnError_hook(Il2CppString *text) {
             il2cpp_class_get_method_from_name(dialogData->klass, "SetSimpleOneButtonMessage",
                                               4)->methodPointer
     )(dialogData, errorText,
-      localify::get_localized_string(il2cpp_string_new(GotoTitleErrorJa.data())), nullptr, okText);
+      localify::get_localized_string(il2cpp_string_new(message.data())), nullptr, okText);
     errorDialog = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *data,
                                                      bool isEnableOutsideClick)>(il2cpp_symbols::get_method_pointer(
             "umamusume.dll", "Gallop", "DialogManager", "PushSystemDialog", 2))(dialogData, true);
@@ -1701,7 +1708,7 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
 }
 
 void dump_all_entries() {
-    vector<const u16string> static_entries;
+    vector<u16string> static_entries;
     // 0 is None
     for (int i = 1;; i++) {
         auto *str = reinterpret_cast<decltype(localize_get_hook) * > (localize_get_orig)(i);
@@ -2272,7 +2279,8 @@ void hookMethods() {
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle",
             "LoadFromFile", 1));
 
-    auto AssetBundleRequest_GetResult_addr = reinterpret_cast<Il2CppObject * (*)(Il2CppString * path)>(il2cpp_symbols::get_method_pointer(
+    auto AssetBundleRequest_GetResult_addr = reinterpret_cast<Il2CppObject *(*)(
+            Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundleRequest",
             "GetResult", 0));
 

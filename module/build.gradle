@@ -59,6 +59,7 @@ android {
             }
         }
     }
+    namespace 'com.kimjio.umamusumelocalify'
 }
 
 repositories {

@@ -12,7 +12,7 @@ namespace logger {
 
     void write_entry(size_t hash, const std::u16string &text);
 
-    void write_static_dict(const std::vector<const std::u16string>& dict);
+    void write_static_dict(const std::vector<std::u16string>& dict);
 
     void write_text_id_static_dict(const std::vector<std::pair<const std::string, const std::u16string>>& dict,
                                    const std::vector<std::pair<const std::string, const std::u16string>>& not_matched);

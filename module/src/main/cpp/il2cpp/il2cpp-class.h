@@ -547,6 +547,8 @@ public:
     bool generateOutOfBounds [[maybe_unused]];
 } TextGenerationSettings_t [[maybe_unused]];
 
+struct Int32Object;
+
 enum class NotificationStyle {
     None,
     BigTextStyle = 2,

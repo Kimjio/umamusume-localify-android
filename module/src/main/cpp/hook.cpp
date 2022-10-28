@@ -74,7 +74,8 @@ void dlopen_process(const char *name, void *handle) {
             app_handle = handle;
             auto getModuleVersion = dlsym(app_handle,
                                           "Java_com_kimjio_umamusumelocalify_settings_ModuleUtils_getModuleVersion");
-            DobbyHook(getModuleVersion, (void *) new_getModuleVersion, (void **) &orig_getModuleVersion);
+            DobbyHook(getModuleVersion, (void *) new_getModuleVersion,
+                      (void **) &orig_getModuleVersion);
         }
     }
 }
@@ -328,13 +329,19 @@ std::optional<std::vector<std::string>> read_config() {
             }
         }
 
-        if (document.HasMember("replaceAssetBundleFilePath"))
-        {
-            g_replace_assetbundle_file_path = document["replaceAssetBundleFilePath"].GetString();
+        if (document.HasMember("replaceAssetBundleFilePath")) {
+            auto replaceAssetBundleFilePath = localify::u8_u16(document["replaceAssetBundleFilePath"].GetString());
+            if (!replaceAssetBundleFilePath.starts_with(u"/")) {
+                replaceAssetBundleFilePath.insert(0, u16string(u"/sdcard/Android/data/").append(
+                        localify::u8_u16(Game::GetCurrentPackageName())).append(u"/"));
+            }
+            if (filesystem::exists(replaceAssetBundleFilePath) &&
+                filesystem::is_regular_file(replaceAssetBundleFilePath)) {
+                g_replace_assetbundle_file_path = localify::u16_u8(replaceAssetBundleFilePath);
+            }
         }
 
-        if (document.HasMember("textIdDict"))
-        {
+        if (document.HasMember("textIdDict")) {
             text_id_dict = document["textIdDict"].GetString();
         }
 
