@@ -20,6 +20,7 @@ bool g_replace_to_builtin_font = false;
 bool g_replace_to_custom_font = false;
 std::string g_font_assetbundle_path;
 std::string g_font_asset_name;
+std::string g_tmpro_font_asset_name;
 bool g_dump_entries = false;
 bool g_dump_db_entries = false;
 bool g_static_entries_use_hash = false;
@@ -287,6 +288,9 @@ std::optional<std::vector<std::string>> read_config() {
         }
         if (document.HasMember("fontAssetName")) {
             g_font_asset_name = std::string(document["fontAssetName"].GetString());
+        }
+        if (document.HasMember("tmproFontAssetName")) {
+            g_tmpro_font_asset_name = std::string(document["tmproFontAssetName"].GetString());
         }
         if (document.HasMember("graphicsQuality")) {
             g_graphics_quality = document["graphicsQuality"].GetInt();

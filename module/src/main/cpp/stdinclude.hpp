@@ -59,6 +59,7 @@ extern bool g_replace_to_builtin_font;
 extern bool g_replace_to_custom_font;
 extern string g_font_assetbundle_path;
 extern string g_font_asset_name;
+extern string g_tmpro_font_asset_name;
 extern bool g_dump_entries;
 extern bool g_dump_db_entries;
 extern bool g_static_entries_use_hash;

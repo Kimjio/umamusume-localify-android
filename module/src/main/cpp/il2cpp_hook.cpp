@@ -114,9 +114,41 @@ string GetTextIdNameById(int id) {
 
 Il2CppObject *GetCustomFont() {
     if (!assets) return nullptr;
-    return load_assets(assets, il2cpp_string_new(g_font_asset_name.data()),
-                       GetRuntimeType("UnityEngine.TextRenderingModule.dll", "UnityEngine",
-                                      "Font"));
+    if (!g_font_asset_name.empty()) {
+        return load_assets(assets, il2cpp_string_new(g_font_asset_name.data()),
+                           GetRuntimeType("UnityEngine.TextRenderingModule.dll", "UnityEngine",
+                                          "Font"));
+    }
+    return nullptr;
+}
+
+// Fallback not support outline style
+Il2CppObject *GetCustomTMPFontFallback() {
+    if (!assets) return nullptr;
+    auto font = GetCustomFont();
+    if (font) {
+        return reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *font, int samplingPointSize, int atlasPadding, int renderMode,
+                int atlasWidth, int atlasHeight, int atlasPopulationMode,
+                bool enableMultiAtlasSupport
+        )>
+        (
+                il2cpp_symbols::get_method_pointer("Unity.TextMeshPro.dll", "TMPro",
+                                                   "TMP_FontAsset", "CreateFontAsset", 1)
+        )(font, 36, 4, 4165, 8192, 8192, 1, false);
+    }
+    return nullptr;
+}
+
+Il2CppObject *GetCustomTMPFont() {
+    if (!assets) return nullptr;
+    if (!g_tmpro_font_asset_name.empty()) {
+        auto tmpFont = load_assets(assets, il2cpp_string_new(g_tmpro_font_asset_name.data()),
+                                   GetRuntimeType("Unity.TextMeshPro.dll", "TMPro",
+                                                  "TMP_FontAsset"));
+        return tmpFont ? tmpFont : GetCustomTMPFontFallback();
+    }
+    return GetCustomTMPFontFallback();
 }
 
 bool ExecuteCoroutine(Il2CppObject *enumerator) {
@@ -582,6 +614,74 @@ void textcommon_awake_hook(Il2CppObject *thisObj) {
     }
     text_set_text(thisObj, localify::get_localized_string(text_get_text(thisObj)));
     reinterpret_cast<decltype(textcommon_awake_hook) * > (textcommon_awake_orig)(thisObj);
+}
+
+void *TextMeshProUguiCommon_Awake_orig = nullptr;
+
+void TextMeshProUguiCommon_Awake_hook(Il2CppObject *_this) {
+    reinterpret_cast<decltype(TextMeshProUguiCommon_Awake_hook) *>(TextMeshProUguiCommon_Awake_orig)(
+            _this);
+    auto customFont = GetCustomTMPFont();
+    auto customFontMaterialField = il2cpp_class_get_field_from_name(customFont->klass, "material");
+    Il2CppObject *customFontMaterial;
+    il2cpp_field_get_value(customFont, customFontMaterialField, &customFontMaterial);
+
+    auto SetFloat = reinterpret_cast<void (*)(Il2CppObject *, Il2CppString *,
+                                              float)>(il2cpp_class_get_method_from_name(
+            customFontMaterial->klass, "SetFloat", 2)->methodPointer);
+    auto SetColor = reinterpret_cast<void (*)(Il2CppObject *, Il2CppString *,
+                                              Color_t)>(il2cpp_class_get_method_from_name(
+            customFontMaterial->klass, "SetColor", 2)->methodPointer);
+
+    auto origOutlineWidth = reinterpret_cast<float (*)(
+            Il2CppObject *)>(il2cpp_class_get_method_from_name(_this->klass, "get_outlineWidth",
+                                                               0)->methodPointer)(_this);
+
+    auto outlineColorDictField = il2cpp_class_get_field_from_name(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "ColorPreset"),
+            "OutlineColorDictionary");
+    Il2CppObject *outlineColorDict;
+    il2cpp_field_static_get_value(outlineColorDictField, &outlineColorDict);
+    auto colorEnum = reinterpret_cast<int (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
+            _this->klass, "get_OutlineColor", 0)->methodPointer)(_this);
+
+    auto entriesField = il2cpp_class_get_field_from_name(outlineColorDict->klass, "entries");
+    Il2CppArray *entries;
+    il2cpp_field_get_value(outlineColorDict, entriesField, &entries);
+
+    auto colorType = GetRuntimeType("umamusume.dll", "Gallop", "OutlineColorType");
+
+    auto color32 = 0xFFFFFFFF;
+    for (int i = 0; i < entries->max_length; i++) {
+        auto entry = reinterpret_cast<unsigned long long>(entries->vector[i]);
+        auto color = (entry & 0xFFFFFFFF00000000) >> 32;
+        auto key = entry & 0xFFFFFFFF;
+        if (key == colorEnum && (color != 0xFFFFFFFF && color != 0)) {
+            color32 = color;
+            break;
+        }
+        auto enumName = localify::u16_u8(GetEnumName(colorType, colorEnum)->start_char);
+        if (enumName == "White"s || enumName == "Black"s) {
+            color32 = color;
+            break;
+        }
+    }
+
+    float a = static_cast<float>((color32 & 0xFF000000) >> 24) / static_cast<float>(0xff);
+    float b = static_cast<float>((color32 & 0xFF0000) >> 16) / static_cast<float>(0xff);
+    float g = static_cast<float>((color32 & 0xFF00) >> 8) / static_cast<float>(0xff);
+    float r = static_cast<float>(color32 & 0xFF) / static_cast<float>(0xff);
+    auto origOutlineColor = Color_t{r, g, b, a};
+
+    SetFloat(customFontMaterial, il2cpp_string_new("_OutlineWidth"), origOutlineWidth);
+    SetColor(customFontMaterial, il2cpp_string_new("_OutlineColor"), origOutlineColor);
+
+    reinterpret_cast<void (*)(Il2CppObject *, Il2CppObject *)>(il2cpp_class_get_method_from_name(
+            _this->klass, "set_font", 1)->methodPointer)(_this, customFont);
+    reinterpret_cast<void (*)(Il2CppObject *, bool)>(il2cpp_class_get_method_from_name(_this->klass,
+                                                                                       "set_enableWordWrapping",
+                                                                                       1)->methodPointer)(
+            _this, false);
 }
 
 void *get_modified_string_orig = nullptr;
@@ -1929,6 +2029,11 @@ void hookMethods() {
             "TextCommon", "Awake", 0
     );
 
+    auto TextMeshProUguiCommon_Awake_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop",
+            "TextMeshProUguiCommon", "Awake", 0
+    );
+
     textcommon_get_TextId = reinterpret_cast<int (*)(
             Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
             "umamusume.dll", "Gallop",
@@ -2440,6 +2545,7 @@ void hookMethods() {
     ADD_HOOK(on_populate)
     if (g_replace_to_builtin_font || g_replace_to_custom_font) {
         ADD_HOOK(textcommon_awake)
+        ADD_HOOK(TextMeshProUguiCommon_Awake)
     }
 
     if (g_max_fps > -1) {
