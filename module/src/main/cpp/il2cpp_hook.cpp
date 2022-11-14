@@ -2120,79 +2120,6 @@ void hookMethods() {
                                                                              bool)>(il2cpp_symbols::get_method_pointer(
             "Cute.Cri.Assembly.dll", "Cute.Cri", "MoviePlayerForObj", "AdjustScreenSize", 2));
 
-
-    auto resources_load_addr = reinterpret_cast<Il2CppObject *(*)(Il2CppString *path,
-                                                                  Il2CppType *)>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.CoreModule.dll", "UnityEngine", "Resources", "Load", 2));
-
-    auto Sprite_get_texture_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_resolve_icall(
-            "UnityEngine.Sprite::get_texture(UnityEngine.Sprite)"));
-
-    auto Renderer_get_material_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                "UnityEngine", "Renderer",
-                                                                "get_material", 0));
-
-    auto Renderer_get_materials_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                "UnityEngine", "Renderer",
-                                                                "get_materials", 0));
-
-    auto Renderer_get_sharedMaterial_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                "UnityEngine", "Renderer",
-                                                                "get_sharedMaterial", 0));
-
-    auto Renderer_get_sharedMaterials_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                "UnityEngine", "Renderer",
-                                                                "get_sharedMaterials", 0));
-
-    auto Renderer_set_material_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                "UnityEngine", "Renderer",
-                                                                "set_material", 1));
-
-    auto Renderer_set_materials_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                "UnityEngine", "Renderer",
-                                                                "set_materials", 1));
-
-    auto Renderer_set_sharedMaterial_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                "UnityEngine", "Renderer",
-                                                                "set_sharedMaterial", 1));
-
-    auto Renderer_set_sharedMaterials_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                "UnityEngine", "Renderer",
-                                                                "set_sharedMaterials", 1));
-
-    auto Material_get_mainTexture_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                "UnityEngine", "Material",
-                                                                "get_mainTexture", 0));
-
-    auto Material_set_mainTexture_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                "UnityEngine", "Material",
-                                                                "set_mainTexture", 1));
-
-    auto Material_SetTextureI4_addr = il2cpp_symbols::find_method("UnityEngine.CoreModule.dll",
-                                                                  "UnityEngine", "Material",
-                                                                  [](const MethodInfo *method) {
-                                                                      return method->name ==
-                                                                             "SetTexture"s &&
-                                                                             method->parameters->parameter_type->type ==
-                                                                             IL2CPP_TYPE_I4;
-                                                                  });
-
-    auto CharaPropRendererAccessor_SetTexture_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
-                                                                "CharaPropRendererAccessor",
-                                                                "SetTexture", 1));
-
     auto FrameRateController_OverrideByNormalFrameRate_addr = reinterpret_cast<void (*)(
             Il2CppObject *, int)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
                                                                      "FrameRateController",
@@ -2239,13 +2166,6 @@ void hookMethods() {
             "_Cyan.dll", "Cyan.LocalFile", "PathResolver",
             "GetLocalPath", 2));
 
-    auto assetbundle_load_asset_addr = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *thisObj,
-                                                                          Il2CppString *name,
-                                                                          Il2CppObject *runtimeType)>(
-            il2cpp_resolve_icall(
-                    "UnityEngine.AssetBundle::LoadAsset_Internal(System.String,System.Type)")
-    );
-
     auto assetbundle_unload_addr = reinterpret_cast<Il2CppObject *(*)(
             Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "Unload", 1));
@@ -2254,11 +2174,6 @@ void hookMethods() {
             Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle",
             "LoadFromFile", 1));
-
-    auto AssetBundleRequest_GetResult_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundleRequest",
-            "GetResult", 0));
 
     if (!assets && !g_font_assetbundle_path.empty() && g_replace_to_custom_font) {
         auto assetbundlePath = localify::u8_u16(g_font_assetbundle_path);
@@ -2304,30 +2219,6 @@ void hookMethods() {
 
     if (assets) {
         LOGI("Asset loaded: %p", assets);
-    }
-
-    if (!replaceAssets && !g_replace_assetbundle_file_path.empty()) {
-        auto assetbundlePath = localify::u8_u16(g_replace_assetbundle_file_path);
-        if (!assetbundlePath.starts_with(u"/")) {
-            assetbundlePath.insert(0, u16string(u"/sdcard/Android/data/").append(
-                    localify::u8_u16(Game::GetCurrentPackageName())).append(u"/"));
-        }
-        replaceAssets = load_from_file(
-                il2cpp_string_new_utf16(assetbundlePath.data(), assetbundlePath.length()));
-
-        if (!replaceAssets && filesystem::exists(assetbundlePath)) {
-            LOGI("Replacement AssetBundle founded but not loaded. Maybe Asset BuildTarget is not for Android");
-        }
-    }
-
-    if (replaceAssets) {
-        LOGI("Replacement AssetBundle loaded: %p", replaceAssets);
-        auto names = get_all_asset_names(replaceAssets);
-        for (int i = 0; i < names->max_length; i++) {
-            auto u8Name = localify::u16_u8(
-                    static_cast<Il2CppString *>(names->vector[i])->start_char);
-            replaceAssetNames.emplace_back(u8Name);
-        }
     }
 
 #define ADD_HOOK(_name_) \
@@ -2550,6 +2441,150 @@ void hookMethods() {
     }
 
     LOGI("Unity Version: %s", GetUnityVersion().data());
+}
+
+void il2cpp_load_assetbundle() {
+    if (!replaceAssets && !g_replace_assetbundle_file_path.empty()) {
+        auto assetbundlePath = localify::u8_u16(g_replace_assetbundle_file_path);
+        if (!assetbundlePath.starts_with(u"/")) {
+            assetbundlePath.insert(0, u16string(u"/sdcard/Android/data/").append(
+                    localify::u8_u16(Game::GetCurrentPackageName())).append(u"/"));
+        }
+        replaceAssets = load_from_file(
+                il2cpp_string_new_utf16(assetbundlePath.data(), assetbundlePath.length()));
+
+        if (!replaceAssets && filesystem::exists(assetbundlePath)) {
+            LOGI("Replacement AssetBundle founded but not loaded. Maybe Asset BuildTarget is not for Android");
+        }
+    }
+
+    if (replaceAssets) {
+        LOGI("Replacement AssetBundle loaded: %p", replaceAssets);
+        auto names = get_all_asset_names(replaceAssets);
+        for (int i = 0; i < names->max_length; i++) {
+            auto u8Name = localify::u16_u8(
+                    static_cast<Il2CppString *>(names->vector[i])->start_char);
+            replaceAssetNames.emplace_back(u8Name);
+        }
+
+        auto AssetBundleRequest_GetResult_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
+                "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundleRequest",
+                "GetResult", 0));
+
+        auto assetbundle_load_asset_addr = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *thisObj,
+                                                                              Il2CppString *name,
+                                                                              Il2CppObject *runtimeType)>(
+                il2cpp_symbols::get_method_pointer(
+                        "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle",
+                        "LoadAsset", 2)
+        );
+
+        auto resources_load_addr = reinterpret_cast<Il2CppObject *(*)(Il2CppString *path,
+                                                                      Il2CppType *)>(il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Resources", "Load", 2));
+
+        auto Sprite_get_texture_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_resolve_icall(
+                "UnityEngine.Sprite::get_texture(UnityEngine.Sprite)"));
+
+        auto Renderer_get_material_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                    "UnityEngine", "Renderer",
+                                                                    "get_material", 0));
+
+        auto Renderer_get_materials_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                    "UnityEngine", "Renderer",
+                                                                    "get_materials", 0));
+
+        auto Renderer_get_sharedMaterial_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                    "UnityEngine", "Renderer",
+                                                                    "get_sharedMaterial", 0));
+
+        auto Renderer_get_sharedMaterials_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                    "UnityEngine", "Renderer",
+                                                                    "get_sharedMaterials", 0));
+
+        auto Renderer_set_material_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                    "UnityEngine", "Renderer",
+                                                                    "set_material", 1));
+
+        auto Renderer_set_materials_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                    "UnityEngine", "Renderer",
+                                                                    "set_materials", 1));
+
+        auto Renderer_set_sharedMaterial_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                    "UnityEngine", "Renderer",
+                                                                    "set_sharedMaterial", 1));
+
+        auto Renderer_set_sharedMaterials_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                    "UnityEngine", "Renderer",
+                                                                    "set_sharedMaterials", 1));
+
+        auto Material_get_mainTexture_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                    "UnityEngine", "Material",
+                                                                    "get_mainTexture", 0));
+
+        auto Material_set_mainTexture_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                    "UnityEngine", "Material",
+                                                                    "set_mainTexture", 1));
+
+        auto Material_SetTextureI4_addr = il2cpp_symbols::find_method("UnityEngine.CoreModule.dll",
+                                                                      "UnityEngine", "Material",
+                                                                      [](const MethodInfo *method) {
+                                                                          return method->name ==
+                                                                                 "SetTexture"s &&
+                                                                                 method->parameters->parameter_type->type ==
+                                                                                 IL2CPP_TYPE_I4;
+                                                                      });
+
+        auto CharaPropRendererAccessor_SetTexture_addr = reinterpret_cast<Il2CppObject *(*)(
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                    "CharaPropRendererAccessor",
+                                                                    "SetTexture", 1));
+
+        ADD_HOOK(AssetBundleRequest_GetResult)
+
+        ADD_HOOK(assetbundle_load_asset)
+
+        ADD_HOOK(resources_load)
+
+        ADD_HOOK(Sprite_get_texture)
+
+        ADD_HOOK(Renderer_get_material)
+
+        ADD_HOOK(Renderer_get_materials)
+
+        ADD_HOOK(Renderer_get_sharedMaterial)
+
+        ADD_HOOK(Renderer_get_sharedMaterials)
+
+        ADD_HOOK(Renderer_set_material)
+
+        ADD_HOOK(Renderer_set_materials)
+
+        ADD_HOOK(Renderer_set_sharedMaterial)
+
+        ADD_HOOK(Renderer_set_sharedMaterials)
+
+        ADD_HOOK(Material_get_mainTexture)
+
+        ADD_HOOK(Material_set_mainTexture)
+
+        ADD_HOOK(Material_SetTextureI4)
+
+        ADD_HOOK(CharaPropRendererAccessor_SetTexture)
+    }
+
 }
 
 void il2cpp_hook_init(void *handle) {

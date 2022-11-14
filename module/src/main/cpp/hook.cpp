@@ -62,12 +62,18 @@ HOOK_DEF(jstring, getModuleVersion,
     return env->NewStringUTF(Module::moduleVersionName);
 }
 
+bool isCriWareInit = false;
+
 void dlopen_process(const char *name, void *handle) {
     if (!il2cpp_handle) {
         if (name != nullptr && strstr(name, "libil2cpp.so")) {
             il2cpp_handle = handle;
             LOGI("Got il2cpp handle!");
         }
+    }
+    if (name != nullptr && strstr(name, "libcri_ware_unity.so") && !isCriWareInit) {
+        isCriWareInit = true;
+        il2cpp_load_assetbundle();
     }
     if (!il2cpp_handle && !app_handle) {
         if (name != nullptr && strstr(name, "libapp.so")) {
@@ -330,7 +336,8 @@ std::optional<std::vector<std::string>> read_config() {
         }
 
         if (document.HasMember("replaceAssetBundleFilePath")) {
-            auto replaceAssetBundleFilePath = localify::u8_u16(document["replaceAssetBundleFilePath"].GetString());
+            auto replaceAssetBundleFilePath = localify::u8_u16(
+                    document["replaceAssetBundleFilePath"].GetString());
             if (!replaceAssetBundleFilePath.starts_with(u"/")) {
                 replaceAssetBundleFilePath.insert(0, u16string(u"/sdcard/Android/data/").append(
                         localify::u8_u16(Game::GetCurrentPackageName())).append(u"/"));
@@ -475,18 +482,18 @@ void hack_thread(void *arg [[maybe_unused]]) {
 
     auto dict = read_config();
 
-    std::thread init_thread([dict]() {
-        logger::init_logger();
-        il2cpp_hook_init(il2cpp_handle);
-        if (dict.has_value()) {
-            localify::load_textdb(get_application_version(), &dict.value());
-        }
-        if (!text_id_dict.empty()) {
-            localify::load_textId_textdb(text_id_dict);
-        }
-        il2cpp_hook();
-    });
-    init_thread.detach();
+    // std::thread init_thread([dict]() {
+    logger::init_logger();
+    il2cpp_hook_init(il2cpp_handle);
+    if (dict.has_value()) {
+        localify::load_textdb(get_application_version(), &dict.value());
+    }
+    if (!text_id_dict.empty()) {
+        localify::load_textId_textdb(text_id_dict);
+    }
+    il2cpp_hook();
+    // });
+    // init_thread.detach();
 }
 
 void hack_settings_thread(void *arg [[maybe_unused]]) {
