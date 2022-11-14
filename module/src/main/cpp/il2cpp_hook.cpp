@@ -119,6 +119,17 @@ Il2CppObject *GetCustomFont() {
                                       "Font"));
 }
 
+bool ExecuteCoroutine(Il2CppObject *enumerator) {
+    auto executor = il2cpp_object_new(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "CoroutineExecutor"));
+    reinterpret_cast<void (*)(Il2CppObject *, Il2CppObject *)>(
+            il2cpp_class_get_method_from_name(executor->klass, ".ctor", 1)->methodPointer
+    )(executor, enumerator);
+    return reinterpret_cast<bool (*)(Il2CppObject *)>(
+            il2cpp_class_get_method_from_name(executor->klass, "UpdateCoroutine", 0)->methodPointer
+    )(executor);
+}
+
 string GetUnityVersion() {
     string version(localify::u16_u8(get_unityVersion()->start_char));
     return version;
@@ -486,11 +497,11 @@ void story_race_textasset_load_hook(Il2CppObject *thisObj) {
             Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(enumerator->klass,
                                                                       "get_Current",
                                                                       0)->methodPointer);
-    auto move_next = reinterpret_cast<bool (*)(
+    /*auto move_next = reinterpret_cast<bool (*)(
             Il2CppObject *thisObj)>(il2cpp_class_get_method_from_name(enumerator->klass, "MoveNext",
-                                                                      0)->methodPointer);
+                                                                      0)->methodPointer);*/
 
-    while (move_next(enumerator)) {
+    while (ExecuteCoroutine(enumerator)) {
         auto key = get_current(enumerator);
         FieldInfo *textField = {il2cpp_class_get_field_from_name(key->klass, "text")};
         Il2CppString *text;
@@ -553,7 +564,6 @@ void on_populate_hook(Il2CppObject *thisObj, void *toFill) {
             text_set_horizontalOverflow(thisObj, 1);
             text_set_verticalOverflow(thisObj, 1);
         }
-
     }
     return reinterpret_cast<decltype(on_populate_hook) * > (on_populate_orig)(thisObj, toFill);
 }
@@ -667,6 +677,39 @@ void Light_set_shadowResolution_hook(Il2CppObject *thisObj, int level) {
             thisObj, 3);
 }
 
+Il2CppObject *(*display_get_main)();
+
+int (*get_system_width)(Il2CppObject *thisObj);
+
+int (*get_system_height)(Il2CppObject *thisObj);
+
+void *set_resolution_orig = nullptr;
+
+void set_resolution_hook(int width, int height, bool fullscreen) {
+    int systemWidth = get_system_width(display_get_main());
+    int systemHeight = get_system_height(display_get_main());
+    // Unity 2019 not invert width, height on landscape
+    if ((width > height && systemWidth < systemHeight) || g_force_landscape) {
+        reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
+                systemHeight, systemWidth,
+                fullscreen);
+        return;
+    }
+    reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
+            width, height,
+            fullscreen);
+}
+
+void *GraphicSettings_GetVirtualResolution_orig = nullptr;
+
+Vector2Int_t GraphicSettings_GetVirtualResolution_hook(Il2CppObject *thisObj) {
+    auto res = reinterpret_cast<decltype(GraphicSettings_GetVirtualResolution_hook) *>(
+            GraphicSettings_GetVirtualResolution_orig
+    )(thisObj);
+    // LOGD("GraphicSettings_GetVirtualResolution %d %d", res.x, res.y);
+    return res;
+}
+
 void *GraphicSettings_GetVirtualResolution3D_orig = nullptr;
 
 Vector2Int_t
@@ -690,31 +733,6 @@ Il2CppString *PathResolver_GetLocalPath_hook(Il2CppObject *thisObj, int kind, Il
     }
     return reinterpret_cast<decltype(PathResolver_GetLocalPath_hook) *>(PathResolver_GetLocalPath_orig)(
             thisObj, kind, hname);
-}
-
-Il2CppObject *display_main = nullptr;
-
-Il2CppObject *(*display_get_main)();
-
-int (*get_system_width)(Il2CppObject *thisObj);
-
-int (*get_system_height)(Il2CppObject *thisObj);
-
-void *set_resolution_orig = nullptr;
-
-void set_resolution_hook(int width, int height, bool fullscreen) {
-    int systemWidth = get_system_width(display_main);
-    int systemHeight = get_system_height(display_main);
-    // Unity 2019 not invert width, height on landscape
-    if ((width > height && systemWidth < systemHeight) || g_force_landscape) {
-        reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
-                systemHeight, systemWidth,
-                fullscreen);
-        return;
-    }
-    reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
-            systemWidth, systemHeight,
-            fullscreen);
 }
 
 void *apply_graphics_quality_orig = nullptr;
@@ -1322,6 +1340,15 @@ Il2CppObject *ChangeScreenOrientation_hook(ScreenOrientation targetOrientation, 
     (ChangeScreenOrientation_orig)(
             g_force_landscape ? ScreenOrientation::Landscape
                               : targetOrientation, isForce);
+}
+
+void *ChangeScreenOrientationPortraitAsync_orig = nullptr;
+
+Il2CppObject *ChangeScreenOrientationPortraitAsync_hook() {
+    return reinterpret_cast<Il2CppObject *(*)()>(il2cpp_symbols::get_method_pointer(
+            "umamusume.dll",
+            "Gallop",
+            "Screen", "ChangeScreenOrientationLandscapeAsync", -1))();
 }
 
 void *CanvasScaler_set_referenceResolution_orig = nullptr;
@@ -1966,11 +1993,9 @@ void hookMethods() {
             )
     );
 
-    auto set_fps_addr = GetUnityVersion() == Unity2020 ? il2cpp_resolve_icall(
-            "UnityEngine.Application::set_targetFrameRate(System.Int32)")
-                                                       : il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.CoreModule.dll", "UnityEngine",
-                    "Application", "set_targetFrameRate", 1);
+    auto set_fps_addr = il2cpp_symbols::get_method_pointer(
+            "UnityEngine.CoreModule.dll", "UnityEngine",
+            "Application", "set_targetFrameRate", 1);
 
     auto an_text_fix_data_addr = reinterpret_cast<void (*)(
             Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("Plugins.dll",
@@ -2004,8 +2029,6 @@ void hookMethods() {
             "UnityEngine",
             "Display", "get_main", -1));
 
-    display_main = display_get_main();
-
     get_system_width = reinterpret_cast<int (*)(Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.CoreModule.dll",
             "UnityEngine",
@@ -2027,6 +2050,12 @@ void hookMethods() {
             "Gallop",
             "GraphicSettings", "ApplyGraphicsQuality", 2));
 
+    auto GraphicSettings_GetVirtualResolution_addr = reinterpret_cast<Vector2Int_t(*)(
+            Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
+            "umamusume.dll",
+            "Gallop",
+            "GraphicSettings", "GetVirtualResolution", 0));
+
     auto GraphicSettings_GetVirtualResolution3D_addr = reinterpret_cast<Vector2Int_t(*)(
             Il2CppObject *, bool)>(il2cpp_symbols::get_method_pointer(
             "umamusume.dll",
@@ -2038,6 +2067,9 @@ void hookMethods() {
             "umamusume.dll",
             "Gallop",
             "Screen", "ChangeScreenOrientation", 2));
+
+    auto ChangeScreenOrientationPortraitAsync_addr = reinterpret_cast<Il2CppObject *(*)()>(il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "Screen", "ChangeScreenOrientationPortraitAsync", -1));
 
     Screen_get_width = reinterpret_cast<int (*)()>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.CoreModule.dll",
@@ -2306,13 +2338,11 @@ void hookMethods() {
 
     ADD_HOOK(DialogCommon_Close);
 
-    ADD_HOOK(GallopUtil_GotoTitleOnError);
+    ADD_HOOK(GallopUtil_GotoTitleOnError)
 
-    ADD_HOOK(Light_set_shadowResolution);
+    ADD_HOOK(Light_set_shadowResolution)
 
-    ADD_HOOK(PathResolver_GetLocalPath);
-
-    ADD_HOOK(AssetBundleRequest_GetResult);
+    ADD_HOOK(PathResolver_GetLocalPath)
 
     ADD_HOOK(Device_IsIllegalUser)
 
@@ -2329,38 +2359,6 @@ void hookMethods() {
     ADD_HOOK(assetbundle_unload)
 
     ADD_HOOK(assetbundle_LoadFromFile)
-
-    if (replaceAssets) {
-        ADD_HOOK(assetbundle_load_asset);
-
-        ADD_HOOK(resources_load);
-
-        ADD_HOOK(Sprite_get_texture);
-
-        ADD_HOOK(Renderer_get_material);
-
-        ADD_HOOK(Renderer_get_materials);
-
-        ADD_HOOK(Renderer_get_sharedMaterial);
-
-        ADD_HOOK(Renderer_get_sharedMaterials);
-
-        ADD_HOOK(Renderer_set_material);
-
-        ADD_HOOK(Renderer_set_materials);
-
-        ADD_HOOK(Renderer_set_sharedMaterial);
-
-        ADD_HOOK(Renderer_set_sharedMaterials);
-
-        ADD_HOOK(Material_get_mainTexture);
-
-        ADD_HOOK(Material_set_mainTexture);
-
-        ADD_HOOK(Material_SetTextureI4);
-
-        ADD_HOOK(CharaPropRendererAccessor_SetTexture);
-    }
 
     ADD_HOOK(get_preferred_width)
 
@@ -2392,6 +2390,10 @@ void hookMethods() {
     ADD_HOOK(query_getstr)
     ADD_HOOK(query_dispose)
 
+    if (g_ui_use_system_resolution || g_force_landscape) {
+        ADD_HOOK(set_resolution)
+    }
+
     if (g_force_landscape) {
         ADD_HOOK(SetResolution)
         ADD_HOOK(CanvasScaler_set_referenceResolution)
@@ -2399,20 +2401,22 @@ void hookMethods() {
         ADD_HOOK(WaitDeviceOrientation)
         ADD_HOOK(DeviceOrientationGuide_Show)
         ADD_HOOK(ChangeScreenOrientation)
-        ADD_HOOK(MoviePlayerForUI_AdjustScreenSize);
-        ADD_HOOK(MoviePlayerForObj_AdjustScreenSize);
+        ADD_HOOK(ChangeScreenOrientationPortraitAsync)
+        ADD_HOOK(MoviePlayerForUI_AdjustScreenSize)
+        ADD_HOOK(MoviePlayerForObj_AdjustScreenSize)
+        ADD_HOOK(GraphicSettings_GetVirtualResolution)
     }
 
+    ADD_HOOK(on_populate)
     if (g_replace_to_builtin_font || g_replace_to_custom_font) {
-        ADD_HOOK(on_populate)
         ADD_HOOK(textcommon_awake)
     }
 
     if (g_max_fps > -1) {
-        ADD_HOOK(FrameRateController_OverrideByNormalFrameRate);
-        ADD_HOOK(FrameRateController_OverrideByMaxFrameRate);
-        ADD_HOOK(FrameRateController_ResetOverride);
-        ADD_HOOK(FrameRateController_ReflectionFrameRate);
+        ADD_HOOK(FrameRateController_OverrideByNormalFrameRate)
+        ADD_HOOK(FrameRateController_OverrideByMaxFrameRate)
+        ADD_HOOK(FrameRateController_ResetOverride)
+        ADD_HOOK(FrameRateController_ReflectionFrameRate)
         ADD_HOOK(set_fps)
     }
 
@@ -2424,16 +2428,12 @@ void hookMethods() {
         logger::dump_db_texts();
     }
 
-    if (g_ui_use_system_resolution || g_force_landscape) {
-        ADD_HOOK(set_resolution)
-    }
-
     if (g_graphics_quality != -1) {
         ADD_HOOK(apply_graphics_quality)
     }
 
     if (g_resolution_3d_scale != 1.0f) {
-        ADD_HOOK(GraphicSettings_GetVirtualResolution3D);
+        ADD_HOOK(GraphicSettings_GetVirtualResolution3D)
     }
 
     if (g_anti_aliasing != -1) {

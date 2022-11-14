@@ -46,11 +46,11 @@ namespace localify {
         string path = string("/sdcard/Android/data/").append(Game::GetCurrentPackageName()).append(
                 "/");
         for (const auto &dict: *dicts) {
-            if (filesystem::exists(path + string(dict))) {
-                std::ifstream dict_stream{path + string(dict)};
+            if (filesystem::exists(path + dict)) {
+                std::ifstream dict_stream{path + dict};
 
                 if (!dict_stream.is_open()) {
-                    LOGW("Cannot Open File: %s", (path + string(dict)).data());
+                    LOGW("Cannot Open File: %s", (path + dict).data());
                     continue;
                 }
 
@@ -97,10 +97,12 @@ namespace localify {
         string path = string("/sdcard/Android/data/").append(Game::GetCurrentPackageName()).append(
                 "/");
         if (filesystem::exists(path + dict)) {
-            std::ifstream dict_stream{dict};
+            std::ifstream dict_stream{path + dict};
 
-            if (!dict_stream.is_open())
+            if (!dict_stream.is_open()) {
+                LOGW("Cannot Open File: %s", (path + dict).data());
                 return;
+            }
 
             printf("Reading %s...\n", dict.data());
 
