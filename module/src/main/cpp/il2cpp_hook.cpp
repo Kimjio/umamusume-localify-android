@@ -1612,6 +1612,24 @@ void GameSystem_FixedUpdate_hook(Il2CppObject *thisObj) {
     reinterpret_cast<decltype(GameSystem_FixedUpdate_hook) *>(GameSystem_FixedUpdate_orig)(thisObj);
 }
 
+void *CriMana_Player_SetFile_orig = nullptr;
+
+bool CriMana_Player_SetFile_hook(Il2CppObject *_this, Il2CppObject *binder, Il2CppString *moviePath,
+                                 int setMode) {
+    stringstream pathStream(localify::u16_u8(moviePath->start_char));
+    string segment;
+    vector<string> split;
+    while (getline(pathStream, segment, '\\')) {
+        split.emplace_back(segment);
+    }
+    if (g_replace_assets.find(split[split.size() - 1]) != g_replace_assets.end()) {
+        auto &replaceAsset = g_replace_assets.at(split[split.size() - 1]);
+        moviePath = il2cpp_string_new(replaceAsset.path.data());
+    }
+    return reinterpret_cast<decltype(CriMana_Player_SetFile_hook) *>(CriMana_Player_SetFile_orig)(
+            _this, binder, moviePath, setMode);
+}
+
 void (*SendNotification)(Il2CppObject *thisObj, Il2CppString *ChannelId, Il2CppString *title,
                          Il2CppString *message,
                          DateTime date, Il2CppString *path, int id);
@@ -2183,6 +2201,9 @@ void hookMethods() {
                                                                           "GameSystem",
                                                                           "FixedUpdate", 0);
 
+    auto CriMana_Player_SetFile_addr = il2cpp_symbols::get_method_pointer(
+            "CriMw.CriWare.Runtime.dll", "CriWare.CriMana", "Player", "SetFile", 3);
+
     load_from_file = reinterpret_cast<Il2CppObject *(*)(
             Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "LoadFromFile", 1));
@@ -2334,9 +2355,11 @@ void hookMethods() {
         ADD_HOOK(ScheduleLocalPushes)
     }
 
-    ADD_HOOK(GameSystem_FixedUpdate);
+    ADD_HOOK(CriMana_Player_SetFile)
 
-    ADD_HOOK(DialogCommon_Close);
+    ADD_HOOK(GameSystem_FixedUpdate)
+
+    ADD_HOOK(DialogCommon_Close)
 
     ADD_HOOK(GallopUtil_GotoTitleOnError)
 
