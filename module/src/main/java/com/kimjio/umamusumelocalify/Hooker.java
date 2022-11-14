@@ -12,6 +12,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 @SuppressWarnings("unused")
 public final class Hooker {
@@ -59,10 +60,20 @@ public final class Hooker {
         Icon largeIcon = null;
         String largeIconPath = thiz.getExtras().getString(KEY_LARGE_ICON);
         try {
-            Field contextField = thiz.getClass().getField("mContext");
-            Context context = (Context) contextField.get(thiz);
-            largeIcon = Icon.createWithResource(context, findResourceIdInContextByName(context, largeIconPath));
-        } catch (Exception ignore) {
+            Field notificationField = thiz.getClass().getField("mN");
+            Notification notification = (Notification) Objects.requireNonNull(notificationField.get(thiz));
+            Field largeIconField = notification.getClass().getField("mLargeIcon");
+            largeIcon = (Icon) largeIconField.get(notification);
+            if (largeIcon == null) {
+                Field contextField = thiz.getClass().getField("mContext");
+                Context context = (Context) contextField.get(thiz);
+                int resId = findResourceIdInContextByName(context, largeIconPath);
+                if (resId != 0) {
+                    largeIcon = Icon.createWithResource(context, resId);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         if (largeIconPath != null && largeIcon == null) {
             Bitmap bitmap = BitmapFactory.decodeFile(largeIconPath);
@@ -70,7 +81,9 @@ public final class Hooker {
                 largeIcon = Icon.createWithBitmap(bitmap);
             }
         }
-        thiz.setLargeIcon(largeIcon);
+        if (largeIcon != null) {
+            thiz.setLargeIcon(largeIcon);
+        }
         return (Notification) callback.backup.invoke(thiz);
     }
 
