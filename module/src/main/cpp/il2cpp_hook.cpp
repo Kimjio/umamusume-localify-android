@@ -766,47 +766,54 @@ assetbundle_LoadFromFile_hook(Il2CppString *path) {
 
 void *assetbundle_load_asset_orig = nullptr;
 
-Il2CppObject *
-assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2CppType *type) {
-    string u8Name = localify::u16_u8(name->start_char);
-    if (find(replaceAssetNames.begin(), replaceAssetNames.end(), u8Name) !=
-        replaceAssetNames.end()) {
-        return reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                replaceAssets, name, type);
+auto
+assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2CppType *type) -> Il2CppObject * {
+    stringstream pathStream(localify::u16_u8(name->start_char));
+    string segment;
+    vector<string> split;
+    while (getline(pathStream, segment, '/')) {
+        split.emplace_back(segment);
     }
-    auto asset = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
+    auto &fileName = split.back();
+    if (find_if(replaceAssetNames.begin(), replaceAssetNames.end(), [fileName](const string &item) {
+        return item.find(fileName) != string::npos;
+    }) != replaceAssetNames.end()) {
+        return reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
+                replaceAssets, il2cpp_string_new(fileName.data()), type);
+    }
+    auto *asset = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
             thisObj, name, type);
     if (asset->klass->name == "GameObject"s) {
         auto getComponent = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *,
                                                                Il2CppType *)>(il2cpp_class_get_method_from_name(
                 asset->klass, "GetComponent", 1)->methodPointer);
-        auto assetholder = getComponent(asset,
+        auto *assetHolder = getComponent(asset,
                                         (Il2CppType *) GetRuntimeType("umamusume.dll", "Gallop",
                                                                       "AssetHolder"));
-        if (assetholder) {
-            auto objectList = reinterpret_cast<Il2CppObject *(*)(
-                    Il2CppObject *)>(il2cpp_class_get_method_from_name(assetholder->klass,
+        if (assetHolder != nullptr) {
+            auto *objectList = reinterpret_cast<Il2CppObject *(*)(
+                    Il2CppObject *)>(il2cpp_class_get_method_from_name(assetHolder->klass,
                                                                        "get_ObjectList",
                                                                        0)->methodPointer)(
-                    assetholder);
+                    assetHolder);
             FieldInfo *itemsField = il2cpp_class_get_field_from_name(objectList->klass, "_items");
             Il2CppArray *arr;
             il2cpp_field_get_value(objectList, itemsField, &arr);
             for (int i = 0; i < arr->max_length; i++) {
-                auto pair = (Il2CppObject *) arr->vector[i];
-                auto field = il2cpp_class_get_field_from_name(pair->klass, "Value");
+                auto *pair = (Il2CppObject *) arr->vector[i];
+                auto *field = il2cpp_class_get_field_from_name(pair->klass, "Value");
                 Il2CppObject *obj;
                 il2cpp_field_get_value(pair, field, &obj);
-                if (obj) {
+                if (obj != nullptr) {
                     if (obj->klass->name == "Texture2D"s) {
-                        auto uobject_name = uobject_get_name(obj);
+                        auto *uobject_name = uobject_get_name(obj);
                         if (!localify::u16_u8(uobject_name->start_char).empty()) {
-                            auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
+                            auto *newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                                     replaceAssets,
                                     uobject_name,
                                     (Il2CppType *) GetRuntimeType("UnityEngine.CoreModule.dll",
                                                                   "UnityEngine", "Texture2D"));
-                            if (newTexture) {
+                            if (newTexture != nullptr) {
                                 reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                         il2cpp_symbols::get_method_pointer(
                                                 "UnityEngine.CoreModule.dll", "UnityEngine",
@@ -824,16 +831,16 @@ assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2
                         auto set_mainTexture = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *,
                                                                                   Il2CppObject *)>(il2cpp_class_get_method_from_name(
                                 obj->klass, "set_mainTexture", 1)->methodPointer);
-                        auto mainTexture = get_mainTexture(obj);
-                        if (mainTexture) {
-                            auto uobject_name = uobject_get_name(mainTexture);
+                        auto *mainTexture = get_mainTexture(obj);
+                        if (mainTexture != nullptr) {
+                            auto *uobject_name = uobject_get_name(mainTexture);
                             if (!localify::u16_u8(uobject_name->start_char).empty()) {
-                                auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
+                                auto *newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                                         replaceAssets,
                                         uobject_name,
                                         (Il2CppType *) GetRuntimeType("UnityEngine.CoreModule.dll",
                                                                       "UnityEngine", "Texture2D"));
-                                if (newTexture) {
+                                if (newTexture != nullptr) {
                                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                             il2cpp_symbols::get_method_pointer(
                                                     "UnityEngine.CoreModule.dll", "UnityEngine",
