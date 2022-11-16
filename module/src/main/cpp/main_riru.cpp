@@ -15,14 +15,14 @@
 #include "zygoteloader/main.h"
 
 #define _uintval(p)               reinterpret_cast<uintptr_t>(p)
-#define _ptr(p)                   reinterpret_cast<void *>(p)
+#define _ptr(p)                   (reinterpret_cast<void *>(p))
 #define _align_up(x, n)           (((x) + ((n) - 1)) & ~((n) - 1))
 #define _align_down(x, n)         ((x) & -(n))
 #define _page_size                4096
 #define _page_align(n)            _align_up(static_cast<uintptr_t>(n), _page_size)
 #define _ptr_align(x)             _ptr(_align_down(reinterpret_cast<uintptr_t>(x), _page_size))
 #define _make_rwx(p, n)           ::mprotect(_ptr_align(p), \
-                                              _page_align(_uintval(p) + n) != _page_align(_uintval(p)) ? _page_align(n) + _page_size : _page_align(n), \
+                                              _page_align(_uintval(p) + (n)) != _page_align(_uintval(p)) ? _page_align(n) + _page_size : _page_align(n), \
                                               PROT_READ | PROT_WRITE | PROT_EXEC)
 
 string moduleApi = "riru";

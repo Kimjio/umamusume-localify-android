@@ -667,10 +667,10 @@ void TextMeshProUguiCommon_Awake_hook(Il2CppObject *_this) {
         }
     }
 
-    float a = static_cast<float>((color32 & 0xFF000000) >> 24) / static_cast<float>(0xff);
-    float b = static_cast<float>((color32 & 0xFF0000) >> 16) / static_cast<float>(0xff);
-    float g = static_cast<float>((color32 & 0xFF00) >> 8) / static_cast<float>(0xff);
-    float r = static_cast<float>(color32 & 0xFF) / static_cast<float>(0xff);
+    float const a = static_cast<float>((color32 & 0xFF000000) >> 24) / static_cast<float>(0xff);
+    float const b = static_cast<float>((color32 & 0xFF0000) >> 16) / static_cast<float>(0xff);
+    float const g = static_cast<float>((color32 & 0xFF00) >> 8) / static_cast<float>(0xff);
+    float const r = static_cast<float>(color32 & 0xFF) / static_cast<float>(0xff);
     auto origOutlineColor = Color_t{r, g, b, a};
 
     SetFloat(customFontMaterial, il2cpp_string_new("_OutlineWidth"), origOutlineWidth);
@@ -686,7 +686,8 @@ void TextMeshProUguiCommon_Awake_hook(Il2CppObject *_this) {
 
 void *get_modified_string_orig = nullptr;
 
-Il2CppString *get_modified_string_hook(Il2CppString *text, Il2CppObject *input, bool allowNewLine) {
+Il2CppString *get_modified_string_hook(Il2CppString *text, Il2CppObject *input,
+                                       bool allowNewLine) {
     if (!allowNewLine) {
         auto u8str = localify::u16_u8(text->start_char);
         replaceAll(u8str, "\n", "");
@@ -704,9 +705,9 @@ void set_fps_hook([[maybe_unused]] int value) {
 void *load_zekken_composite_resource_orig = nullptr;
 
 void load_zekken_composite_resource_hook(Il2CppObject *thisObj) {
-    if (assets && g_replace_to_custom_font) {
-        auto font = GetCustomFont();
-        if (font) {
+    if ((assets != nullptr) && g_replace_to_custom_font) {
+        auto *font = GetCustomFont();
+        if (font != nullptr) {
             FieldInfo *zekkenFontField = il2cpp_class_get_field_from_name(thisObj->klass,
                                                                           "_fontZekken");
             il2cpp_field_set_value(thisObj, zekkenFontField, font);
@@ -846,8 +847,7 @@ void apply_graphics_quality_hook(Il2CppObject *thisObj, int quality, bool force)
 
 void *assetbundle_LoadFromFile_orig = nullptr;
 
-Il2CppObject *
-assetbundle_LoadFromFile_hook(Il2CppString *path) {
+Il2CppObject *assetbundle_LoadFromFile_hook(Il2CppString *path) {
     stringstream pathStream(localify::u16_u8(path->start_char));
     string segment;
     vector<string> split;
@@ -866,8 +866,8 @@ assetbundle_LoadFromFile_hook(Il2CppString *path) {
 
 void *assetbundle_load_asset_orig = nullptr;
 
-auto
-assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2CppType *type) -> Il2CppObject * {
+Il2CppObject *
+assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2CppType *type) {
     stringstream pathStream(localify::u16_u8(name->start_char));
     string segment;
     vector<string> split;
@@ -888,8 +888,8 @@ assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2
                                                                Il2CppType *)>(il2cpp_class_get_method_from_name(
                 asset->klass, "GetComponent", 1)->methodPointer);
         auto *assetHolder = getComponent(asset,
-                                        (Il2CppType *) GetRuntimeType("umamusume.dll", "Gallop",
-                                                                      "AssetHolder"));
+                                         (Il2CppType *) GetRuntimeType("umamusume.dll", "Gallop",
+                                                                       "AssetHolder"));
         if (assetHolder != nullptr) {
             auto *objectList = reinterpret_cast<Il2CppObject *(*)(
                     Il2CppObject *)>(il2cpp_class_get_method_from_name(assetHolder->klass,
@@ -974,10 +974,10 @@ void assetbundle_unload_hook(Il2CppObject *thisObj, bool unloadAllLoadedObjects)
 void *AssetBundleRequest_GetResult_orig = nullptr;
 
 Il2CppObject *AssetBundleRequest_GetResult_hook(Il2CppObject *thisObj) {
-    auto obj = reinterpret_cast<decltype(AssetBundleRequest_GetResult_hook) *>(AssetBundleRequest_GetResult_orig)(
+    auto *obj = reinterpret_cast<decltype(AssetBundleRequest_GetResult_hook) *>(AssetBundleRequest_GetResult_orig)(
             thisObj);
-    if (obj) {
-        auto name = uobject_get_name(obj);
+    if (obj != nullptr) {
+        auto *name = uobject_get_name(obj);
         auto u8Name = localify::u16_u8(name->start_char);
         if (find(replaceAssetNames.begin(), replaceAssetNames.end(), u8Name) !=
             replaceAssetNames.end()) {
@@ -991,29 +991,29 @@ Il2CppObject *AssetBundleRequest_GetResult_hook(Il2CppObject *thisObj) {
 void *resources_load_orig = nullptr;
 
 Il2CppObject *resources_load_hook(Il2CppString *path, Il2CppType *type) {
-    string u8Name = localify::u16_u8(path->start_char);
+    string const u8Name = localify::u16_u8(path->start_char);
     if (u8Name == "ui/views/titleview"s) {
         if (find(replaceAssetNames.begin(), replaceAssetNames.end(),
                  "assets/title/utx_obj_title_logo_umamusume.png") != replaceAssetNames.end()) {
-            auto gameObj = reinterpret_cast<decltype(resources_load_hook) *>(resources_load_orig)(
+            auto *gameObj = reinterpret_cast<decltype(resources_load_hook) *>(resources_load_orig)(
                     path, type);
             auto getComponent = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *,
                                                                    Il2CppType *)>(il2cpp_class_get_method_from_name(
                     gameObj->klass, "GetComponent", 1)->methodPointer);
-            auto component = getComponent(gameObj,
-                                          (Il2CppType *) GetRuntimeType("umamusume.dll", "Gallop",
-                                                                        "TitleView"));
+            auto *component = getComponent(gameObj,
+                                           (Il2CppType *) GetRuntimeType("umamusume.dll", "Gallop",
+                                                                         "TitleView"));
 
-            auto imgField = il2cpp_class_get_field_from_name(component->klass, "TitleLogoImage");
+            auto *imgField = il2cpp_class_get_field_from_name(component->klass, "TitleLogoImage");
             Il2CppObject *imgCommon;
             il2cpp_field_get_value(component, imgField, &imgCommon);
-            auto texture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
+            auto *texture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                     replaceAssets,
                     il2cpp_string_new("assets/title/utx_obj_title_logo_umamusume.png"),
                     (Il2CppType *) GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
                                                   "Texture2D"));
-            auto m_TextureField = il2cpp_class_get_field_from_name(imgCommon->klass->parent,
-                                                                   "m_Texture");
+            auto *m_TextureField = il2cpp_class_get_field_from_name(imgCommon->klass->parent,
+                                                                    "m_Texture");
             il2cpp_field_set_value(imgCommon, m_TextureField, texture);
             return gameObj;
         }
@@ -1741,16 +1741,15 @@ void (*SendNotification)(Il2CppObject *thisObj, Il2CppString *ChannelId, Il2CppS
                          Il2CppString *message,
                          DateTime date, Il2CppString *path, int id);
 
-Il2CppString *(*createFavIconFilePath)(Il2CppObject *thisObj, int _unitId);
-
+Il2CppString *(*createFavIconFilePath)(Il2CppObject *thisObj, int unitId);
 
 void *GeneratePushNotifyCharaIconPng_orig = nullptr;
 
-Il2CppString *GeneratePushNotifyCharaIconPng_hook(Il2CppObject *thisObj, int _unitId, int dressid,
+Il2CppString *GeneratePushNotifyCharaIconPng_hook(Il2CppObject *thisObj, int unitId, int dressId,
                                                   Boolean forceGen) {
     return reinterpret_cast<decltype(GeneratePushNotifyCharaIconPng_hook) * >
     (GeneratePushNotifyCharaIconPng_orig)(
-            thisObj, _unitId, dressid,
+            thisObj, unitId, dressId,
             GetBoolean(true));
 }
 
@@ -1766,7 +1765,7 @@ void
 (*RegisterNotificationChannel)(Il2CppObject *thisObj, Il2CppString *name, Il2CppString *ChannelId,
                                Il2CppString *message);
 
-Boolean (*IsDenyTime)(Il2CppObject *thisObj, Il2CppObject *_dateTime);
+Boolean (*IsDenyTime)(Il2CppObject *thisObj, Il2CppObject *dateTime);
 
 void (*DeleteAllLocalPushes)(Il2CppObject *thisObj);
 
@@ -1878,7 +1877,7 @@ void dump_all_entries() {
 }
 
 void init_il2cpp_api() {
-#define DO_API(r, n, p) n = (r (*) p)dlsym(il2cpp_handle, #n)
+#define DO_API(r, n, ...) n = (r (*) (__VA_ARGS__))dlsym(il2cpp_handle, #n)
 
 #include "il2cpp/il2cpp-api-functions.h"
 

@@ -4,7 +4,7 @@
 #include "../stdinclude.hpp"
 #include "il2cpp-class.h"
 
-#define DO_API(r, n, p) inline r (*n) p
+#define DO_API(r, n, ...) inline r (*n) (__VA_ARGS__)
 
 #include "il2cpp-api-functions.h"
 
@@ -23,7 +23,7 @@ namespace il2cpp_symbols
                            const char* klassName, const char* name, int argsCount);
 
     Il2CppMethodPointer find_method(const char* assemblyName, const char* namespaze,
-                          const char* klassName, std::function<bool(const MethodInfo*)> predict);
+                          const char* klassName, const std::function<bool(const MethodInfo*)>& predict);
 }
 
 #endif //UMAMUSUMELOCALIFYANDROID_IL2CPP_SYMBOLS_H
