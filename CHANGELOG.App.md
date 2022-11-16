@@ -1,3 +1,14 @@
+## 1.3.0
+
+- Add some preferences
+- Update library, proguard rules
+- Add TextMeshPro font asset name option
+
+## 1.2.0
+
+- Add 'staticEntriesUseHash' option
+- Hide Restore notification option
+
 ## 1.1.1
 
 - Fix cannot select json files on Android Pie and earlier

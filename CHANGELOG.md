@@ -1,3 +1,18 @@
+## 2.7.0
+
+- Applying many Windows version feature updates
+- Enhanced Notification.build hook
+- Load replacement asset on criware init
+- Hooking CriMana.Player.SetFile to change movie file
+- Custom TextMeshPro font support
+
+## 2.5.0
+
+- Enhanced notification java logic
+- Add 'staticEntriesUseHash' option
+- Cyan.Loader.AssetLoader.LoadOne -> UnityEngine.AssetBundle.LoadFromFile
+- Improved movie size in force landscape mode
+
 ## 2.4.0
 
 - Bypass root check
