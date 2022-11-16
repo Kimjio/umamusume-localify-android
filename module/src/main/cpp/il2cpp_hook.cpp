@@ -2312,8 +2312,13 @@ void hookMethods() {
                                                                           "GameSystem",
                                                                           "FixedUpdate", 0);
 
-    auto CriMana_Player_SetFile_addr = il2cpp_symbols::get_method_pointer(
-            "CriMw.CriWare.Runtime.dll", "CriWare.CriMana", "Player", "SetFile", 3);
+    auto CriMana_Player_SetFile_addr =
+            GetUnityVersion() == Unity2020 ?
+            il2cpp_symbols::get_method_pointer(
+                    "CriMw.CriWare.Runtime.dll", "CriWare.CriMana", "Player", "SetFile", 3)
+                                           :
+            il2cpp_symbols::get_method_pointer(
+                    "Cute.Cri.Assembly.dll", "CriMana", "Player", "SetFile", 3);
 
     load_from_file = reinterpret_cast<Il2CppObject *(*)(
             Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
