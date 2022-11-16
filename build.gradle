@@ -25,7 +25,7 @@ allprojects {
 
 ext {
     minSdkVersion = 23
-    targetSdkVersion = 32
+    targetSdkVersion = 33
 
     outDir = file("$rootDir/out")
 }
