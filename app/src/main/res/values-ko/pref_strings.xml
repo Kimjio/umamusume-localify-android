@@ -18,6 +18,7 @@
     <string name="pref_replace_custom_font">사용자 지정 폰트로 교체</string>
     <string name="pref_font_asset_path">폰트 에셋 번들</string>
     <string name="pref_font_asset_name">폰트 에셋 이름</string>
+    <string name="pref_tmpro_font_asset_name">TextMeshPro 폰트 에셋 이름</string>
     <string name="pref_force_landscape">강제 가로화면</string>
     <string name="pref_force_landscape_ui_scale">강제 가로화면에서의 UI 배율</string>
 

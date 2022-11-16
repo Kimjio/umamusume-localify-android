@@ -107,6 +107,11 @@
             android:title="@string/pref_font_asset_name"
             app:useSimpleSummaryProvider="true" />
 
+        <EditTextPreference
+            android:key="tmproFontAssetName"
+            android:title="@string/pref_tmpro_font_asset_name"
+            app:useSimpleSummaryProvider="true" />
+
         <SwitchPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_landscape"

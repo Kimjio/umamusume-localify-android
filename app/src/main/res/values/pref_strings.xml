@@ -18,6 +18,7 @@
     <string name="pref_replace_custom_font">Replace to custom font</string>
     <string name="pref_font_asset_path">Font asset bundle</string>
     <string name="pref_font_asset_name">Font asset name</string>
+    <string name="pref_tmpro_font_asset_name">TextMeshPro font asset name</string>
     <string name="pref_force_landscape">Force landscape</string>
     <string name="pref_force_landscape_ui_scale">UI scale on force landscape</string>
 

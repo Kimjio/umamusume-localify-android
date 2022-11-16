@@ -109,7 +109,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_marginBottom="16dp"
-                    android:text="설치된 앱이 없습니다."
+                    android:text="@string/no_apps"
                     android:textAlignment="center" />
             </LinearLayout>
 

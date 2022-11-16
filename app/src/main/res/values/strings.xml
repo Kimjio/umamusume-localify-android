@@ -17,4 +17,5 @@
     <string name="files_empty">No files have been added.</string>
     <string name="unknown">Unknown</string>
     <string name="error_occurred">Error occurred</string>
+    <string name="no_apps">There are no apps installed.</string>
 </resources>
