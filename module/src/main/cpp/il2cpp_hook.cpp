@@ -1474,7 +1474,7 @@ void *SetResolution_orig = nullptr;
 
 void SetResolution_hook(int w, int h, bool fullscreen, bool forceUpdate) {
     if (!resolutionIsSet || GetUnityVersion() == Unity2020) {
-        if (sceneManager) {
+        if (sceneManager || GetUnityVersion() == Unity2019 && w < h) {
             resolutionIsSet = true;
         }
         reinterpret_cast<decltype(SetResolution_hook) * > (SetResolution_orig)(w, h, fullscreen,
