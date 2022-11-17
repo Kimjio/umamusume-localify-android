@@ -1,3 +1,7 @@
+## 2.7.1
+
+- Enhanced force landscape on Unity 2019 build
+
 ## 2.7.0
 
 - Applying many Windows version feature updates
