@@ -1853,12 +1853,25 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
 
 void dump_all_entries() {
     vector<u16string> static_entries;
+    vector<pair<const string, const u16string>> text_id_static_entries;
+    vector<pair<const string, const u16string>> text_id_not_matched_entries;
     // 0 is None
     for (int i = 1;; i++) {
         auto *str = reinterpret_cast<decltype(localize_get_hook) * > (localize_get_orig)(i);
 
         if (str && *str->start_char) {
-            if (g_static_entries_use_hash) {
+
+            if (g_static_entries_use_text_id_name) {
+                const string textIdName = GetTextIdNameById(i);
+                text_id_static_entries.emplace_back(
+                        textIdName, u16string(str->start_char));
+                if (localify::get_localized_string(textIdName) == nullptr ||
+                    localify::u16_u8(localify::get_localized_string(textIdName)->start_char) ==
+                    localify::u16_u8(str->start_char)) {
+                    text_id_not_matched_entries.emplace_back(
+                            textIdName, u16string(str->start_char));
+                }
+            } else if (g_static_entries_use_hash) {
                 static_entries.emplace_back(str->start_char);
             } else {
                 logger::write_entry(i, str->start_char);
@@ -1871,7 +1884,10 @@ void dump_all_entries() {
                 break;
         }
     }
-    if (g_static_entries_use_hash) {
+
+    if (g_static_entries_use_text_id_name) {
+        logger::write_text_id_static_dict(text_id_static_entries, text_id_not_matched_entries);
+    } else if (g_static_entries_use_hash) {
         logger::write_static_dict(static_entries);
     }
 }
@@ -2475,7 +2491,9 @@ void hookMethods() {
 
     ADD_HOOK(GameSystem_FixedUpdate)
 
-    ADD_HOOK(DialogCommon_Close)
+    if (GetUnityVersion() == Unity2020) {
+        ADD_HOOK(DialogCommon_Close)
+    }
 
     ADD_HOOK(GallopUtil_GotoTitleOnError)
 

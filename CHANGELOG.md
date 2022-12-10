@@ -1,3 +1,7 @@
+## 2.7.2
+
+- Fixed a crash that occurred when closing the download dialog in the Korean version
+
 ## 2.7.1
 
 - Enhanced force landscape on Unity 2019 build
