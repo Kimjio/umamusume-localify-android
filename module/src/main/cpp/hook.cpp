@@ -6,6 +6,7 @@
 #include "localify/localify.h"
 #include "logger/logger.h"
 #include "config.hpp"
+#include "native_bridge_itf.h"
 
 using namespace std;
 using namespace localify;
@@ -372,6 +373,22 @@ std::optional<std::vector<std::string>> read_config() {
     return dicts;
 }
 
+void* GetNativeBridgeLoadLibrary(void* fallbackAddress) {
+    // Bluestacks
+    void* handle = dlopen("libnb.so", RTLD_NOW);
+    // clear error
+    dlerror();
+    if (handle) {
+        auto itf = reinterpret_cast<NativeBridgeCallbacks*>(dlsym(handle, "NativeBridgeItf"));
+        LOGD("NativeBridgeItf version: %d", itf->version);
+        if (GetAndroidApiLevel() >= 26) {
+            return (void*) itf->loadLibraryExt;
+        }
+        return (void*) itf->loadLibrary;
+    }
+    return fallbackAddress;
+}
+
 void hack_thread(void *arg [[maybe_unused]]) {
     LOGI("%s hack thread: %d", ABI, gettid());
     int api_level = GetAndroidApiLevel();
@@ -396,8 +413,8 @@ void hack_thread(void *arg [[maybe_unused]]) {
                 }
             }
         } else {
-            void *addr = DobbySymbolResolver(nullptr,
-                                             "NativeBridgeLoadLibraryExt");
+            void *addr = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
+                                             "NativeBridgeLoadLibraryExt"));
             if (addr) {
                 LOGI("NativeBridgeLoadLibraryExt at: %p", addr);
                 DobbyHook(addr, (void *) new_NativeBridgeLoadLibraryExt_V30,
@@ -425,8 +442,8 @@ void hack_thread(void *arg [[maybe_unused]]) {
                 }
             }
         } else {
-            void *addr = DobbySymbolResolver(nullptr,
-                                             "_ZN7android26NativeBridgeLoadLibraryExtEPKciPNS_25native_bridge_namespace_tE");
+            void *addr = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
+                                             "_ZN7android26NativeBridgeLoadLibraryExtEPKciPNS_25native_bridge_namespace_tE"));
             if (addr) {
                 LOGI("NativeBridgeLoadLibraryExt at: %p", addr);
                 DobbyHook(addr, (void *) new_NativeBridgeLoadLibraryExt_V26,
@@ -448,8 +465,8 @@ void hack_thread(void *arg [[maybe_unused]]) {
                           (void **) &orig_do_dlopen_V24);
             }
         } else {
-            void *addr = DobbySymbolResolver(nullptr,
-                                             "_ZN7android23NativeBridgeLoadLibraryEPKci");
+            void *addr = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
+                                             "_ZN7android23NativeBridgeLoadLibraryEPKci"));
             if (addr) {
                 LOGI("NativeBridgeLoadLibrary at: %p", addr);
                 DobbyHook(addr, (void *) new_NativeBridgeLoadLibrary_V21,
@@ -466,8 +483,8 @@ void hack_thread(void *arg [[maybe_unused]]) {
                           (void **) &orig_do_dlopen_V19);
             }
         } else {
-            void *addr = DobbySymbolResolver(nullptr,
-                                             "_ZN7android23NativeBridgeLoadLibraryEPKci");
+            void *addr = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
+                                             "_ZN7android23NativeBridgeLoadLibraryEPKci"));
             if (addr) {
                 LOGI("NativeBridgeLoadLibrary at: %p", addr);
                 DobbyHook(addr, (void *) new_NativeBridgeLoadLibrary_V21,
