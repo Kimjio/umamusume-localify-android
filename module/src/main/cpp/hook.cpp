@@ -380,7 +380,7 @@ void* GetNativeBridgeLoadLibrary(void* fallbackAddress) {
     dlerror();
     if (handle) {
         auto itf = reinterpret_cast<NativeBridgeCallbacks*>(dlsym(handle, "NativeBridgeItf"));
-        LOGD("NativeBridgeItf version: %d", itf->version);
+        LOGI("NativeBridgeItf version: %d", itf->version);
         if (GetAndroidApiLevel() >= 26) {
             return (void*) itf->loadLibraryExt;
         }

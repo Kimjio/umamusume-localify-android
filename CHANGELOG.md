@@ -1,3 +1,7 @@
+## 2.7.3
+
+- BlueStacks Android 11 support
+
 ## 2.7.2
 
 - Fixed a crash that occurred when closing the download dialog in the Korean version
