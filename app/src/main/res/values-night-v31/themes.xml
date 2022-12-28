@@ -8,7 +8,5 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="switchPreferenceStyle">@style/Preference.SwitchPreference.Material3</item>
-        <item name="android:switchPreferenceStyle">@style/Preference.SwitchPreference.Material3</item>
-        <item name="android:windowShowWallpaper">true</item>
     </style>
 </resources>
