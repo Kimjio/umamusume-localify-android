@@ -60,6 +60,9 @@ elseif (${API} STREQUAL "riru")
 
     add_library(${MODULE_NAME} SHARED main_riru.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
     target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static riru::riru)
+else ()
+    add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp logger/logger.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
+    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static)
 endif ()
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

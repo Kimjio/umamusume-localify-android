@@ -15,6 +15,7 @@ void hack_thread(void *arg);
 // void hack_settings_thread(void *arg);
 
 #define HOOK_DEF(ret, func, ...) \
+  void* addr_##func; \
   ret (*orig_##func)(__VA_ARGS__); \
   ret new_##func(__VA_ARGS__)
 

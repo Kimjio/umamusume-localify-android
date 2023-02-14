@@ -19,9 +19,9 @@ bool g_ui_use_system_resolution = false;
 float g_resolution_3d_scale = 1.0f;
 bool g_replace_to_builtin_font = false;
 bool g_replace_to_custom_font = false;
-std::string g_font_assetbundle_path;
-std::string g_font_asset_name;
-std::string g_tmpro_font_asset_name;
+string g_font_assetbundle_path;
+string g_font_asset_name;
+string g_tmpro_font_asset_name;
 bool g_dump_entries = false;
 bool g_dump_db_entries = false;
 bool g_static_entries_use_hash = false;
@@ -101,26 +101,34 @@ ProcessStatus dlopen_process(const char *name, void *handle) {
 
 HOOK_DEF(void*, do_dlopen, const char *name, int flags) {
     void *handle = orig_do_dlopen(name, flags);
-    dlopen_process(name, handle);
+    if (dlopen_process(name, handle) == ProcessStatus::DONE) {
+        DobbyDestroy(addr_do_dlopen);
+    }
     return handle;
 }
 
 HOOK_DEF(void*, __loader_dlopen, const char *filename, int flags, const void *caller_addr) {
     void *handle = orig___loader_dlopen(filename, flags, caller_addr);
-    dlopen_process(filename, handle);
+    if (dlopen_process(filename, handle) == ProcessStatus::DONE) {
+        DobbyDestroy(addr___loader_dlopen);
+    }
     return handle;
 }
 
 HOOK_DEF(void*, do_dlopen_V24, const char *name, int flags, const void *extinfo [[maybe_unused]],
          void *caller_addr) {
     void *handle = orig_do_dlopen_V24(name, flags, extinfo, caller_addr);
-    dlopen_process(name, handle);
+    if (dlopen_process(name, handle) == ProcessStatus::DONE) {
+        DobbyDestroy(addr_do_dlopen_V24);
+    }
     return handle;
 }
 
 HOOK_DEF(void*, do_dlopen_V19, const char *name, int flags, const void *extinfo [[maybe_unused]]) {
     void *handle = orig_do_dlopen_V19(name, flags, extinfo);
-    dlopen_process(name, handle);
+    if (dlopen_process(name, handle) == ProcessStatus::DONE) {
+        DobbyDestroy(addr_do_dlopen_V19);
+    }
     return handle;
 }
 
@@ -143,13 +151,13 @@ HOOK_DEF(void*, NativeBridgeLoadLibrary_V21, const char *filename, int flag) {
         }
 
         if (!path.empty()) {
-            std::thread load_thread([path, NativeBridgeError]() {
+            thread load_thread([path, NativeBridgeError]() {
                 void *lib = orig_NativeBridgeLoadLibrary_V21(path.data(), RTLD_NOW);
                 LOGI("%s: %p", path.data(), lib);
                 if (NativeBridgeError()) {
                     LOGW("LoadLibrary failed");
                 }
-                DobbyDestroy((void *) new_do_dlopen_V24);
+                DobbyDestroy(addr_NativeBridgeLoadLibrary_V21);
             });
             load_thread.detach();
         }
@@ -180,17 +188,16 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V26, const char *filename, int flag,
         }
 
         if (!path.empty()) {
-            std::thread load_thread([path, ns, NativeBridgeError, NativeBridgeGetError]() {
+            thread load_thread([path, ns, NativeBridgeError, NativeBridgeGetError]() {
                 void *lib = orig_NativeBridgeLoadLibraryExt_V26(path.data(), RTLD_NOW, ns);
                 LOGI("%s: %p", path.data(), lib);
                 if (NativeBridgeError()) {
-                    char *error_bridge;
-                    if ((error_bridge = NativeBridgeGetError()) !=
-                        nullptr) {
+                    char *error_bridge = NativeBridgeGetError();
+                    if (error_bridge) {
                         LOGW("error_bridge: %s", error_bridge);
                     }
                 }
-                DobbyDestroy((void *) new_do_dlopen_V24);
+                DobbyDestroy(addr_NativeBridgeLoadLibraryExt_V26);
             });
             load_thread.detach();
         }
@@ -221,17 +228,17 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
         }
 
         if (!path.empty()) {
-            std::thread load_thread([path, ns, NativeBridgeError, NativeBridgeGetError]() {
+            thread load_thread([path, ns, NativeBridgeError, NativeBridgeGetError]() {
                 void *lib = orig_NativeBridgeLoadLibraryExt_V30(path.data(), RTLD_NOW, ns);
                 LOGI("%s: %p", path.data(), lib);
                 if (NativeBridgeError()) {
-                    char *error_bridge;
-                    if ((error_bridge = NativeBridgeGetError()) !=
+                    char *error_bridge = NativeBridgeGetError();
+                    if ((error_bridge) !=
                         nullptr) {
                         LOGW("error_bridge: %s", error_bridge);
                     }
                 }
-                DobbyDestroy((void *) new_do_dlopen_V24);
+                DobbyDestroy(addr_NativeBridgeLoadLibraryExt_V30);
             });
             load_thread.detach();
         }
@@ -240,11 +247,11 @@ HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
     return orig_NativeBridgeLoadLibraryExt_V30(filename, flag, ns);
 }
 
-std::optional<std::vector<std::string>> read_config() {
-    std::ifstream config_stream{
+optional<vector<string>> read_config() {
+    ifstream config_stream{
             string("/sdcard/Android/data/").append(Game::GetCurrentPackageName()).append(
                     "/config.json")};
-    std::vector<std::string> dicts{};
+    vector<string> dicts{};
 
     if (!config_stream.is_open()) {
         LOGW("config.json not loaded.");
@@ -296,13 +303,13 @@ std::optional<std::vector<std::string>> read_config() {
             g_replace_to_custom_font = document["replaceToCustomFont"].GetBool();
         }
         if (document.HasMember("fontAssetBundlePath")) {
-            g_font_assetbundle_path = std::string(document["fontAssetBundlePath"].GetString());
+            g_font_assetbundle_path = string(document["fontAssetBundlePath"].GetString());
         }
         if (document.HasMember("fontAssetName")) {
-            g_font_asset_name = std::string(document["fontAssetName"].GetString());
+            g_font_asset_name = string(document["fontAssetName"].GetString());
         }
         if (document.HasMember("tmproFontAssetName")) {
-            g_tmpro_font_asset_name = std::string(document["tmproFontAssetName"].GetString());
+            g_tmpro_font_asset_name = string(document["tmproFontAssetName"].GetString());
         }
         if (document.HasMember("graphicsQuality")) {
             g_graphics_quality = document["graphicsQuality"].GetInt();
@@ -431,13 +438,13 @@ void* GetNativeBridgeLoadLibrary(void* fallbackAddress) {
 
 void hack_thread(void *arg [[maybe_unused]]) {
     LOGI("%s hack thread: %d", ABI, gettid());
-    int api_level = GetAndroidApiLevel();
+    const int api_level = GetAndroidApiLevel();
     LOGI("%s api level: %d", ABI, api_level);
     if (api_level >= 30) {
         if (!IsABIRequiredNativeBridge()) {
             void *addr;
             if (IsRunningOnNativeBridge()) {
-                addr = (void *) dlopen;
+                addr = reinterpret_cast<void *>(dlopen);
             } else {
                 addr = DobbySymbolResolver(nullptr,
                                            "__dl__Z9do_dlopenPKciPK17android_dlextinfoPKv");
@@ -445,27 +452,29 @@ void hack_thread(void *arg [[maybe_unused]]) {
             if (addr) {
                 LOGI("%s do_dlopen at: %p", ABI, addr);
                 if (IsRunningOnNativeBridge()) {
-                    DobbyHook(addr, (void *) new_do_dlopen,
-                              (void **) &orig_do_dlopen);
+                    addr_do_dlopen = addr;
+                    DobbyHook(addr_do_dlopen, reinterpret_cast<void *>(new_do_dlopen),
+                              reinterpret_cast<void **>(&orig_do_dlopen));
                 } else {
-                    DobbyHook(addr, (void *) new_do_dlopen_V24,
-                              (void **) &orig_do_dlopen_V24);
+                    addr_do_dlopen_V24 = addr;
+                    DobbyHook(addr_do_dlopen_V24, reinterpret_cast<void *>(new_do_dlopen_V24),
+                              reinterpret_cast<void **>(&orig_do_dlopen_V24));
                 }
             }
         } else {
-            void *addr = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
+            addr_NativeBridgeLoadLibraryExt_V30 = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
                                              "NativeBridgeLoadLibraryExt"));
-            if (addr) {
-                LOGI("NativeBridgeLoadLibraryExt at: %p", addr);
-                DobbyHook(addr, (void *) new_NativeBridgeLoadLibraryExt_V30,
-                          (void **) &orig_NativeBridgeLoadLibraryExt_V30);
+            if (addr_NativeBridgeLoadLibraryExt_V30) {
+                LOGI("NativeBridgeLoadLibraryExt at: %p", addr_NativeBridgeLoadLibraryExt_V30);
+                DobbyHook(addr_NativeBridgeLoadLibraryExt_V30, reinterpret_cast<void *>(new_NativeBridgeLoadLibraryExt_V30),
+                          reinterpret_cast<void **>(&orig_NativeBridgeLoadLibraryExt_V30));
             }
         }
     } else if (api_level >= 26) {
         if (!IsABIRequiredNativeBridge()) {
             void *addr;
             if (IsRunningOnNativeBridge()) {
-                addr = (void *) dlopen;
+                addr = reinterpret_cast<void *>(dlopen);
             } else {
                 void *libdl_handle = dlopen("libdl.so", RTLD_LAZY);
                 addr = dlsym(libdl_handle, "__loader_dlopen");
@@ -473,44 +482,47 @@ void hack_thread(void *arg [[maybe_unused]]) {
             if (addr) {
                 if (IsRunningOnNativeBridge()) {
                     LOGI("do_dlopen at: %p", addr);
-                    DobbyHook(addr, (void *) new_do_dlopen,
-                              (void **) &orig_do_dlopen);
+                    addr_do_dlopen = addr;
+                    DobbyHook(addr_do_dlopen, reinterpret_cast<void *>(new_do_dlopen),
+                              reinterpret_cast<void **>(&orig_do_dlopen));
                 } else {
                     LOGI("__loader_dlopen at: %p", addr);
-                    DobbyHook(addr, (void *) new___loader_dlopen,
-                              (void **) &orig___loader_dlopen);
+                    addr___loader_dlopen = addr;
+                    DobbyHook(addr___loader_dlopen, reinterpret_cast<void *>(new___loader_dlopen),
+                              reinterpret_cast<void **>(&orig___loader_dlopen));
                 }
             }
         } else {
-            void *addr = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
+            addr_NativeBridgeLoadLibraryExt_V26 = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
                                              "_ZN7android26NativeBridgeLoadLibraryExtEPKciPNS_25native_bridge_namespace_tE"));
-            if (addr) {
-                LOGI("NativeBridgeLoadLibraryExt at: %p", addr);
-                DobbyHook(addr, (void *) new_NativeBridgeLoadLibraryExt_V26,
-                          (void **) &orig_NativeBridgeLoadLibraryExt_V26);
+            if (addr_NativeBridgeLoadLibraryExt_V26) {
+                LOGI("NativeBridgeLoadLibraryExt at: %p", addr_NativeBridgeLoadLibraryExt_V26);
+                DobbyHook(addr_NativeBridgeLoadLibraryExt_V26, reinterpret_cast<void *>(new_NativeBridgeLoadLibraryExt_V26),
+                          reinterpret_cast<void **>(&orig_NativeBridgeLoadLibraryExt_V26));
             }
         }
     } else if (api_level >= 24) {
         if (!IsABIRequiredNativeBridge()) {
             void *addr;
             if (IsRunningOnNativeBridge()) {
-                addr = (void *) dlopen;
+                addr = reinterpret_cast<void *>(dlopen);
             } else {
                 addr = DobbySymbolResolver(nullptr,
                                            "__dl__Z9do_dlopenPKciPK17android_dlextinfoPv");
             }
             if (addr) {
                 LOGI("do_dlopen at: %p", addr);
-                DobbyHook(addr, (void *) new_do_dlopen_V24,
-                          (void **) &orig_do_dlopen_V24);
+                addr_do_dlopen_V24 = addr;
+                DobbyHook(addr_do_dlopen_V24, reinterpret_cast<void *>(new_do_dlopen_V24),
+                          reinterpret_cast<void **>(&orig_do_dlopen_V24));
             }
         } else {
-            void *addr = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
+            addr_NativeBridgeLoadLibrary_V21 = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
                                              "_ZN7android23NativeBridgeLoadLibraryEPKci"));
-            if (addr) {
-                LOGI("NativeBridgeLoadLibrary at: %p", addr);
-                DobbyHook(addr, (void *) new_NativeBridgeLoadLibrary_V21,
-                          (void **) &orig_NativeBridgeLoadLibrary_V21);
+            if (addr_NativeBridgeLoadLibrary_V21) {
+                LOGI("NativeBridgeLoadLibrary at: %p", addr_NativeBridgeLoadLibrary_V21);
+                DobbyHook(addr_NativeBridgeLoadLibrary_V21, reinterpret_cast<void *>(new_NativeBridgeLoadLibrary_V21),
+                          reinterpret_cast<void **>(&orig_NativeBridgeLoadLibrary_V21));
             }
         }
     } else {
@@ -519,16 +531,17 @@ void hack_thread(void *arg [[maybe_unused]]) {
                                              "__dl__Z9do_dlopenPKciPK17android_dlextinfo");
             if (addr) {
                 LOGI("do_dlopen at: %p", addr);
-                DobbyHook(addr, (void *) new_do_dlopen_V19,
-                          (void **) &orig_do_dlopen_V19);
+                addr_do_dlopen_V19 = addr;
+                DobbyHook(addr_do_dlopen_V19, reinterpret_cast<void *>(new_do_dlopen_V19),
+                          reinterpret_cast<void **>(&orig_do_dlopen_V19));
             }
         } else {
-            void *addr = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
+            addr_NativeBridgeLoadLibrary_V21 = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
                                              "_ZN7android23NativeBridgeLoadLibraryEPKci"));
-            if (addr) {
-                LOGI("NativeBridgeLoadLibrary at: %p", addr);
-                DobbyHook(addr, (void *) new_NativeBridgeLoadLibrary_V21,
-                          (void **) &orig_NativeBridgeLoadLibrary_V21);
+            if (addr_NativeBridgeLoadLibrary_V21) {
+                LOGI("NativeBridgeLoadLibrary at: %p", addr_NativeBridgeLoadLibrary_V21);
+                DobbyHook(addr_NativeBridgeLoadLibrary_V21, reinterpret_cast<void *>(new_NativeBridgeLoadLibrary_V21),
+                          reinterpret_cast<void **>(&orig_NativeBridgeLoadLibrary_V21));
             }
         }
     }
