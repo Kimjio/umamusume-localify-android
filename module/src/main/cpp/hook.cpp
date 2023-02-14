@@ -32,9 +32,12 @@ bool g_force_landscape = false;
 float g_force_landscape_ui_scale = 0.5f;
 bool g_ui_loading_show_orientation_guide = true;
 bool g_restore_notification = false;
-std::unordered_map<std::string, ReplaceAsset> g_replace_assets;
-std::string g_replace_assetbundle_file_path;
-std::string text_id_dict;
+unordered_map<string, ReplaceAsset> g_replace_assets;
+string g_replace_assetbundle_file_path;
+string g_replace_text_db_path;
+bool g_character_system_text_caption = false;
+int g_cyspring_update_mode = -1;
+string text_id_dict;
 
 bool isGame(const char *pkgNm) {
     if (!pkgNm)
@@ -357,6 +360,32 @@ std::optional<std::vector<std::string>> read_config() {
                 filesystem::is_regular_file(replaceAssetBundleFilePath)) {
                 g_replace_assetbundle_file_path = localify::u16_u8(replaceAssetBundleFilePath);
             }
+        }
+
+        // Not working correctly...
+        /*if (document.HasMember("replaceTextDBPath")) {
+            auto replaceTextDBPath = localify::u8_u16(
+                    document["replaceTextDBPath"].GetString());
+            if (!replaceTextDBPath.starts_with(u"/")) {
+                replaceTextDBPath.insert(0, u16string(u"/sdcard/Android/data/").append(
+                        localify::u8_u16(Game::GetCurrentPackageName())).append(u"/"));
+            }
+            if (filesystem::exists(replaceTextDBPath) &&
+                filesystem::is_regular_file(replaceTextDBPath)) {
+                g_replace_text_db_path = localify::u16_u8(replaceTextDBPath);
+            }
+        }*/
+
+        if (document.HasMember("characterSystemTextCaption")) {
+            g_character_system_text_caption = document["characterSystemTextCaption"].GetBool();
+        }
+
+        if (document.HasMember("cySpringUpdateMode")) {
+            g_cyspring_update_mode = document["cySpringUpdateMode"].GetInt();
+            vector<int> options = { 0, 1, 2, 3, -1 };
+            g_cyspring_update_mode = find(options.begin(), options.end(), g_cyspring_update_mode) - options.begin();
+        } else if (g_max_fps > 30) {
+            g_cyspring_update_mode = 1;
         }
 
         if (document.HasMember("textIdDict")) {

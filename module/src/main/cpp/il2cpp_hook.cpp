@@ -8,6 +8,8 @@
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/prettywriter.h>
 #include <sstream>
+#include <regex>
+#include <SQLiteCpp/SQLiteCpp.h>
 
 using namespace std;
 using namespace il2cpp_symbols;
@@ -55,6 +57,8 @@ DateTime (*FromUnixTimeToLocaleTime)(long unixTime);
 void *(*Array_GetValue)(Il2CppArray *thisObj, long index);
 
 Il2CppObject *sceneManager = nullptr;
+
+Il2CppObject *uiManager = nullptr;
 
 vector<string> replaceAssetNames;
 
@@ -163,8 +167,7 @@ bool ExecuteCoroutine(Il2CppObject *enumerator) {
 }
 
 string GetUnityVersion() {
-    string version(localify::u16_u8(get_unityVersion()->start_char));
-    return version;
+    return string(localify::u16_u8(get_unityVersion()->start_char));
 }
 
 /**
@@ -346,42 +349,472 @@ void *update_hook(Il2CppObject *thisObj, void *updateType, float deltaTime, floa
                                                                     g_ui_animation_scale);
 }
 
-std::unordered_map<void *, bool> text_queries;
+unordered_map<void *, SQLite::Statement *> text_queries;
+unordered_map<void *, bool> replacement_queries_can_next;
+
+SQLite::Database *replacementMDB;
 
 void *query_setup_orig = nullptr;
 
-void *query_setup_hook(void *thisObj, void *conn, Il2CppString *sql) {
-    auto sqlQuery = localify::u16_wide(sql->start_char);
 
-    if (sqlQuery.find(L"text_data") != std::string::npos ||
-        sqlQuery.find(L"character_system_text") != std::string::npos ||
-        sqlQuery.find(L"race_jikkyo_comment") != std::string::npos ||
-        sqlQuery.find(L"race_jikkyo_message") != std::string::npos) {
-        text_queries.emplace(thisObj, true);
+void query_setup_hook(Il2CppObject *thisObj, void *conn, Il2CppString *sql) {
+    reinterpret_cast<decltype(query_setup_hook) *>(query_setup_orig)(thisObj, conn, sql);
+
+    auto sqlQuery = u16string(sql->start_char);
+
+    if (sqlQuery.find(u"text_data") != string::npos ||
+        sqlQuery.find(u"character_system_text") != string::npos ||
+        sqlQuery.find(u"race_jikkyo_comment") != string::npos ||
+        sqlQuery.find(u"race_jikkyo_message") != string::npos) {
+        auto stmtField = il2cpp_class_get_field_from_name(thisObj->klass, "_stmt");
+        intptr_t *stmtPtr;
+        il2cpp_field_get_value(thisObj, stmtField, &stmtPtr);
+        try {
+            if (replacementMDB) {
+                text_queries.emplace(stmtPtr,
+                                     new SQLite::Statement(*replacementMDB,
+                                                           localify::u16_u8(sqlQuery)));
+            } else {
+                text_queries.emplace(stmtPtr, nullptr);
+            }
+        } catch (exception &e) {
+            LOGD("query_setup ERROR: %s", e.what());
+        }
+    }
+}
+
+
+void *Plugin_sqlite3_step_orig = nullptr;
+
+bool Plugin_sqlite3_step_hook(intptr_t *pStmt) {
+    LOGD("Plugin_sqlite3_step_hook");
+    if (text_queries.contains(pStmt)) {
+        try {
+            auto stmt = text_queries.at(pStmt);
+            if (stmt) {
+                if (stmt->getQuery().find("`race_jikkyo_message`;") != string::npos ||
+                    stmt->getQuery().find("`race_jikkyo_comment`;") != string::npos) {
+                    if (replacement_queries_can_next.find(pStmt) ==
+                        replacement_queries_can_next.end()) {
+                        replacement_queries_can_next.emplace(pStmt, true);
+                    }
+                    if (replacement_queries_can_next.at(pStmt)) {
+                        try {
+                            stmt->executeStep();
+                        } catch (exception &e) {
+                        }
+                    }
+                } else {
+                    stmt->executeStep();
+                }
+            }
+        } catch (exception &e) {
+        }
     }
 
-    return reinterpret_cast<decltype(query_setup_hook) * > (query_setup_orig)(thisObj, conn, sql);
+    return reinterpret_cast<decltype(Plugin_sqlite3_step_hook) *>(Plugin_sqlite3_step_orig)(pStmt);
+}
+
+void *Plugin_sqlite3_reset_orig = nullptr;
+
+bool Plugin_sqlite3_reset_hook(intptr_t *pStmt) {
+    if (text_queries.contains(pStmt)) {
+        try {
+            auto stmt = text_queries.at(pStmt);
+            if (stmt) {
+                stmt->reset();
+                stmt->clearBindings();
+                replacement_queries_can_next.insert_or_assign(pStmt, true);
+            }
+        }
+        catch (exception &e) {
+        }
+    }
+    return reinterpret_cast<decltype(Plugin_sqlite3_reset_hook) *>(Plugin_sqlite3_reset_orig)(
+            pStmt);
+}
+
+void *query_step_orig = nullptr;
+
+bool query_step_hook(Il2CppObject *thisObj) {
+    auto stmtField = il2cpp_class_get_field_from_name(thisObj->klass, "_stmt");
+    intptr_t *stmtPtr;
+    il2cpp_field_get_value(thisObj, stmtField, &stmtPtr);
+    if (text_queries.contains(stmtPtr)) {
+        try {
+            auto stmt = text_queries.at(stmtPtr);
+            if (stmt) {
+                stmt->executeStep();
+            }
+        }
+        catch (exception &e) {
+        }
+    }
+    return reinterpret_cast<decltype(query_step_hook) *>(query_step_orig)(thisObj);
+}
+
+void *prepared_query_reset_orig = nullptr;
+
+bool prepared_query_reset_hook(Il2CppObject *thisObj) {
+    auto stmtField = il2cpp_class_get_field_from_name(thisObj->klass, "_stmt");
+    intptr_t *stmtPtr;
+    il2cpp_field_get_value(thisObj, stmtField, &stmtPtr);
+    if (text_queries.contains(stmtPtr)) {
+        try {
+            auto stmt = text_queries.at(stmtPtr);
+            if (stmt) {
+
+                stmt->reset();
+                stmt->clearBindings();
+                replacement_queries_can_next.insert_or_assign(stmtPtr, true);
+            }
+        }
+        catch (exception &e) {
+        }
+    }
+    return reinterpret_cast<decltype(prepared_query_reset_hook) *>(prepared_query_reset_orig)(
+            thisObj);
+}
+
+void *prepared_query_bind_text_orig = nullptr;
+
+bool prepared_query_bind_text_hook(Il2CppObject *thisObj, int idx, Il2CppString *text) {
+    auto stmtField = il2cpp_class_get_field_from_name(thisObj->klass, "_stmt");
+    intptr_t *stmtPtr;
+    il2cpp_field_get_value(thisObj, stmtField, &stmtPtr);
+    if (text_queries.contains(stmtPtr)) {
+        try {
+            auto stmt = text_queries.at(stmtPtr);
+            if (stmt) {
+                stmt->bind(idx, localify::u16_u8(text->start_char));
+            }
+        }
+        catch (exception &e) {
+        }
+    }
+    return reinterpret_cast<decltype(prepared_query_bind_text_hook) *>(prepared_query_bind_text_orig)(
+            thisObj, idx, text);
+}
+
+void *prepared_query_bind_int_orig = nullptr;
+
+bool prepared_query_bind_int_hook(Il2CppObject *thisObj, int idx, int iValue) {
+    auto stmtField = il2cpp_class_get_field_from_name(thisObj->klass, "_stmt");
+    intptr_t *stmtPtr;
+    il2cpp_field_get_value(thisObj, stmtField, &stmtPtr);
+    if (text_queries.contains(stmtPtr)) {
+        try {
+            auto stmt = text_queries.at(stmtPtr);
+            if (stmt) {
+                stmt->bind(idx, iValue);
+            }
+        }
+        catch (exception &e) {
+        }
+    }
+    return reinterpret_cast<decltype(prepared_query_bind_int_hook) *>(prepared_query_bind_int_orig)(
+            thisObj, idx, iValue);
+}
+
+void *prepared_query_bind_long_orig = nullptr;
+
+bool prepared_query_bind_long_hook(Il2CppObject *thisObj, int idx, int64_t lValue) {
+    auto stmtField = il2cpp_class_get_field_from_name(thisObj->klass, "_stmt");
+    intptr_t *stmtPtr;
+    il2cpp_field_get_value(thisObj, stmtField, &stmtPtr);
+    if (text_queries.contains(stmtPtr)) {
+        try {
+            auto stmt = text_queries.at(stmtPtr);
+            if (stmt) {
+                stmt->bind(idx, lValue);
+            }
+        }
+        catch (exception &e) {
+        }
+    }
+    return reinterpret_cast<decltype(prepared_query_bind_long_hook) *>(prepared_query_bind_long_orig)(
+            thisObj, idx, lValue);
+}
+
+void *prepared_query_bind_double_orig = nullptr;
+
+bool prepared_query_bind_double_hook(Il2CppObject *thisObj, int idx, double rValue) {
+    auto stmtField = il2cpp_class_get_field_from_name(thisObj->klass, "_stmt");
+    intptr_t *stmtPtr;
+    il2cpp_field_get_value(thisObj, stmtField, &stmtPtr);
+    if (text_queries.contains(stmtPtr)) {
+        try {
+            auto stmt = text_queries.at(stmtPtr);
+            if (stmt) {
+                stmt->bind(idx, rValue);
+            }
+        }
+        catch (exception &e) {
+        }
+    }
+    return reinterpret_cast<decltype(prepared_query_bind_double_hook) *>(prepared_query_bind_double_orig)(
+            thisObj, idx, rValue);
 }
 
 void *query_dispose_orig = nullptr;
 
-void query_dispose_hook(void *thisObj) {
-    if (text_queries.contains(thisObj))
-        text_queries.erase(thisObj);
+void query_dispose_hook(Il2CppObject *thisObj) {
+    auto stmtField = il2cpp_class_get_field_from_name(thisObj->klass, "_stmt");
+    intptr_t *stmtPtr;
+    il2cpp_field_get_value(thisObj, stmtField, &stmtPtr);
+    if (text_queries.contains(stmtPtr))
+        text_queries.erase(stmtPtr);
 
-    return reinterpret_cast<decltype(query_dispose_hook) * > (query_dispose_orig)(thisObj);
+    return reinterpret_cast<decltype(query_dispose_hook) *>(query_dispose_orig)(thisObj);
 }
 
-void *query_getstr_orig = nullptr;
+int (*query_getint)(Il2CppObject *thisObj, int index) = nullptr;
 
-Il2CppString *query_getstr_hook(void *thisObj, int32_t idx) {
-    auto result = reinterpret_cast<decltype(query_getstr_hook) * >
-    (query_getstr_orig)(thisObj, idx);
+void *query_gettext_orig = nullptr;
 
-    if (text_queries.contains(thisObj))
+Il2CppString *query_gettext_hook(Il2CppObject *thisObj, int idx) {
+    auto stmtField = il2cpp_class_get_field_from_name(thisObj->klass, "_stmt");
+    intptr_t *stmtPtr;
+    il2cpp_field_get_value(thisObj, stmtField, &stmtPtr);
+    auto result = reinterpret_cast<decltype(query_gettext_hook) *>(query_gettext_orig)(thisObj,
+                                                                                       idx);
+
+    if (text_queries.contains(stmtPtr)) {
+        try {
+            auto stmt = text_queries.at(stmtPtr);
+            if (stmt) {
+                string text;
+                if (stmt->hasRow()) {
+                    text = stmt->getColumn(idx).getString();
+                    if (!text.empty()) {
+                        if (stmt->getQuery().find("`race_jikkyo_message`;") != string::npos ||
+                            stmt->getQuery().find("`race_jikkyo_comment`;") != string::npos) {
+                            const int id = query_getint(thisObj, 0);
+                            const int id1 = stmt->getColumn(0).getInt();
+                            const int groupId = query_getint(thisObj, 1);
+                            const int groupId1 = stmt->getColumn(1).getInt();
+                            if (stmt->hasRow()) {
+                                if (id == id1 && groupId == groupId1) {
+                                    replacement_queries_can_next.insert_or_assign(stmtPtr, true);
+                                    return il2cpp_string_new(text.data());
+                                } else {
+                                    replacement_queries_can_next.insert_or_assign(stmtPtr, false);
+                                }
+                            }
+                        } else if (stmt->getQuery().find("character_system_text") != string::npos) {
+                            int cueId, cueId1;
+                            string cueSheet, cueSheet1;
+                            if (stmt->getQuery().find("`voice_id`=?") != string::npos) {
+                                cueId = query_getint(thisObj, 2);
+                                cueId1 = stmt->getColumn(2).getInt();
+                                cueSheet = localify::u16_u8(
+                                        reinterpret_cast<decltype(query_gettext_hook) *>(query_gettext_orig)(
+                                                thisObj, 1)->start_char
+                                );
+                                cueSheet1 = stmt->getColumn(1).getString();
+                            } else {
+                                cueId = query_getint(thisObj, 3);
+                                cueId1 = stmt->getColumn(3).getInt();
+                                cueSheet = localify::u16_u8(
+                                        reinterpret_cast<decltype(query_gettext_hook) *>(query_gettext_orig)(
+                                                thisObj, 2)->start_char
+                                );
+                                cueSheet1 = stmt->getColumn(2).getString();
+                            }
+                            if (cueId == cueId1 && cueSheet == cueSheet1) {
+                                return il2cpp_string_new(text.data());
+                            }
+                        } else {
+                            return il2cpp_string_new(text.data());
+                        }
+                    }
+                }
+            }
+        }
+        catch (exception &e) {
+        }
         return localify::get_localized_string(result);
+    }
 
     return result;
+}
+
+void *MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_orig = nullptr;
+
+Il2CppObject *
+MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_hook(Il2CppObject *thisObj,
+                                                                     Il2CppObject *query,
+                                                                     int characterId) {
+    auto stmtField = il2cpp_class_get_field_from_name(query->klass, "_stmt");
+    intptr_t *stmtPtr;
+    il2cpp_field_get_value(query, stmtField, &stmtPtr);
+    if (text_queries.contains(stmtPtr)) {
+
+        try {
+            auto stmt = text_queries.at(stmtPtr);
+            if (stmt) {
+                if (replacement_queries_can_next.find(stmtPtr) ==
+                    replacement_queries_can_next.end()) {
+                    replacement_queries_can_next.emplace(stmtPtr, true);
+                }
+                if (replacement_queries_can_next.at(stmtPtr)) {
+                    try {
+                        stmt->executeStep();
+                    }
+                    catch (exception &e) {
+                    }
+                }
+                if (stmt->hasRow()) {
+                    const int voiceId = query_getint(query, 0);
+                    const int voiceId1 = stmt->getColumn(0).getInt();
+                    const int cueId = query_getint(query, 3);
+                    const int cueId1 = stmt->getColumn(3).getInt();
+                    const string cueSheet = localify::u16_u8(
+                            reinterpret_cast<decltype(query_gettext_hook) *>(query_gettext_orig)(
+                                    query, 2)->start_char
+                    );
+                    const string cueSheet1 = stmt->getColumn(2).getString();
+
+                    if (voiceId == voiceId1 && cueId == cueId1 && cueSheet == cueSheet1) {
+                        replacement_queries_can_next.insert_or_assign(stmtPtr, true);
+                    } else {
+                        replacement_queries_can_next.insert_or_assign(stmtPtr, false);
+                    }
+                }
+            }
+        }
+        catch (exception &e) {
+        }
+    }
+    return reinterpret_cast<decltype(MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_hook) *>(
+            MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_orig
+    )(thisObj, query, characterId);
+}
+
+void ShowCaptionByNotification(Il2CppObject *audioManager, Il2CppObject *elem) {
+    auto characterIdField = il2cpp_class_get_field_from_name(elem->klass, "CharacterId");
+    auto voiceIdField = il2cpp_class_get_field_from_name(elem->klass, "VoiceId");
+    auto textField = il2cpp_class_get_field_from_name(elem->klass, "Text");
+    auto cueSheetField = il2cpp_class_get_field_from_name(elem->klass, "CueSheet");
+    auto cueIdField = il2cpp_class_get_field_from_name(elem->klass, "CueId");
+
+    int characterId;
+    il2cpp_field_get_value(elem, characterIdField, &characterId);
+
+    int voiceId;
+    il2cpp_field_get_value(elem, voiceIdField, &voiceId);
+
+    Il2CppString *text;
+    il2cpp_field_get_value(elem, textField, &text);
+
+    Il2CppString *cueSheet;
+    il2cpp_field_get_value(elem, cueSheetField, &cueSheet);
+
+    int cueId;
+    il2cpp_field_get_value(elem, cueIdField, &cueId);
+
+    auto u8Text = localify::u16_u8(text->start_char);
+    replaceAll(u8Text, "\n", " ");
+    if (uiManager &&
+        u16string(cueSheet->start_char).find(u"_home_") == string::npos &&
+        u16string(cueSheet->start_char).find(u"_tc_") == string::npos &&
+        u16string(cueSheet->start_char).find(u"_title_") == string::npos &&
+        u16string(cueSheet->start_char).find(u"_gacha_") == string::npos &&
+        voiceId != 95001 &&
+        (characterId < 9000 ||
+            voiceId == 70000)) {
+        auto ShowNotification = reinterpret_cast<void (*)(Il2CppObject *, Il2CppString *)>(
+                il2cpp_class_get_method_from_name(uiManager->klass, "ShowNotification",
+                                                  1)->methodPointer
+        );
+        auto LineHeadWrap = reinterpret_cast<Il2CppString *(*)(Il2CppString *, int)>(
+                il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop", "GallopUtil",
+                                                   "LineHeadWrap", 2)
+        );
+
+        auto notiField = il2cpp_class_get_field_from_name(uiManager->klass, "_notification");
+        Il2CppObject *notification;
+        il2cpp_field_get_value(uiManager, notiField, &notification);
+
+        auto timeField = il2cpp_class_get_field_from_name(notification->klass, "_displayTime");
+        float displayTime;
+        il2cpp_field_get_value(notification, timeField, &displayTime);
+
+        float length = reinterpret_cast<float (*)(Il2CppObject *, Il2CppString *, int)>(
+                il2cpp_class_get_method_from_name(audioManager->klass, "GetCueLength",
+                                                  2)->methodPointer
+        )(audioManager, cueSheet, cueId);
+        il2cpp_field_set_value(notification, timeField, &length);
+
+        ShowNotification(uiManager, LineHeadWrap(il2cpp_string_new(u8Text.data()), 32));
+
+        il2cpp_field_set_value(notification, timeField, &displayTime);
+    }
+}
+
+void *AtomSourceEx_SetParameter_orig = nullptr;
+
+void AtomSourceEx_SetParameter_hook(Il2CppObject* thisObj) {
+    reinterpret_cast<decltype(AtomSourceEx_SetParameter_hook) *>(AtomSourceEx_SetParameter_orig)(thisObj);
+
+    FieldInfo *cueIdField = il2cpp_class_get_field_from_name(thisObj->klass, "<CueId>k__BackingField");
+    int cueId;
+    il2cpp_field_get_value(thisObj, cueIdField, &cueId);
+
+    FieldInfo *cueSheetField = il2cpp_class_get_field_from_name(thisObj->klass, "_cueSheet");
+    Il2CppString *cueSheet;
+    il2cpp_field_get_value(thisObj, cueSheetField, &cueSheet);
+
+    const regex r(R"((\d{4})(?:\d{2}))");
+    smatch stringMatch;
+    const auto cueSheetU8 = localify::u16_u8(cueSheet->start_char);
+    regex_search(cueSheetU8, stringMatch, r);
+    if (!stringMatch.empty()) {
+        Il2CppObject* textList = reinterpret_cast<Il2CppObject * (*)(int)>(
+                il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop", "MasterCharacterSystemText", "GetByCharaId", 1))(stoi(stringMatch[1].str()));
+        FieldInfo *itemsField = il2cpp_class_get_field_from_name(textList->klass, "_items");
+        Il2CppArray *textArr;
+        il2cpp_field_get_value(textList, itemsField, &textArr);
+
+        Il2CppObject* audioManager;
+        auto klass = il2cpp_symbols::get_class("umamusume.dll", "Gallop", "AudioManager");
+        auto instanceField = il2cpp_class_get_field_from_name(klass, "_instance");
+        il2cpp_field_static_get_value(instanceField, &audioManager);
+
+        for (int i = 0; i < textArr->max_length; i++) {
+            auto elem = reinterpret_cast<Il2CppObject*>(textArr->vector[i]);
+            if (elem) {
+                auto elemCueIdField = il2cpp_class_get_field_from_name(elem->klass, "CueId");
+                auto elemCueSheetField = il2cpp_class_get_field_from_name(elem->klass, "CueSheet");
+
+                Il2CppString *elemCueSheet;
+                il2cpp_field_get_value(elem, elemCueSheetField, &elemCueSheet);
+
+                int elemCueId;
+                il2cpp_field_get_value(elem, elemCueIdField, &elemCueId);
+
+                if (u16string(elemCueSheet->start_char) == u16string(cueSheet->start_char) && cueId == elemCueId) {
+                    ShowCaptionByNotification(audioManager, elem);
+                    return;
+                }
+            }
+        }
+    }
+}
+
+void *CySpringUpdater_set_SpringUpdateMode_orig = nullptr;
+
+void CySpringUpdater_set_SpringUpdateMode_hook(Il2CppObject *thisObj, int  /*value*/) {
+    reinterpret_cast<decltype(CySpringUpdater_set_SpringUpdateMode_hook) *>(CySpringUpdater_set_SpringUpdateMode_orig)(
+            thisObj, g_cyspring_update_mode);
+}
+
+void *CySpringUpdater_get_SpringUpdateMode_orig = nullptr;
+
+int CySpringUpdater_get_SpringUpdateMode_hook(Il2CppObject *thisObj) {
+    CySpringUpdater_set_SpringUpdateMode_hook(thisObj, g_cyspring_update_mode);
+    return reinterpret_cast<decltype(CySpringUpdater_get_SpringUpdateMode_hook) *>(CySpringUpdater_get_SpringUpdateMode_orig)(
+            thisObj);
 }
 
 void *story_timeline_controller_play_orig;
@@ -716,6 +1149,13 @@ void load_zekken_composite_resource_hook(Il2CppObject *thisObj) {
     reinterpret_cast<decltype(load_zekken_composite_resource_hook) * >
     (load_zekken_composite_resource_orig)(
             thisObj);
+}
+
+void *UIManager_OnInitialize_orig = nullptr;
+
+void UIManager_OnInitialize_hook(Il2CppObject *thisObj) {
+    reinterpret_cast<decltype(UIManager_OnInitialize_hook) *>(UIManager_OnInitialize_orig)(thisObj);
+    uiManager = thisObj;
 }
 
 void *wait_resize_ui_orig = nullptr;
@@ -2012,14 +2452,80 @@ void hookMethods() {
             "Query", "_Setup", 2
     );
 
-    auto query_getstr_addr = il2cpp_symbols::get_method_pointer(
+    auto Plugin_sqlite3_step_addr = il2cpp_symbols::get_method_pointer(
+            "LibNative.Runtime.dll", "LibNative.Sqlite3",
+            "Plugin", "sqlite3_step", 1
+    );
+
+    auto Plugin_sqlite3_reset_addr = il2cpp_symbols::get_method_pointer(
+            "LibNative.Runtime.dll", "LibNative.Sqlite3",
+            "Plugin", "sqlite3_reset", 1
+    );
+
+    auto query_step_addr = il2cpp_symbols::get_method_pointer(
+            "LibNative.Runtime.dll", "LibNative.Sqlite3",
+            "Query", "Step", 0
+    );
+
+    auto prepared_query_reset_addr = il2cpp_symbols::get_method_pointer(
+            "LibNative.Runtime.dll", "LibNative.Sqlite3",
+            "PreparedQuery", "Reset", 0
+    );
+
+    auto prepared_query_bind_text_addr = il2cpp_symbols::get_method_pointer(
+            "LibNative.Runtime.dll", "LibNative.Sqlite3",
+            "PreparedQuery", "BindText", 2
+    );
+
+    auto prepared_query_bind_int_addr = il2cpp_symbols::get_method_pointer(
+            "LibNative.Runtime.dll", "LibNative.Sqlite3",
+            "PreparedQuery", "BindInt", 2
+    );
+
+    auto prepared_query_bind_long_addr = il2cpp_symbols::get_method_pointer(
+            "LibNative.Runtime.dll", "LibNative.Sqlite3",
+            "PreparedQuery", "BindLong", 2
+    );
+
+    auto prepared_query_bind_double_addr = il2cpp_symbols::get_method_pointer(
+            "LibNative.Runtime.dll", "LibNative.Sqlite3",
+            "PreparedQuery", "BindDouble", 2
+    );
+
+    auto query_gettext_addr = il2cpp_symbols::get_method_pointer(
             "LibNative.Runtime.dll", "LibNative.Sqlite3",
             "Query", "GetText", 1
     );
 
+    query_getint = reinterpret_cast<int (*)(Il2CppObject *,
+                                            int)>(il2cpp_symbols::get_method_pointer(
+            "LibNative.Runtime.dll", "LibNative.Sqlite3",
+            "Query", "GetInt", 1
+    ));
+
     auto query_dispose_addr = il2cpp_symbols::get_method_pointer(
             "LibNative.Runtime.dll", "LibNative.Sqlite3",
             "Query", "Dispose", 0
+    );
+
+    auto MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop",
+            "MasterCharacterSystemText", "_CreateOrmByQueryResultWithCharacterId", 2
+    );
+
+    auto AtomSourceEx_SetParameter_addr = il2cpp_symbols::get_method_pointer(
+            "Cute.Cri.Assembly.dll", "Cute.Cri",
+            "AtomSourceEx", "SetParameter", 0
+    );
+
+    auto CySpringUpdater_set_SpringUpdateMode_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop.Model.Component",
+            "CySpringUpdater", "set_SpringUpdateMode", 1
+    );
+
+    auto CySpringUpdater_get_SpringUpdateMode_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop.Model.Component",
+            "CySpringUpdater", "get_SpringUpdateMode", 0
     );
 
     auto story_timeline_controller_play_addr = il2cpp_symbols::get_method_pointer(
@@ -2033,6 +2539,11 @@ void hookMethods() {
     auto get_modified_string_addr = il2cpp_symbols::get_method_pointer(
             "umamusume.dll", "Gallop",
             "GallopUtil", "GetModifiedString", -1);
+
+    auto UIManager_OnInitialize_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop",
+            "UIManager", "OnInitialize", 0
+    );
 
     auto on_populate_addr = il2cpp_symbols::get_method_pointer(
             "umamusume.dll", "Gallop",
@@ -2408,8 +2919,8 @@ void hookMethods() {
 
 #define ADD_HOOK(_name_) \
     LOGI("ADD_HOOK: %s", #_name_); \
-    DobbyHook((void *)_name_##_addr, (void *) _name_##_hook, (void **) &_name_##_orig);
-#pragma endregion
+    if (_name_##_addr) DobbyHook(reinterpret_cast<void *>(_name_##_addr), reinterpret_cast<void *>(_name_##_hook), reinterpret_cast<void **>(&_name_##_orig)); \
+    else LOGW("ADD_HOOK: %s_addr is null", #_name_);
 
     if (Game::currentGameRegion == Game::Region::KOR && g_restore_notification && false) {
         SendNotification = reinterpret_cast<void (*)(
@@ -2491,11 +3002,11 @@ void hookMethods() {
 
     ADD_HOOK(GameSystem_FixedUpdate)
 
-    if (GetUnityVersion() == Unity2020) {
+    /*if (GetUnityVersion() == Unity2020) {
         ADD_HOOK(DialogCommon_Close)
-    }
+    }*/
 
-    ADD_HOOK(GallopUtil_GotoTitleOnError)
+    // ADD_HOOK(GallopUtil_GotoTitleOnError)
 
     ADD_HOOK(Light_set_shadowResolution)
 
@@ -2525,6 +3036,8 @@ void hookMethods() {
 
     ADD_HOOK(load_zekken_composite_resource)
 
+    ADD_HOOK(UIManager_OnInitialize)
+
     ADD_HOOK(wait_resize_ui)
 
     // hook UnityEngine.TextGenerator::PopulateWithErrors to modify text
@@ -2544,8 +3057,33 @@ void hookMethods() {
     ADD_HOOK(update)
 
     ADD_HOOK(query_setup)
-    ADD_HOOK(query_getstr)
+    ADD_HOOK(query_gettext)
     ADD_HOOK(query_dispose)
+
+    if (!g_replace_text_db_path.empty()) {
+        try {
+            replacementMDB = new SQLite::Database(g_replace_text_db_path.data());
+            ADD_HOOK(Plugin_sqlite3_step)
+            ADD_HOOK(Plugin_sqlite3_reset)
+            ADD_HOOK(query_step)
+            ADD_HOOK(prepared_query_reset)
+            ADD_HOOK(prepared_query_bind_text)
+            ADD_HOOK(prepared_query_bind_int)
+            ADD_HOOK(prepared_query_bind_long)
+            ADD_HOOK(prepared_query_bind_double)
+            ADD_HOOK(MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId)
+        } catch (exception &e) {
+        }
+    }
+
+    if (g_character_system_text_caption) {
+        ADD_HOOK(AtomSourceEx_SetParameter)
+    }
+
+    if (g_cyspring_update_mode != -1) {
+        ADD_HOOK(CySpringUpdater_set_SpringUpdateMode)
+        ADD_HOOK(CySpringUpdater_get_SpringUpdateMode)
+    }
 
     if (g_ui_use_system_resolution || g_force_landscape) {
         ADD_HOOK(set_resolution)
@@ -2746,7 +3284,6 @@ void il2cpp_load_assetbundle() {
 }
 
 void il2cpp_hook_init(void *handle) {
-    //initialize
     LOGI("il2cpp_handle: %p", handle);
     il2cpp_handle = handle;
     init_il2cpp_api();
