@@ -1,3 +1,14 @@
+## 2.15.0
+
+- Lookup NativeBridgeItf symbol from ro.dalvik.vm.native.bridge (Improved to work on Waydroid)
+- Fixed an issue where nothing could be done when the loading screen failed to display, additionally added an option to hide the loading screen
+- Improved display of gacha video & story summary video in force landscape mode
+- Change the maximum number of characters to wrap with newlines
+- Add cyspring update mode option
+- Add character system text caption
+- Use another DB when querying text from DB
+- Changed the way the settings app looks up module versions
+
 ## 2.7.3
 
 - BlueStacks Android 11 support

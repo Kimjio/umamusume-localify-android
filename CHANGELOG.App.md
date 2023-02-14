@@ -1,3 +1,11 @@
+## 1.4.0
+
+- Add various preferences
+- Fixed an error where the app could not run after removing some packages
+- Enable enableOnBackInvokedCallback
+- Update themed icon
+- Changed the way the settings app looks up module versions
+
 ## 1.3.0
 
 - Add some preferences
