@@ -5,10 +5,10 @@ apply plugin: 'com.android.library'
 apply from: file(rootProject.file('module.gradle'))
 
 android {
-    flavorDimensions "api"
+    flavorDimensions += "api"
 
-    compileSdkVersion rootProject.ext.targetSdkVersion
-    buildToolsVersion '33.0.0'
+    compileSdkVersion = rootProject.ext.targetSdkVersion
+    buildToolsVersion = '33.0.1'
     ndkVersion '25.0.8775105'
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
@@ -25,7 +25,7 @@ android {
         }
     }
     productFlavors {
-        all {
+        configureEach {
             externalNativeBuild {
                 cmake {
                     arguments "-DMODULE_NAME:STRING=$moduleLibraryName",
@@ -35,7 +35,7 @@ android {
             buildConfigField("String", "API", "\"$name\"")
         }
 
-        create("Riru") {
+        register("Riru") {
             dimension = "api"
             externalNativeBuild {
                 cmake {
@@ -48,7 +48,7 @@ android {
             }
         }
 
-        create("Zygisk") {
+        register("Zygisk") {
             dimension = "api"
             externalNativeBuild {
                 cmake {
@@ -168,8 +168,8 @@ afterEvaluate {
         task("zip${variantCapped}", type: Zip) {
             dependsOn("prepareMagiskFiles${variantCapped}")
             from magiskDir
-            archiveName zipName
-            destinationDir outDir
+            archiveFileName = zipName
+            destinationDirectory = outDir
         }
 
         task("push${variantCapped}", type: Exec) {
