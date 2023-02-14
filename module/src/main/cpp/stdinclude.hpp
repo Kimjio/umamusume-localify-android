@@ -113,6 +113,12 @@ namespace {
         return android_get_device_api_level();
     }
 
+    string GetNativeBridgeLibrary() {
+        char nativeBridge[PROP_VALUE_MAX];
+        __system_property_get("ro.dalvik.vm.native.bridge", nativeBridge);
+        return string(nativeBridge);
+    }
+
     bool IsABIRequiredNativeBridge() {
         if (moduleApi == "riru"s) {
             // Riru is a NativeBridge, so you can`t use other NativeBridge (ex. houdini).

@@ -415,17 +415,16 @@ std::optional<std::vector<std::string>> read_config() {
 }
 
 void* GetNativeBridgeLoadLibrary(void* fallbackAddress) {
-    // Bluestacks
-    void* handle = dlopen("libnb.so", RTLD_NOW);
+    void* handle = dlopen(GetNativeBridgeLibrary().data(), RTLD_NOW);
     // clear error
     dlerror();
     if (handle) {
         auto itf = reinterpret_cast<NativeBridgeCallbacks*>(dlsym(handle, "NativeBridgeItf"));
         LOGI("NativeBridgeItf version: %d", itf->version);
         if (GetAndroidApiLevel() >= 26) {
-            return (void*) itf->loadLibraryExt;
+            return reinterpret_cast<void*>(itf->loadLibraryExt);
         }
-        return (void*) itf->loadLibrary;
+        return reinterpret_cast<void*>(itf->loadLibrary);
     }
     return fallbackAddress;
 }
