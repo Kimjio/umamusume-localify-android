@@ -8,7 +8,7 @@ android {
     flavorDimensions += "api"
 
     compileSdkVersion = rootProject.ext.targetSdkVersion
-    buildToolsVersion = '33.0.1'
+    buildToolsVersion = '33.0.2'
     ndkVersion '25.0.8775105'
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
