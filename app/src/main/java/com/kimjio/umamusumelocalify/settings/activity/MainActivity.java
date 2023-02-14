@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 public class MainActivity extends BaseActivity<MainActivityBinding> {
 
     private static final String TAG = "MainActivity";
+
     public static final String KEY_LAST_SELECTED = "last_selected_index";
 
     public static final String KEY_LAST_SELECTED_PACKAGE = "last_selected_package";
@@ -96,7 +97,11 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
                 .collect(Collectors.toList());
 
         binding.packageSpinner.setAdapter(new PackageAdapter(packageInfoList));
-        binding.packageSpinner.setSelection(preferences.getInt(KEY_LAST_SELECTED, 0));
+        int lastSelected = preferences.getInt(KEY_LAST_SELECTED, 0);
+        if (lastSelected > packageInfoList.size()) {
+            lastSelected = 0;
+        }
+        binding.packageSpinner.setSelection(lastSelected);
         binding.packageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
