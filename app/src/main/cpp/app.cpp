@@ -1,13 +1,12 @@
 #include <jni.h>
 #include <string>
-#include <android/log.h>
-
-#define LOG_TAG "UmamusumeLocalifySettings"
+#include <sys/system_properties.h>
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_kimjio_umamusumelocalify_settings_ModuleUtils_getModuleVersion(
         JNIEnv* env,
         jclass /* this class */) {
-    __android_log_print(ANDROID_LOG_WARN, LOG_TAG, "Module not installed.");
-    return nullptr;
+    char nativeBridge[PROP_VALUE_MAX];
+    __system_property_get("ro.com.kimjio.umamusumelocalify.version", nativeBridge);
+    return env->NewStringUTF(nativeBridge);
 }

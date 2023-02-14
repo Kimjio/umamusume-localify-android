@@ -48,7 +48,7 @@ bool isGame(const char *pkgNm) {
     return false;
 }
 
-bool isSettings(const char *pkgNm) {
+/*bool isSettings(const char *pkgNm) {
     if (!pkgNm)
         return false;
     if ("com.kimjio.umamusumelocalify.settings"s == pkgNm) {
@@ -56,36 +56,42 @@ bool isSettings(const char *pkgNm) {
     }
     return false;
 
-}
+}*/
 
-HOOK_DEF(jstring, getModuleVersion,
+/*HOOK_DEF(jstring, getModuleVersion,
          JNIEnv *env,
          jclass) {
     return env->NewStringUTF(Module::moduleVersionName);
-}
+}*/
 
 bool isCriWareInit = false;
 
-void dlopen_process(const char *name, void *handle) {
+enum class ProcessStatus {
+    INIT,
+    DONE,
+    NONE,
+};
+
+ProcessStatus dlopen_process(const char *name, void *handle) {
     if (!il2cpp_handle) {
         if (name != nullptr && strstr(name, "libil2cpp.so")) {
             il2cpp_handle = handle;
             LOGI("Got il2cpp handle!");
+            return ProcessStatus::INIT;
         }
     }
     if (name != nullptr && strstr(name, "libcri_ware_unity.so") && !isCriWareInit) {
         isCriWareInit = true;
         il2cpp_load_assetbundle();
+        return ProcessStatus::DONE;
     }
-    if (!il2cpp_handle && !app_handle) {
+    /*if (!il2cpp_handle && !app_handle) {
         if (name != nullptr && strstr(name, "libapp.so")) {
             app_handle = handle;
-            auto getModuleVersion = dlsym(app_handle,
-                                          "Java_com_kimjio_umamusumelocalify_settings_ModuleUtils_getModuleVersion");
-            DobbyHook(getModuleVersion, (void *) new_getModuleVersion,
-                      (void **) &orig_getModuleVersion);
+            return ProcessStatus::DONE;
         }
-    }
+    }*/
+    return ProcessStatus::NONE;
 }
 
 HOOK_DEF(void*, do_dlopen, const char *name, int flags) {
@@ -503,7 +509,6 @@ void hack_thread(void *arg [[maybe_unused]]) {
 
     auto dict = read_config();
 
-    // std::thread init_thread([dict]() {
     logger::init_logger();
     il2cpp_hook_init(il2cpp_handle);
     if (dict.has_value()) {
@@ -513,20 +518,18 @@ void hack_thread(void *arg [[maybe_unused]]) {
         localify::load_textId_textdb(text_id_dict);
     }
     il2cpp_hook();
-    // });
-    // init_thread.detach();
 }
 
-void hack_settings_thread(void *arg [[maybe_unused]]) {
-    int api_level = GetAndroidApiLevel();
+/*void hack_settings_thread(void *arg [[maybe_unused]]) {
+    const int api_level = GetAndroidApiLevel();
     LOGI("%s api level: %d", ABI, api_level);
     if (api_level >= 30) {
         void *addr = DobbySymbolResolver(nullptr,
                                          "__dl__Z9do_dlopenPKciPK17android_dlextinfoPKv");
         if (addr) {
             LOGI("%s do_dlopen at: %p", ABI, addr);
-            DobbyHook(addr, (void *) new_do_dlopen_V24,
-                      (void **) &orig_do_dlopen_V24);
+            DobbyHook(addr, reinterpret_cast<void *>(new_do_dlopen_V24),
+                      reinterpret_cast<void **>(&orig_do_dlopen_V24));
 
         }
     } else if (api_level >= 26) {
@@ -535,8 +538,8 @@ void hack_settings_thread(void *arg [[maybe_unused]]) {
 
         if (addr) {
             LOGI("__loader_dlopen at: %p", addr);
-            DobbyHook(addr, (void *) new___loader_dlopen,
-                      (void **) &orig___loader_dlopen);
+            DobbyHook(addr, reinterpret_cast<void *>(new___loader_dlopen),
+                      reinterpret_cast<void **>(&orig___loader_dlopen));
 
         }
     } else if (api_level >= 24) {
@@ -544,16 +547,25 @@ void hack_settings_thread(void *arg [[maybe_unused]]) {
                                          "__dl__Z9do_dlopenPKciPK17android_dlextinfoPv");
         if (addr) {
             LOGI("do_dlopen at: %p", addr);
-            DobbyHook(addr, (void *) new_do_dlopen_V24,
-                      (void **) &orig_do_dlopen_V24);
+            DobbyHook(addr, reinterpret_cast<void *>(new_do_dlopen_V24),
+                      reinterpret_cast<void **>(&orig_do_dlopen_V24));
         }
     } else {
         void *addr = DobbySymbolResolver(nullptr,
                                          "__dl__Z9do_dlopenPKciPK17android_dlextinfo");
         if (addr) {
             LOGI("do_dlopen at: %p", addr);
-            DobbyHook(addr, (void *) new_do_dlopen_V19,
-                      (void **) &orig_do_dlopen_V19);
+            DobbyHook(addr, reinterpret_cast<void *>(new_do_dlopen_V19),
+                      reinterpret_cast<void **>(&orig_do_dlopen_V19));
         }
     }
-}
+
+    while (!app_handle) {
+        sleep(1);
+    }
+
+    auto getModuleVersion = dlsym(app_handle,
+                                  "Java_com_kimjio_umamusumelocalify_settings_ModuleUtils_getModuleVersion");
+    DobbyHook(getModuleVersion, reinterpret_cast<void *>(new_getModuleVersion),
+              reinterpret_cast<void **>(&orig_getModuleVersion));
+}*/

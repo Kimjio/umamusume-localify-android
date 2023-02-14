@@ -52,6 +52,7 @@ fi
 ui_print "- Extracting module files"
 
 extract "$ZIPFILE" 'module.prop' "$MODPATH"
+extract "$ZIPFILE" 'system.prop' "$MODPATH"
 extract "$ZIPFILE" 'uninstall.sh' "$MODPATH"
 extract "$ZIPFILE" 'classes.dex' "$MODPATH"
 

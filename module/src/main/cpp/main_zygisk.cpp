@@ -33,8 +33,6 @@ using zygisk::Api;
 using zygisk::AppSpecializeArgs;
 using zygisk::ServerSpecializeArgs;
 
-using namespace std;
-
 string moduleApi = "zygisk";
 
 void *InlineHooker(void *target, void *hooker) {
@@ -101,9 +99,9 @@ public:
         }
         auto pkgNm = env->GetStringUTFChars(args->nice_name, nullptr);
         enable_hack = isGame(pkgNm);
-        if (!enable_hack) {
+        /* if (!enable_hack) {
             enable_settings_hack = isSettings(pkgNm);
-        }
+        } */
         if (enable_hack && Game::currentGameRegion == Game::Region::KOR) {
             fetchResources();
         }
@@ -111,7 +109,7 @@ public:
     }
 
     void postAppSpecialize(const AppSpecializeArgs *args) override {
-        if (enable_hack || enable_settings_hack) {
+        if (enable_hack /* || enable_settings_hack */) {
             if (enable_hack && Game::currentGameRegion == Game::Region::KOR) {
                 SandHook::ElfImg art("libart.so");
                 lsplant::InitInfo initInfo{
@@ -134,9 +132,9 @@ public:
             int ret;
             pthread_t ntid;
             if ((ret = pthread_create(&ntid, nullptr,
-                                      reinterpret_cast<void *(*)(void *)>(enable_settings_hack
+                                      reinterpret_cast<void *(*)(void *)>(/* enable_settings_hack
                                                                           ? hack_settings_thread
-                                                                          : hack_thread),
+                                                                          :  */hack_thread),
                                       classesDex))) {
                 LOGE("can't create thread: %s\n", strerror(ret));
             }
