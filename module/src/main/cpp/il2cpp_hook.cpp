@@ -2049,7 +2049,58 @@ Boolean Device_IsIllegalUser_hook() {
     return Boolean{.m_value = false};
 }
 
+struct MoviePlayerHandle {
+};
+
 Il2CppObject *(*MoviePlayerBase_get_MovieInfo)(Il2CppObject *thisObj);
+
+Il2CppObject *(*MovieManager_GetMovieInfo)(Il2CppObject *thisObj, MoviePlayerHandle playerHandle);
+
+void *MovieManager_SetImageUvRect_orig = nullptr;
+
+void MovieManager_SetImageUvRect_hook(Il2CppObject *thisObj, MoviePlayerHandle playerHandle, Rect_t uv) {
+    auto movieInfo = MovieManager_GetMovieInfo(thisObj, playerHandle);
+    auto widthField = il2cpp_class_get_field_from_name(movieInfo->klass, "width");
+    auto heightField = il2cpp_class_get_field_from_name(movieInfo->klass, "height");
+    unsigned int movieWidth, movieHeight;
+    il2cpp_field_get_value(movieInfo, widthField, &movieWidth);
+    il2cpp_field_get_value(movieInfo, heightField, &movieHeight);
+    if (movieWidth < movieHeight) {
+        auto width = static_cast<float>(Screen_get_width());
+        auto height = static_cast<float>(Screen_get_height());
+        if (roundf(1080 / (max(1.0f, height / 1080.f) * g_force_landscape_ui_scale)) == static_cast<float>(uv.y)) {
+            uv.y = static_cast<short>(width);
+        }
+        uv.x = static_cast<short>(height);
+    }
+
+    reinterpret_cast<decltype(MovieManager_SetImageUvRect_hook) *>(MovieManager_SetImageUvRect_orig)(
+            thisObj, playerHandle, uv);
+}
+
+void *MovieManager_SetScreenSize_orig = nullptr;
+
+void MovieManager_SetScreenSize_hook(Il2CppObject *thisObj, MoviePlayerHandle playerHandle,
+                                     Vector2_t screenSize) {
+    auto movieInfo = MovieManager_GetMovieInfo(thisObj, playerHandle);
+    auto widthField = il2cpp_class_get_field_from_name(movieInfo->klass, "width");
+    auto heightField = il2cpp_class_get_field_from_name(movieInfo->klass, "height");
+    unsigned int movieWidth, movieHeight;
+    il2cpp_field_get_value(movieInfo, widthField, &movieWidth);
+    il2cpp_field_get_value(movieInfo, heightField, &movieHeight);
+    if (movieWidth < movieHeight) {
+        auto width = static_cast<float>(Screen_get_width());
+        auto height = static_cast<float>(Screen_get_height());
+        if (roundf(1080 / (max(1.0f, height / 1080.f) * g_force_landscape_ui_scale)) ==
+            screenSize.y) {
+            screenSize.y = width;
+        }
+        screenSize.x = height;
+    }
+
+    reinterpret_cast<decltype(MovieManager_SetScreenSize_hook) *>(MovieManager_SetScreenSize_orig)(
+            thisObj, playerHandle, screenSize);
+}
 
 void *MoviePlayerForUI_AdjustScreenSize_orig = nullptr;
 
@@ -2842,6 +2893,17 @@ void hookMethods() {
             Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
             "Cute.Cri.Assembly.dll", "Cute.Cri", "MoviePlayerBase", "get_MovieInfo", 0));
 
+    MovieManager_GetMovieInfo = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *,
+                                                                   MoviePlayerHandle)>(il2cpp_symbols::get_method_pointer(
+            "Cute.Cri.Assembly.dll", "Cute.Cri", "MovieManager", "GetMovieInfo", 1));
+
+    auto MovieManager_SetImageUvRect_addr = il2cpp_symbols::get_method_pointer(
+            "Cute.Cri.Assembly.dll", "Cute.Cri", "MovieManager", "SetImageUvRect", 2);
+
+    auto MovieManager_SetScreenSize_addr = il2cpp_symbols::get_method_pointer(
+            "Cute.Cri.Assembly.dll", "Cute.Cri", "MovieManager", "SetScreenSize", 2);
+
+
     auto MoviePlayerForUI_AdjustScreenSize_addr = reinterpret_cast<void (*)(Il2CppObject *,
                                                                             Vector2_t,
                                                                             bool)>(il2cpp_symbols::get_method_pointer(
@@ -3145,6 +3207,8 @@ void hookMethods() {
         ADD_HOOK(DeviceOrientationGuide_Show)
         ADD_HOOK(ChangeScreenOrientation)
         ADD_HOOK(ChangeScreenOrientationPortraitAsync)
+        ADD_HOOK(MovieManager_SetScreenSize)
+        ADD_HOOK(MovieManager_SetImageUvRect)
         ADD_HOOK(MoviePlayerForUI_AdjustScreenSize)
         ADD_HOOK(MoviePlayerForObj_AdjustScreenSize)
         ADD_HOOK(GraphicSettings_GetVirtualResolution)
