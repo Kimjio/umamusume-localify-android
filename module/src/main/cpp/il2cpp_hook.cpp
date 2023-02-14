@@ -1049,6 +1049,32 @@ void textcommon_awake_hook(Il2CppObject *thisObj) {
     reinterpret_cast<decltype(textcommon_awake_hook) * > (textcommon_awake_orig)(thisObj);
 }
 
+
+void *textcommon_SetTextWithLineHeadWrap_orig = nullptr;
+
+void
+textcommon_SetTextWithLineHeadWrap_hook(Il2CppObject *thisObj, Il2CppString *str,
+                                        int maxCharacter) {
+    reinterpret_cast<decltype(textcommon_SetTextWithLineHeadWrap_hook) *>(textcommon_SetTextWithLineHeadWrap_orig)(
+            thisObj, str, maxCharacter * 2);
+}
+
+void *textcommon_SetTextWithLineHeadWrapWithColorTag_orig = nullptr;
+
+void textcommon_SetTextWithLineHeadWrapWithColorTag_hook(Il2CppObject *thisObj, Il2CppString *str,
+                                                         int maxCharacter) {
+    reinterpret_cast<decltype(textcommon_SetTextWithLineHeadWrapWithColorTag_hook) *>(textcommon_SetTextWithLineHeadWrapWithColorTag_orig)(
+            thisObj, str, maxCharacter * 2);
+}
+
+void *textcommon_SetSystemTextWithLineHeadWrap_orig = nullptr;
+
+void textcommon_SetSystemTextWithLineHeadWrap_hook(Il2CppObject *thisObj, Il2CppObject *systemText,
+                                                   int maxCharacter) {
+    reinterpret_cast<decltype(textcommon_SetSystemTextWithLineHeadWrap_hook) *>(textcommon_SetSystemTextWithLineHeadWrap_orig)(
+            thisObj, systemText, maxCharacter * 2);
+}
+
 void *TextMeshProUguiCommon_Awake_orig = nullptr;
 
 void TextMeshProUguiCommon_Awake_hook(Il2CppObject *_this) {
@@ -2555,6 +2581,24 @@ void hookMethods() {
             "TextCommon", "Awake", 0
     );
 
+    auto textcommon_SetSystemTextWithLineHeadWrap_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop",
+            "TextCommon", "SetSystemTextWithLineHeadWrap", 2
+
+    );
+
+    auto textcommon_SetTextWithLineHeadWrapWithColorTag_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop",
+            "TextCommon", "SetTextWithLineHeadWrapWithColorTag", 2
+
+    );
+
+    auto textcommon_SetTextWithLineHeadWrap_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop",
+            "TextCommon", "SetTextWithLineHeadWrap", 2
+
+    );
+
     auto TextMeshProUguiCommon_Awake_addr = il2cpp_symbols::get_method_pointer(
             "umamusume.dll", "Gallop",
             "TextMeshProUguiCommon", "Awake", 0
@@ -3042,6 +3086,10 @@ void hookMethods() {
 
     // hook UnityEngine.TextGenerator::PopulateWithErrors to modify text
     ADD_HOOK(populate_with_errors)
+
+    ADD_HOOK(textcommon_SetTextWithLineHeadWrap)
+    ADD_HOOK(textcommon_SetTextWithLineHeadWrapWithColorTag)
+    ADD_HOOK(textcommon_SetSystemTextWithLineHeadWrap)
 
     ADD_HOOK(localizeextension_text)
 
