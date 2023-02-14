@@ -28,4 +28,18 @@
         <item>4</item>
         <item>8</item>
     </string-array>
+    <string-array name="cyspring_update_mode">
+        <item>Auto</item>
+        <item>ModeNormal</item>
+        <item>Mode60FPS</item>
+        <item>SkipFrame</item>
+        <item>SkipFramePostAlways</item>
+    </string-array>
+    <string-array name="cyspring_update_mode_value">
+        <item>null</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
 </resources>

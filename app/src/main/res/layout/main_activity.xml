@@ -38,14 +38,15 @@
                     android:layout_height="?actionBarSize"
                     android:layout_gravity="bottom"
                     android:layout_marginStart="-8dp"
-                    android:elevation="0dp"
                     android:background="@android:color/transparent"
+                    android:elevation="0dp"
                     app:layout_collapseMode="pin">
 
                     <Spinner
                         android:id="@+id/package_spinner"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        tools:listitem="@layout/package_item" />
 
                 </com.google.android.material.appbar.MaterialToolbar>
             </com.google.android.material.appbar.CollapsingToolbarLayout>
@@ -78,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_marginBottom="16dp"
-                    android:text="@string/prem_required_messsage_simple"
+                    android:text="@string/prem_required_message_simple"
                     android:textAlignment="center" />
 
                 <com.google.android.material.button.MaterialButton
@@ -101,6 +102,7 @@
                     android:layout_width="128dp"
                     android:layout_height="128dp"
                     android:layout_gravity="center"
+                    android:contentDescription="@string/no_apps"
                     android:src="@drawable/ic_app_not_found" />
 
                 <com.google.android.material.textview.MaterialTextView

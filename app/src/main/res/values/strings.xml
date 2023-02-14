@@ -5,7 +5,7 @@
     <string name="manage_translate">Manage translate</string>
     <string name="perm_required">Permission required</string>
     <string name="perm_required_message">Data folder access permission is required to create and edit configuration files.</string>
-    <string name="prem_required_messsage_simple">Requires access to the data folder.</string>
+    <string name="prem_required_message_simple">Requires access to the data folder.</string>
     <string name="error_wrong_path">Please select the correct folder.</string>
     <string name="support_version">Support version: %1$s.*</string>
     <string name="error_file_not_in_data_folder">Only files in the data folder can be added.</string>

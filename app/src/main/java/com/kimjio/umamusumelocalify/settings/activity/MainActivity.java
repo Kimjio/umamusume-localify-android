@@ -2,12 +2,14 @@ package com.kimjio.umamusumelocalify.settings.activity;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.DocumentsContract;
@@ -16,6 +18,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
@@ -179,16 +182,22 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
     }
 
     private void showWrongPathDialog() {
-        new MaterialAlertDialogBuilder(this)
+        Dialog dialog = new MaterialAlertDialogBuilder(this)
                 .setIcon(R.drawable.ic_info)
                 .setTitle(R.string.error)
                 .setMessage(R.string.error_wrong_path)
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> requestFolderAccess())
-                .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+                .setPositiveButton(android.R.string.ok, (d, which) -> requestFolderAccess())
+                .setNegativeButton(android.R.string.cancel, (d, which) -> {
                     binding.progress.setVisibility(View.GONE);
                     binding.permRequired.setVisibility(View.VISIBLE);
                 })
-                .show();
+                .create();
+        float density = getResources().getDisplayMetrics().density;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+            dialog.getWindow().getAttributes().setBlurBehindRadius((int) (density * 16.0f));
+        }
+        dialog.show();
     }
 
     private void setPreferences(String packageName) {
@@ -204,16 +213,22 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
                     view.setVisibility(View.GONE);
                 }
             }
-            new MaterialAlertDialogBuilder(this)
+            Dialog dialog = new MaterialAlertDialogBuilder(this)
                     .setIcon(R.drawable.ic_info)
                     .setTitle(R.string.perm_required)
                     .setMessage(R.string.perm_required_message)
-                    .setPositiveButton(android.R.string.ok, (dialog, which) -> requestFolderAccess())
-                    .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+                    .setPositiveButton(android.R.string.ok, (d, which) -> requestFolderAccess())
+                    .setNegativeButton(android.R.string.cancel, (d, which) -> {
                         binding.progress.setVisibility(View.GONE);
                         binding.permRequired.setVisibility(View.VISIBLE);
                     })
-                    .show();
+                    .create();
+            float density = getResources().getDisplayMetrics().density;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+                dialog.getWindow().getAttributes().setBlurBehindRadius((int) (density * 16.0f));
+            }
+            dialog.show();
         } else {
             initFragment(DocumentFile.fromTreeUri(this, Uri.parse(treePath)));
         }

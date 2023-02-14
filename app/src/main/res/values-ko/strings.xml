@@ -5,7 +5,7 @@
     <string name="manage_translate">번역 관리</string>
     <string name="perm_required">권한 필요</string>
     <string name="perm_required_message">설정 파일을 생성, 수정하기 위해 데이터 폴더 접근 권한이 필요합니다.</string>
-    <string name="prem_required_messsage_simple">데이터 폴더 접근 권한이 필요합니다.</string>
+    <string name="prem_required_message_simple">데이터 폴더 접근 권한이 필요합니다.</string>
     <string name="error_wrong_path">올바른 폴더를 선택해주세요.</string>
     <string name="support_version">지원 버전: %1$s.*</string>
     <string name="error_file_not_in_data_folder">데이터 폴더의 파일만 추가 가능합니다.</string>

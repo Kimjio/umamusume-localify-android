@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Logger prefs -->
     <string name="pref_cate_logger">Logger</string>
     <string name="pref_enable_logger">Enable logger</string>
-    <string name="oref_dump_static_entries">Dump static entries</string>
-    <string name="oref_dump_db_entries">Dump database entries</string>
+    <string name="pref_dump_static_entries">Dump static entries</string>
+    <string name="pref_dump_db_entries">Dump database entries</string>
 
+    <!-- Graphics prefs -->
     <string name="pref_cate_graphics">Graphics</string>
     <string name="pref_max_fps">Max FPS</string>
     <string name="pref_ui_animation_scale">UI animation scale</string>
     <string name="pref_3d_resolution_scale">3D rendering resolution scale</string>
     <string name="pref_graphics_quality">Graphics quality</string>
     <string name="pref_anti_aliasing">Anti-aliasing</string>
+    <string name="pref_cyspring_update_mode">CySpring update mode</string>
 
+    <!-- Screen prefs -->
     <string name="pref_cate_screen">Screen</string>
     <string name="pref_use_system_resolution">Use system resolution</string>
     <string name="pref_replace_builtin_font">Replace to builtin font</string>
@@ -22,10 +26,12 @@
     <string name="pref_force_landscape">Force landscape</string>
     <string name="pref_force_landscape_ui_scale">UI scale on force landscape</string>
 
+    <!-- ETC prefs -->
     <string name="pref_cate_etc">ETC</string>
     <string name="pref_replace_assets_path">The folder containing the asset to be replaced</string>
     <string name="pref_replace_asset_bundle">Asset bundle for replacement</string>
     <string name="pref_loading_show_orientation_guide">Show screen rotation guide while loading</string>
+    <string name="pref_hide_loading_screen">Hide loading screen</string>
 
     <string name="pref_module_version">Module version</string>
 

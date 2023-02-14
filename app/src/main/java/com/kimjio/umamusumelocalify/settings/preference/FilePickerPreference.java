@@ -23,11 +23,21 @@ import com.kimjio.umamusumelocalify.settings.R;
 import com.kimjio.umamusumelocalify.settings.activity.MainActivity;
 
 public class FilePickerPreference extends Preference implements IActivityResultPreference {
+    private static final String MIME_OCTET_STREAM = "application/octet-stream";
+
     private String mText;
+
+    private String mMimeType;
 
     public FilePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         setSummaryProvider(SimpleSummaryProvider.getInstance());
+        try (TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.FilePickerPreference, defStyleAttr, defStyleRes)) {
+            mMimeType = a.getString(R.styleable.FilePickerPreference_android_mimeType);
+            if (mMimeType == null) {
+                mMimeType = MIME_OCTET_STREAM;
+            }
+        }
     }
 
     public FilePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
@@ -47,7 +57,10 @@ public class FilePickerPreference extends Preference implements IActivityResultP
         Activity activity = getActivity();
         if (activity != null) {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT)
-                    .setType("application/octet-stream");
+                    .setType(
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ?
+                                    mMimeType :
+                                    "application/octet-stream");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 String currentPackageName = getContext().getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE)
                         .getString(MainActivity.KEY_LAST_SELECTED_PACKAGE, null);

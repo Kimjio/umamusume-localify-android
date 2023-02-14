@@ -1,6 +1,7 @@
 package com.kimjio.umamusumelocalify.settings.fragment;
 
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -8,13 +9,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.documentfile.provider.DocumentFile;
+import androidx.fragment.app.DialogFragment;
 import androidx.preference.EditTextPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceDataStore;
@@ -22,15 +24,15 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceGroup;
 import androidx.preference.PreferenceManager;
 import androidx.preference.SeekBarPreference;
-import androidx.preference.SwitchPreference;
 import androidx.preference.TwoStatePreference;
 
-import com.kimjio.umamusumelocalify.settings.Constants;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.kimjio.umamusumelocalify.settings.ModuleUtils;
 import com.kimjio.umamusumelocalify.settings.R;
 import com.kimjio.umamusumelocalify.settings.activity.ManageTranslateActivity;
 import com.kimjio.umamusumelocalify.settings.preference.FilePickerPreference;
 import com.kimjio.umamusumelocalify.settings.preference.JsonPreferenceDataStore;
+import com.kimjio.umamusumelocalify.settings.preference.MaterialEditTextPreferenceDialogFragmentCompat;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -66,13 +68,18 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         if (file != null) {
             getPreferenceScreen().setEnabled(file.canWrite());
             if (!getPreferenceScreen().isEnabled() && Build.VERSION.SDK_INT >= 33) {
-                new AlertDialog.Builder(requireContext())
+                Dialog dialog = new MaterialAlertDialogBuilder(requireContext())
                         .setIcon(R.drawable.ic_error)
                         .setTitle(R.string.error)
                         .setMessage(R.string.error_readonly)
-                        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                        })
-                        .show();
+                        .setPositiveButton(android.R.string.ok, null)
+                        .create();
+                float density = getResources().getDisplayMetrics().density;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+                    dialog.getWindow().getAttributes().setBlurBehindRadius((int) (density * 16.0f));
+                }
+                dialog.show();
             }
         } else {
             getPreferenceScreen().setEnabled(false);
@@ -150,6 +157,18 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         return view;
     }
 
+    @Override
+    public void onDisplayPreferenceDialog(@NonNull Preference preference) {
+        if (preference instanceof EditTextPreference) {
+            final DialogFragment f;
+            f = MaterialEditTextPreferenceDialogFragmentCompat.newInstance(preference.getKey());
+            f.setTargetFragment(this, 0);
+            f.show(getParentFragmentManager(), "androidx.preference.PreferenceFragment.DIALOG");
+        } else {
+            super.onDisplayPreferenceDialog(preference);
+        }
+    }
+
     public void changeDataSource(String packageName, Uri parentPath, Uri path) {
         this.packageName = packageName;
         this.parentPath = parentPath;
@@ -191,6 +210,5 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         } catch (ReflectiveOperationException | IllegalArgumentException e) {
             e.printStackTrace();
         }
-
     }
 }

@@ -23,4 +23,9 @@
         when released. By default, this boolean is false. -->
         <attr name="updatesContinuously" format="boolean" />
     </declare-styleable>
+
+
+    <declare-styleable name="FilePickerPreference" parent="Preference">
+        <attr name="android:mimeType" format="string" />
+    </declare-styleable>
 </resources>

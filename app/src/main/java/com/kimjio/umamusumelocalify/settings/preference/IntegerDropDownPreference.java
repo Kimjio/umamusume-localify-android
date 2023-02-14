@@ -26,9 +26,12 @@ public class IntegerDropDownPreference extends DropDownPreference {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-
     @Override
     protected boolean persistString(String value) {
+        if ("null".equals(value)) {
+            super.persistString(null);
+            return true;
+        }
         int intValue = Integer.parseInt(value);
         return persistInt(intValue);
     }
@@ -44,7 +47,7 @@ public class IntegerDropDownPreference extends DropDownPreference {
             if (getPersistedInt(0) == getPersistedInt(1)) {
                 intValue = getPersistedInt(0);
             } else {
-                throw new IllegalArgumentException("Cannot get an int without a default return value");
+                return "null";
             }
         }
 

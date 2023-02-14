@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <Preference
+        android:icon="@drawable/ic_carrot"
         android:key="version"
         android:summary="@string/unknown"
         android:title="@string/pref_module_version" />
@@ -18,11 +19,11 @@
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="dumpStaticEntries"
-            android:title="@string/oref_dump_static_entries" />
+            android:title="@string/pref_dump_static_entries" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="dumpDbEntries"
-            android:title="@string/oref_dump_db_entries" />
+            android:title="@string/pref_dump_db_entries" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_cate_graphics">
@@ -74,6 +75,15 @@
             app:entries="@array/anti_aliasing"
             app:entryValues="@array/anti_aliasing_value"
             app:title="@string/pref_anti_aliasing"
+            app:useSimpleSummaryProvider="true" />
+
+        <com.kimjio.umamusumelocalify.settings.preference.IntegerDropDownPreference
+            android:defaultValue="@null"
+            android:icon="@drawable/ic_update"
+            android:key="cySpringUpdateMode"
+            app:entries="@array/cyspring_update_mode"
+            app:entryValues="@array/cyspring_update_mode_value"
+            app:title="@string/pref_cyspring_update_mode"
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
@@ -134,6 +144,11 @@
             android:icon="@drawable/ic_orientation"
             android:key="uiLoadingShowOrientationGuide"
             android:title="@string/pref_loading_show_orientation_guide" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="hideNowLoading"
+            android:title="@string/pref_hide_loading_screen" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_cate_etc">
@@ -155,6 +170,12 @@
             android:key="replaceAssetBundleFilePath"
             android:title="@string/pref_replace_asset_bundle" />
 
+        <!--<com.kimjio.umamusumelocalify.settings.preference.FilePickerPreference
+            android:icon="@drawable/ic_database"
+            android:key="replaceTextDBPath"
+            android:title="Database"
+            android:mimeType="application/msaccess"/>-->
+
         <CheckBoxPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_static_hash"
@@ -167,10 +188,11 @@
             android:key="staticEntriesUseTextIdName"
             android:title="@string/pref_static_entries_use_text_id" />
 
-        <com.kimjio.umamusumelocalify.settings.preference.JsonFilePickerPreference
+        <com.kimjio.umamusumelocalify.settings.preference.FilePickerPreference
             android:icon="@drawable/ic_json"
             android:key="textIdDict"
-            android:title="@string/pref_text_id_file" />
+            android:title="@string/pref_text_id_file"
+            android:mimeType="application/json" />
 
         <Preference
             android:icon="@drawable/ic_translate"

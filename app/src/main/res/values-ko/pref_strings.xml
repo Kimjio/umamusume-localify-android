@@ -2,8 +2,8 @@
 <resources>
     <string name="pref_cate_logger">로거</string>
     <string name="pref_enable_logger">로거 활성화</string>
-    <string name="oref_dump_static_entries">정적 항목 덤프</string>
-    <string name="oref_dump_db_entries">DB 항목 덤프</string>
+    <string name="pref_dump_static_entries">정적 항목 덤프</string>
+    <string name="pref_dump_db_entries">DB 항목 덤프</string>
 
     <string name="pref_cate_graphics">그래픽</string>
     <string name="pref_max_fps">최대 FPS</string>
@@ -11,6 +11,7 @@
     <string name="pref_3d_resolution_scale">3D 렌더링 해상도 배율</string>
     <string name="pref_graphics_quality">그래픽 품질</string>
     <string name="pref_anti_aliasing">안티 엘리어싱</string>
+    <string name="pref_cyspring_update_mode">CySpring 업데이트 모드</string>
 
     <string name="pref_cate_screen">화면</string>
     <string name="pref_use_system_resolution">시스템 해상도 사용</string>
@@ -26,6 +27,7 @@
     <string name="pref_replace_assets_path">교체할 에셋이 들어있는 폴더</string>
     <string name="pref_replace_asset_bundle">교체용 에셋 번들</string>
     <string name="pref_loading_show_orientation_guide">로딩 중 화면 회전 가이드 표시</string>
+    <string name="pref_hide_loading_screen">로딩 화면 숨기기</string>
 
     <string name="pref_module_version">모듈 버전</string>
 
