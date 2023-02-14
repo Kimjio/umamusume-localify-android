@@ -1980,34 +1980,155 @@ void DeviceOrientationGuide_Show_hook(Il2CppObject *thisObj, bool isTargetOrient
             g_force_landscape ? 2 : target);
 }
 
+bool onCompleteCalled_Show = false;
+
+void *onComplete_Show_addr = nullptr;
+
+void *onComplete_Show_orig = nullptr;
+
+void onComplete_Show_hook(Il2CppObject* thisObj) {
+    reinterpret_cast<decltype(onComplete_Show_hook) *>(onComplete_Show_orig)(thisObj);
+    onCompleteCalled_Show = true;
+    DobbyDestroy(onComplete_Show_addr);
+}
+
 void *NowLoading_Show_orig = nullptr;
 
-void NowLoading_Show_hook(Il2CppObject *thisObj, int type, Il2CppObject *onComplete,
+void NowLoading_Show_hook(Il2CppObject *thisObj, int type, Il2CppDelegate *onComplete,
                           float overrideDuration) {
+    onCompleteCalled_Show = false;
     // NowLoadingOrientation
     if (type == 2 && (g_force_landscape || !g_ui_loading_show_orientation_guide)) {
         // NowLoadingTips
         type = 0;
     }
-    reinterpret_cast<decltype(NowLoading_Show_hook) * > (NowLoading_Show_orig)(
-            thisObj,
-            type,
-            onComplete, overrideDuration);
+    if (onComplete) {
+        onComplete_Show_addr = reinterpret_cast<void *>(onComplete->method_ptr);
+        DobbyHook(onComplete_Show_addr, reinterpret_cast<void *>(onComplete_Show_hook), reinterpret_cast<void **>(&onComplete_Show_orig));
+    }
+    if (!g_hide_now_loading) {
+        reinterpret_cast<decltype(NowLoading_Show_hook) *>(NowLoading_Show_orig)(
+                thisObj,
+                type,
+                onComplete, overrideDuration);
+    }
+    if (onComplete) {
+        thread timeoutThread([onComplete]() {
+            sleep(1);
+            if (!onCompleteCalled_Show) {
+                auto thread = il2cpp_thread_attach(il2cpp_domain_get());
+                LOGI("NowLoading::Show: onCompleteCalled not changed, calling onComplete manually...");
+                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Show_addr)(onComplete->target);
+                il2cpp_thread_detach(thread);
+            } else {
+                DobbyDestroy(onComplete_Show_addr);
+            }
+        });
+        timeoutThread.detach();
+    }
 }
 
 void *NowLoading_Show2_orig = nullptr;
 
-void NowLoading_Show2_hook(Il2CppObject *thisObj, int type, Il2CppObject *onComplete,
+void NowLoading_Show2_hook(Il2CppObject *thisObj, int type, Il2CppDelegate *onComplete,
                            Il2CppObject *overrideDuration, int easeType) {
+    onCompleteCalled_Show = false;
     // NowLoadingOrientation
     if (type == 2 && (g_force_landscape || !g_ui_loading_show_orientation_guide)) {
         // NowLoadingTips
         type = 0;
     }
-    reinterpret_cast<decltype(NowLoading_Show2_hook) *>(NowLoading_Show2_orig)(
-            thisObj,
-            type,
-            onComplete, overrideDuration, easeType);
+    if (onComplete) {
+        onComplete_Show_addr = reinterpret_cast<void *>(onComplete->method_ptr);
+        DobbyHook(onComplete_Show_addr, reinterpret_cast<void *>(onComplete_Show_hook), reinterpret_cast<void **>(&onComplete_Show_orig));
+    }
+    if (!g_hide_now_loading) {
+        reinterpret_cast<decltype(NowLoading_Show2_hook) *>(NowLoading_Show2_orig)(
+                thisObj,
+                type,
+                onComplete, overrideDuration, easeType);
+    }
+    if (onComplete) {
+        thread timeoutThread([onComplete]() {
+            sleep(1);
+            if (!onCompleteCalled_Show) {
+                LOGI("NowLoading::Show: onCompleteCalled not changed, calling onComplete manually...");
+                auto thread = il2cpp_thread_attach(il2cpp_domain_get());
+                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Show_addr)(onComplete->target);
+                il2cpp_thread_detach(thread);
+            } else {
+                DobbyDestroy(onComplete_Show_addr);
+            }
+        });
+        timeoutThread.detach();
+    }
+}
+
+bool onCompleteCalled_Hide = false;
+
+void *onComplete_Hide_addr = nullptr;
+
+void *onComplete_Hide_orig = nullptr;
+
+void onComplete_Hide_hook(Il2CppObject* thisObj) {
+    reinterpret_cast<decltype(onComplete_Hide_hook) *>(onComplete_Hide_orig)(thisObj);
+    onCompleteCalled_Hide = true;
+    DobbyDestroy(onComplete_Hide_addr);
+}
+
+void *NowLoading_Hide_orig = nullptr;
+
+void NowLoading_Hide_hook(Il2CppObject *thisObj, Il2CppDelegate *onComplete) {
+    onCompleteCalled_Hide = false;
+    if (onComplete) {
+        onComplete_Hide_addr = reinterpret_cast<void *>(onComplete->method_ptr);
+        DobbyHook(onComplete_Hide_addr, reinterpret_cast<void *>(onComplete_Hide_hook), reinterpret_cast<void **>(&onComplete_Hide_orig));
+    }
+    if (!g_hide_now_loading) {
+        reinterpret_cast<decltype(NowLoading_Hide_hook) *>(NowLoading_Hide_orig)(thisObj, onComplete);
+    }
+    if (onComplete) {
+        thread timeoutThread([onComplete]() {
+            sleep(1);
+            if (!onCompleteCalled_Hide) {
+                LOGI("NowLoading::Hide: onCompleteCalled not changed, calling onComplete manually...");
+                auto thread = il2cpp_thread_attach(il2cpp_domain_get());
+                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Hide_addr)(onComplete->target);
+                il2cpp_thread_detach(thread);
+            } else {
+                DobbyDestroy(onComplete_Hide_addr);
+            }
+        });
+        timeoutThread.detach();
+    }
+}
+
+void *NowLoading_Hide2_orig = nullptr;
+
+void NowLoading_Hide2_hook(Il2CppObject *thisObj, Il2CppDelegate *onComplete,
+                           Il2CppObject *overrideDuration, int easeType) {
+    onCompleteCalled_Hide = false;
+    if (onComplete) {
+        onComplete_Hide_addr = reinterpret_cast<void *>(onComplete->method_ptr);
+        DobbyHook(onComplete_Hide_addr, reinterpret_cast<void *>(onComplete_Hide_hook), reinterpret_cast<void **>(&onComplete_Hide_orig));
+    }
+    if (!g_hide_now_loading) {
+        reinterpret_cast<decltype(NowLoading_Hide2_hook) *>(NowLoading_Hide2_orig)(thisObj, onComplete, overrideDuration, easeType);
+    }
+    if (onComplete) {
+        thread timeoutThread([onComplete]() {
+            sleep(1);
+            if (!onCompleteCalled_Hide) {
+                LOGI("NowLoading::Hide: onCompleteCalled not changed, calling onComplete manually...");
+                auto thread = il2cpp_thread_attach(il2cpp_domain_get());
+                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Hide_addr)(onComplete->target);
+                il2cpp_thread_detach(thread);
+            } else {
+                DobbyDestroy(onComplete_Hide_addr);
+            }
+        });
+        timeoutThread.detach();
+    }
 }
 
 void *WaitDeviceOrientation_orig = nullptr;
@@ -2848,16 +2969,21 @@ void hookMethods() {
             "umamusume.dll",
             "Gallop", "DeviceOrientationGuide", "Show", 2));
 
-    auto NowLoading_Show_addr = reinterpret_cast<void (*)(int, Il2CppObject *,
-                                                          float)>(il2cpp_symbols::get_method_pointer(
+    auto NowLoading_Show_addr = il2cpp_symbols::get_method_pointer(
             "umamusume.dll",
-            "Gallop", "NowLoading", "Show", 3));
+            "Gallop", "NowLoading", "Show", 3);
 
-    auto NowLoading_Show2_addr = reinterpret_cast<void (*)(int, Il2CppObject *,
-                                                           Il2CppObject *,
-                                                           int)>(il2cpp_symbols::get_method_pointer(
+    auto NowLoading_Show2_addr = il2cpp_symbols::get_method_pointer(
             "umamusume.dll",
-            "Gallop", "NowLoading", "Show", 4));
+            "Gallop", "NowLoading", "Show", 4);
+
+    auto NowLoading_Hide_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll",
+            "Gallop", "NowLoading", "Hide", 1);
+
+    auto NowLoading_Hide2_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll",
+            "Gallop", "NowLoading", "Hide", 3);
 
     auto WaitDeviceOrientation_addr = reinterpret_cast<void (*)(
             ScreenOrientation)>(il2cpp_symbols::get_method_pointer(
@@ -3126,9 +3252,13 @@ void hookMethods() {
 
     ADD_HOOK(SafetyNet_OnError)
 
-    ADD_HOOK(NowLoading_Show)
-
-    ADD_HOOK(NowLoading_Show2)
+    if (GetUnityVersion() == Unity2020) {
+        ADD_HOOK(NowLoading_Show2)
+        ADD_HOOK(NowLoading_Hide2)
+    } else {
+        ADD_HOOK(NowLoading_Show)
+        ADD_HOOK(NowLoading_Hide)
+    }
 
     ADD_HOOK(assetbundle_unload)
 

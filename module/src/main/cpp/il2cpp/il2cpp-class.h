@@ -287,6 +287,89 @@ typedef struct Il2CppString {
     Il2CppChar start_char[0];
 } Il2CppString;
 
+typedef void *(*InvokerMethod)(Il2CppMethodPointer, const MethodInfo *, void *, void **);
+
+typedef struct Il2CppDelegate {
+    Il2CppObject object;
+    /* The compiled code of the target method */
+    Il2CppMethodPointer method_ptr;
+    /* The invoke code */
+    InvokerMethod invoke_impl;
+    Il2CppObject *target;
+    const MethodInfo *method;
+
+    void *delegate_trampoline;
+
+    intptr_t extraArg;
+
+    /*
+     * If non-NULL, this points to a memory location which stores the address of
+     * the compiled code of the method, or NULL if it is not yet compiled.
+     */
+    uint8_t **method_code;
+    Il2CppReflectionMethod *method_info;
+    Il2CppReflectionMethod *original_method_info;
+    Il2CppObject *data;
+
+    bool method_is_virtual;
+} Il2CppDelegate;
+
+typedef struct Il2CppInternalThread {
+    Il2CppObject obj;
+    int lock_thread_id;
+    void *handle;
+    void *native_handle;
+    Il2CppArray *cached_culture_info;
+    Il2CppChar *name;
+    int name_len;
+    uint32_t state;
+    Il2CppObject *abort_exc;
+    int abort_state_handle;
+    uint64_t tid;
+    intptr_t debugger_thread;
+    void **static_data;
+    void *runtime_thread_info;
+    Il2CppObject *current_appcontext;
+    Il2CppObject *root_domain_thread;
+    Il2CppArray *_serialized_principal;
+    int _serialized_principal_version;
+    void *appdomain_refs;
+    int32_t interruption_requested;
+    void *synch_cs;
+    bool threadpool_thread;
+    bool thread_interrupt_requested;
+    int stack_size;
+    uint8_t apartment_state;
+    int critical_region_level;
+    int managed_id;
+    uint32_t small_id;
+    void *manage_callback;
+    void *interrupt_on_stop;
+    intptr_t flags;
+    void *thread_pinning_ref;
+    void *abort_protected_block_count;
+    int32_t priority;
+    void *owned_mutexes;
+    void *suspended;
+    int32_t self_suspended;
+    size_t thread_state;
+    size_t unused2;
+    void *last;
+} Il2CppInternalThread;
+
+// System.Threading.Thread
+typedef struct Il2CppThread {
+    Il2CppObject obj;
+    Il2CppInternalThread *internal_thread;
+    Il2CppObject *start_obj;
+    Il2CppException *pending_exception;
+    Il2CppObject *principal;
+    int32_t principal_version;
+    Il2CppDelegate *delegate;
+    Il2CppObject *executionContext;
+    bool executionContextBelongsToOuterScope;
+} Il2CppThread;
+
 typedef struct Il2CppDefaults {
     const Il2CppImage *corlib [[maybe_unused]];
     Il2CppClass *object_class [[maybe_unused]];
@@ -505,6 +588,14 @@ public:
     // System.Single UnityEngine.Vector3::z
     float z;
 } Vector3_t [[maybe_unused]];
+
+struct Rect_t {
+public:
+    short x;
+    short y;
+    short width;
+    short height;
+};
 
 // UnityEngine.TextGenerationSettings
 typedef struct TextGenerationSettings_t {

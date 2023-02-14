@@ -37,6 +37,8 @@ string g_replace_assetbundle_file_path;
 string g_replace_text_db_path;
 bool g_character_system_text_caption = false;
 int g_cyspring_update_mode = -1;
+bool g_hide_now_loading = false;
+
 string text_id_dict;
 
 bool isGame(const char *pkgNm) {
@@ -386,6 +388,10 @@ std::optional<std::vector<std::string>> read_config() {
             g_cyspring_update_mode = find(options.begin(), options.end(), g_cyspring_update_mode) - options.begin();
         } else if (g_max_fps > 30) {
             g_cyspring_update_mode = 1;
+        }
+
+        if (document.HasMember("hideNowLoading")) {
+            g_hide_now_loading = document["hideNowLoading"].GetBool();
         }
 
         if (document.HasMember("textIdDict")) {
