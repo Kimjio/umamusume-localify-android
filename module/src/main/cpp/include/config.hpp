@@ -2,7 +2,7 @@
 
 namespace Module {
     extern const int moduleVersionCode;
-    extern const char* const moduleVersionName;
+    extern const char *const moduleVersionName;
 }
 
 #ifdef RIRU_MODULE

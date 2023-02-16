@@ -391,8 +391,9 @@ optional<vector<string>> read_config() {
 
         if (document.HasMember("cySpringUpdateMode")) {
             g_cyspring_update_mode = document["cySpringUpdateMode"].GetInt();
-            vector<int> options = { 0, 1, 2, 3, -1 };
-            g_cyspring_update_mode = find(options.begin(), options.end(), g_cyspring_update_mode) - options.begin();
+            vector<int> options = {0, 1, 2, 3, -1};
+            g_cyspring_update_mode =
+                    find(options.begin(), options.end(), g_cyspring_update_mode) - options.begin();
         } else if (g_max_fps > 30) {
             g_cyspring_update_mode = 1;
         }
@@ -421,17 +422,17 @@ optional<vector<string>> read_config() {
     return dicts;
 }
 
-void* GetNativeBridgeLoadLibrary(void* fallbackAddress) {
-    void* handle = dlopen(GetNativeBridgeLibrary().data(), RTLD_NOW);
+void *GetNativeBridgeLoadLibrary(void *fallbackAddress) {
+    void *handle = dlopen(GetNativeBridgeLibrary().data(), RTLD_NOW);
     // clear error
     dlerror();
     if (handle) {
-        auto itf = reinterpret_cast<NativeBridgeCallbacks*>(dlsym(handle, "NativeBridgeItf"));
+        auto itf = reinterpret_cast<NativeBridgeCallbacks *>(dlsym(handle, "NativeBridgeItf"));
         LOGI("NativeBridgeItf version: %d", itf->version);
         if (GetAndroidApiLevel() >= 26) {
-            return reinterpret_cast<void*>(itf->loadLibraryExt);
+            return reinterpret_cast<void *>(itf->loadLibraryExt);
         }
-        return reinterpret_cast<void*>(itf->loadLibrary);
+        return reinterpret_cast<void *>(itf->loadLibrary);
     }
     return fallbackAddress;
 }
@@ -462,11 +463,13 @@ void hack_thread(void *arg [[maybe_unused]]) {
                 }
             }
         } else {
-            addr_NativeBridgeLoadLibraryExt_V30 = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
-                                             "NativeBridgeLoadLibraryExt"));
+            addr_NativeBridgeLoadLibraryExt_V30 = GetNativeBridgeLoadLibrary(
+                    DobbySymbolResolver(nullptr,
+                                        "NativeBridgeLoadLibraryExt"));
             if (addr_NativeBridgeLoadLibraryExt_V30) {
                 LOGI("NativeBridgeLoadLibraryExt at: %p", addr_NativeBridgeLoadLibraryExt_V30);
-                DobbyHook(addr_NativeBridgeLoadLibraryExt_V30, reinterpret_cast<void *>(new_NativeBridgeLoadLibraryExt_V30),
+                DobbyHook(addr_NativeBridgeLoadLibraryExt_V30,
+                          reinterpret_cast<void *>(new_NativeBridgeLoadLibraryExt_V30),
                           reinterpret_cast<void **>(&orig_NativeBridgeLoadLibraryExt_V30));
             }
         }
@@ -493,11 +496,13 @@ void hack_thread(void *arg [[maybe_unused]]) {
                 }
             }
         } else {
-            addr_NativeBridgeLoadLibraryExt_V26 = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
-                                             "_ZN7android26NativeBridgeLoadLibraryExtEPKciPNS_25native_bridge_namespace_tE"));
+            addr_NativeBridgeLoadLibraryExt_V26 = GetNativeBridgeLoadLibrary(
+                    DobbySymbolResolver(nullptr,
+                                        "_ZN7android26NativeBridgeLoadLibraryExtEPKciPNS_25native_bridge_namespace_tE"));
             if (addr_NativeBridgeLoadLibraryExt_V26) {
                 LOGI("NativeBridgeLoadLibraryExt at: %p", addr_NativeBridgeLoadLibraryExt_V26);
-                DobbyHook(addr_NativeBridgeLoadLibraryExt_V26, reinterpret_cast<void *>(new_NativeBridgeLoadLibraryExt_V26),
+                DobbyHook(addr_NativeBridgeLoadLibraryExt_V26,
+                          reinterpret_cast<void *>(new_NativeBridgeLoadLibraryExt_V26),
                           reinterpret_cast<void **>(&orig_NativeBridgeLoadLibraryExt_V26));
             }
         }
@@ -517,11 +522,13 @@ void hack_thread(void *arg [[maybe_unused]]) {
                           reinterpret_cast<void **>(&orig_do_dlopen_V24));
             }
         } else {
-            addr_NativeBridgeLoadLibrary_V21 = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
-                                             "_ZN7android23NativeBridgeLoadLibraryEPKci"));
+            addr_NativeBridgeLoadLibrary_V21 = GetNativeBridgeLoadLibrary(
+                    DobbySymbolResolver(nullptr,
+                                        "_ZN7android23NativeBridgeLoadLibraryEPKci"));
             if (addr_NativeBridgeLoadLibrary_V21) {
                 LOGI("NativeBridgeLoadLibrary at: %p", addr_NativeBridgeLoadLibrary_V21);
-                DobbyHook(addr_NativeBridgeLoadLibrary_V21, reinterpret_cast<void *>(new_NativeBridgeLoadLibrary_V21),
+                DobbyHook(addr_NativeBridgeLoadLibrary_V21,
+                          reinterpret_cast<void *>(new_NativeBridgeLoadLibrary_V21),
                           reinterpret_cast<void **>(&orig_NativeBridgeLoadLibrary_V21));
             }
         }
@@ -536,11 +543,13 @@ void hack_thread(void *arg [[maybe_unused]]) {
                           reinterpret_cast<void **>(&orig_do_dlopen_V19));
             }
         } else {
-            addr_NativeBridgeLoadLibrary_V21 = GetNativeBridgeLoadLibrary(DobbySymbolResolver(nullptr,
-                                             "_ZN7android23NativeBridgeLoadLibraryEPKci"));
+            addr_NativeBridgeLoadLibrary_V21 = GetNativeBridgeLoadLibrary(
+                    DobbySymbolResolver(nullptr,
+                                        "_ZN7android23NativeBridgeLoadLibraryEPKci"));
             if (addr_NativeBridgeLoadLibrary_V21) {
                 LOGI("NativeBridgeLoadLibrary at: %p", addr_NativeBridgeLoadLibrary_V21);
-                DobbyHook(addr_NativeBridgeLoadLibrary_V21, reinterpret_cast<void *>(new_NativeBridgeLoadLibrary_V21),
+                DobbyHook(addr_NativeBridgeLoadLibrary_V21,
+                          reinterpret_cast<void *>(new_NativeBridgeLoadLibrary_V21),
                           reinterpret_cast<void **>(&orig_NativeBridgeLoadLibrary_V21));
             }
         }

@@ -90,7 +90,9 @@ static void specializeAppProcessPost(
         int ret;
         pthread_t ntid;
         if ((ret = pthread_create(&ntid, nullptr,
-                                  reinterpret_cast<void *(*)(void *)>(/* enable_settings_hack ? hack_settings_thread :  */hack_thread), nullptr))) {
+                                  reinterpret_cast<void *(*)(
+                                          void *)>(/* enable_settings_hack ? hack_settings_thread :  */hack_thread),
+                                  nullptr))) {
             LOGE("can't create thread: %s\n", strerror(ret));
         }
     }

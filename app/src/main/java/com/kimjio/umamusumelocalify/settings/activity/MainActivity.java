@@ -45,12 +45,9 @@ import java.util.stream.Collectors;
 
 public class MainActivity extends BaseActivity<MainActivityBinding> {
 
-    private static final String TAG = "MainActivity";
-
     public static final String KEY_LAST_SELECTED = "last_selected_index";
-
     public static final String KEY_LAST_SELECTED_PACKAGE = "last_selected_package";
-
+    private static final String TAG = "MainActivity";
     private SharedPreferences preferences;
 
     private String currentPackageName;
@@ -60,24 +57,6 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
     private boolean createdAfterStateSaved = false;
 
     private boolean hasError = false;
-
-    private final ActivityResultLauncher<Uri> requestDocumentTree = registerForActivityResult(
-            new ActivityResultContracts.OpenDocumentTree(), result -> {
-                if (result != null) {
-                    if (!result.getPath().endsWith("Android/data/" + currentPackageName)) {
-                        showWrongPathDialog();
-                        return;
-                    }
-                    getContentResolver().takePersistableUriPermission(result,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION |
-                                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    preferences.edit().putString(currentPackageName, result.toString()).apply();
-                    initFragment(DocumentFile.fromTreeUri(this, result));
-                } else {
-                    binding.progress.setVisibility(View.GONE);
-                    binding.permRequired.setVisibility(View.VISIBLE);
-                }
-            });
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -122,7 +101,23 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
             binding.progress.setVisibility(View.GONE);
             binding.appNotFound.setVisibility(View.VISIBLE);
         }
-    }
+    }    private final ActivityResultLauncher<Uri> requestDocumentTree = registerForActivityResult(
+            new ActivityResultContracts.OpenDocumentTree(), result -> {
+                if (result != null) {
+                    if (!result.getPath().endsWith("Android/data/" + currentPackageName)) {
+                        showWrongPathDialog();
+                        return;
+                    }
+                    getContentResolver().takePersistableUriPermission(result,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    preferences.edit().putString(currentPackageName, result.toString()).apply();
+                    initFragment(DocumentFile.fromTreeUri(this, result));
+                } else {
+                    binding.progress.setVisibility(View.GONE);
+                    binding.permRequired.setVisibility(View.VISIBLE);
+                }
+            });
 
     @Override
     public boolean onCreateOptionsMenu(@NonNull Menu menu) {
@@ -322,4 +317,6 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
             return convertView;
         }
     }
+
+
 }

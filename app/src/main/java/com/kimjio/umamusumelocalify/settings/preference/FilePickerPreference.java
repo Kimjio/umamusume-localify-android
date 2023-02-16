@@ -72,6 +72,11 @@ public class FilePickerPreference extends Preference implements IActivityResultP
         }
     }
 
+    @Nullable
+    public String getText() {
+        return mText;
+    }
+
     public void setText(@Nullable String text) {
         final boolean wasBlocking = shouldDisableDependents();
 
@@ -85,11 +90,6 @@ public class FilePickerPreference extends Preference implements IActivityResultP
         }
 
         notifyChanged();
-    }
-
-    @Nullable
-    public String getText() {
-        return mText;
     }
 
     @Override

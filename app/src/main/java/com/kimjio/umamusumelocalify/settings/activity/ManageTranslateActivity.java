@@ -160,7 +160,7 @@ public class ManageTranslateActivity extends BaseActivity<ManageTranslateActivit
         new Thread(() -> {
             List<TranslateFile> files = dictSet.stream()
                     .map(item -> {
-                        DocumentFile file =DocumentFile.fromSingleUri(this, Uri.parse(path.toString() + "%2F" + item.replaceAll("/", "%2F")));
+                        DocumentFile file = DocumentFile.fromSingleUri(this, Uri.parse(path.toString() + "%2F" + item.replaceAll("/", "%2F")));
                         if (file != null) return Map.of("origPath", item, "file", file);
                         return Map.of("origPath", item);
                     })

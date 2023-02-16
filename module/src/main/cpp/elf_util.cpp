@@ -188,7 +188,8 @@ ElfW(Addr) ElfImg::LinearLookup(std::string_view name) const {
 
 ElfW(Addr) ElfImg::PrefixLookupFirst(std::string_view prefix) const {
     MayInitLinearMap();
-    if (auto i = symtabs_.lower_bound(prefix); i != symtabs_.end() && i->first.starts_with(prefix)) {
+    if (auto i = symtabs_.lower_bound(prefix); i != symtabs_.end() &&
+                                               i->first.starts_with(prefix)) {
         return i->second->st_value;
     } else {
         return 0;
@@ -254,7 +255,7 @@ bool ElfImg::findModuleBase() {
     }
 
     char *next = buff;
-    load_addr = (long)strtoul(buff, &next, 16);
+    load_addr = (long) strtoul(buff, &next, 16);
 
     if (buff) free(buff);
 

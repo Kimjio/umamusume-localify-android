@@ -1,3 +1,7 @@
+## 2.15.1
+
+- Fixed an issue where the resolution was incorrect when the screen was rotated from horizontal to vertical
+
 ## 2.15.0
 
 - Lookup NativeBridgeItf symbol from ro.dalvik.vm.native.bridge (Improved to work on Waydroid)

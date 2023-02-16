@@ -58,6 +58,11 @@ public class FolderPickerPreference extends Preference implements IActivityResul
         }
     }
 
+    @Nullable
+    public String getText() {
+        return mText;
+    }
+
     public void setText(@Nullable String text) {
         final boolean wasBlocking = shouldDisableDependents();
 
@@ -71,11 +76,6 @@ public class FolderPickerPreference extends Preference implements IActivityResul
         }
 
         notifyChanged();
-    }
-
-    @Nullable
-    public String getText() {
-        return mText;
     }
 
     @Override

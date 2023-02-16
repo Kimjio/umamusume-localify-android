@@ -2,13 +2,9 @@ package com.kimjio.umamusumelocalify.settings.preference;
 
 import android.content.ContentResolver;
 import android.net.Uri;
-import android.os.Build;
 import android.util.ArraySet;
-import android.util.Log;
-import android.util.PrintWriterPrinter;
 
 import androidx.annotation.Nullable;
-import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceDataStore;
 
 import org.json.JSONArray;
@@ -16,13 +12,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Set;
@@ -47,7 +40,7 @@ public class JsonPreferenceDataStore extends PreferenceDataStore {
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
             String line;
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 builder.append(line);
             }
             jsonObject = new JSONObject(builder.toString());

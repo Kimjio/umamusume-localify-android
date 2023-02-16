@@ -80,7 +80,8 @@ Boolean GetBoolean(bool value) {
 }
 
 Int32Object *GetInt32Instance(int value) {
-    return reinterpret_cast<Int32Object *>(il2cpp_value_box(il2cpp_symbols::get_class("mscorlib.dll", "System", "Int32"), &value));
+    return reinterpret_cast<Int32Object *>(il2cpp_value_box(
+            il2cpp_symbols::get_class("mscorlib.dll", "System", "Int32"), &value));
 }
 
 Il2CppObject *ParseEnum(Il2CppObject *runtimeType, const string &name) {
@@ -716,7 +717,7 @@ void ShowCaptionByNotification(Il2CppObject *audioManager, Il2CppObject *elem) {
         u16string(cueSheet->start_char).find(u"_gacha_") == string::npos &&
         voiceId != 95001 &&
         (characterId < 9000 ||
-            voiceId == 70000)) {
+         voiceId == 70000)) {
         auto ShowNotification = reinterpret_cast<void (*)(Il2CppObject *, Il2CppString *)>(
                 il2cpp_class_get_method_from_name(uiManager->klass, "ShowNotification",
                                                   1)->methodPointer
@@ -748,10 +749,12 @@ void ShowCaptionByNotification(Il2CppObject *audioManager, Il2CppObject *elem) {
 
 void *AtomSourceEx_SetParameter_orig = nullptr;
 
-void AtomSourceEx_SetParameter_hook(Il2CppObject* thisObj) {
-    reinterpret_cast<decltype(AtomSourceEx_SetParameter_hook) *>(AtomSourceEx_SetParameter_orig)(thisObj);
+void AtomSourceEx_SetParameter_hook(Il2CppObject *thisObj) {
+    reinterpret_cast<decltype(AtomSourceEx_SetParameter_hook) *>(AtomSourceEx_SetParameter_orig)(
+            thisObj);
 
-    FieldInfo *cueIdField = il2cpp_class_get_field_from_name(thisObj->klass, "<CueId>k__BackingField");
+    FieldInfo *cueIdField = il2cpp_class_get_field_from_name(thisObj->klass,
+                                                             "<CueId>k__BackingField");
     int cueId;
     il2cpp_field_get_value(thisObj, cueIdField, &cueId);
 
@@ -764,19 +767,21 @@ void AtomSourceEx_SetParameter_hook(Il2CppObject* thisObj) {
     const auto cueSheetU8 = localify::u16_u8(cueSheet->start_char);
     regex_search(cueSheetU8, stringMatch, r);
     if (!stringMatch.empty()) {
-        Il2CppObject* textList = reinterpret_cast<Il2CppObject * (*)(int)>(
-                il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop", "MasterCharacterSystemText", "GetByCharaId", 1))(stoi(stringMatch[1].str()));
+        Il2CppObject *textList = reinterpret_cast<Il2CppObject *(*)(int)>(
+                il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                   "MasterCharacterSystemText", "GetByCharaId", 1))(
+                stoi(stringMatch[1].str()));
         FieldInfo *itemsField = il2cpp_class_get_field_from_name(textList->klass, "_items");
         Il2CppArray *textArr;
         il2cpp_field_get_value(textList, itemsField, &textArr);
 
-        Il2CppObject* audioManager;
+        Il2CppObject *audioManager;
         auto klass = il2cpp_symbols::get_class("umamusume.dll", "Gallop", "AudioManager");
         auto instanceField = il2cpp_class_get_field_from_name(klass, "_instance");
         il2cpp_field_static_get_value(instanceField, &audioManager);
 
         for (int i = 0; i < textArr->max_length; i++) {
-            auto elem = reinterpret_cast<Il2CppObject*>(textArr->vector[i]);
+            auto elem = reinterpret_cast<Il2CppObject *>(textArr->vector[i]);
             if (elem) {
                 auto elemCueIdField = il2cpp_class_get_field_from_name(elem->klass, "CueId");
                 auto elemCueSheetField = il2cpp_class_get_field_from_name(elem->klass, "CueSheet");
@@ -787,7 +792,8 @@ void AtomSourceEx_SetParameter_hook(Il2CppObject* thisObj) {
                 int elemCueId;
                 il2cpp_field_get_value(elem, elemCueIdField, &elemCueId);
 
-                if (u16string(elemCueSheet->start_char) == u16string(cueSheet->start_char) && cueId == elemCueId) {
+                if (u16string(elemCueSheet->start_char) == u16string(cueSheet->start_char) &&
+                    cueId == elemCueId) {
                     ShowCaptionByNotification(audioManager, elem);
                     return;
                 }
@@ -1251,14 +1257,22 @@ void set_resolution_hook(int width, int height, bool fullscreen) {
     const int systemHeight = get_system_height(display_get_main());
     // Unity 2019 not invert width, height on landscape
     if ((width > height && systemWidth < systemHeight) || g_force_landscape) {
-        reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
-                systemHeight, systemWidth,
-                fullscreen);
-        return;
+        if (g_ui_use_system_resolution) {
+            reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
+                    systemHeight, systemWidth,
+                    fullscreen);
+            return;
+        }
     }
-    reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
-            width, height,
-            fullscreen);
+    if (g_ui_use_system_resolution) {
+        reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
+                systemWidth, systemHeight,
+                fullscreen);
+    } else {
+        reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
+                width, height,
+                fullscreen);
+    }
 }
 
 void *GraphicSettings_GetVirtualResolution_orig = nullptr;
@@ -1348,8 +1362,9 @@ assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2
                                                                Il2CppType *)>(il2cpp_class_get_method_from_name(
                 asset->klass, "GetComponent", 1)->methodPointer);
         auto *assetHolder = getComponent(asset,
-                                         reinterpret_cast<Il2CppType *>(GetRuntimeType("umamusume.dll", "Gallop",
-                                                                       "AssetHolder")));
+                                         reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                                                 "umamusume.dll", "Gallop",
+                                                 "AssetHolder")));
         if (assetHolder != nullptr) {
             auto *objectList = reinterpret_cast<Il2CppObject *(*)(
                     Il2CppObject *)>(il2cpp_class_get_method_from_name(assetHolder->klass,
@@ -1371,8 +1386,9 @@ assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2
                             auto *newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                                     replaceAssets,
                                     uobject_name,
-                                    reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                                  "UnityEngine", "Texture2D")));
+                                    reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                                            "UnityEngine.CoreModule.dll",
+                                            "UnityEngine", "Texture2D")));
                             if (newTexture != nullptr) {
                                 reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                         il2cpp_symbols::get_method_pointer(
@@ -1398,8 +1414,9 @@ assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2
                                 auto *newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                                         replaceAssets,
                                         uobject_name,
-                                        reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                                      "UnityEngine", "Texture2D")));
+                                        reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                                                "UnityEngine.CoreModule.dll",
+                                                "UnityEngine", "Texture2D")));
                                 if (newTexture != nullptr) {
                                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                             il2cpp_symbols::get_method_pointer(
@@ -1461,8 +1478,9 @@ Il2CppObject *resources_load_hook(Il2CppString *path, Il2CppType *type) {
                                                                    Il2CppType *)>(il2cpp_class_get_method_from_name(
                     gameObj->klass, "GetComponent", 1)->methodPointer);
             auto *component = getComponent(gameObj,
-                                           reinterpret_cast<Il2CppType *>(GetRuntimeType("umamusume.dll", "Gallop",
-                                                                         "TitleView")));
+                                           reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                                                   "umamusume.dll", "Gallop",
+                                                   "TitleView")));
 
             auto *imgField = il2cpp_class_get_field_from_name(component->klass, "TitleLogoImage");
             Il2CppObject *imgCommon;
@@ -1470,8 +1488,9 @@ Il2CppObject *resources_load_hook(Il2CppString *path, Il2CppType *type) {
             auto *texture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                     replaceAssets,
                     il2cpp_string_new("assets/title/utx_obj_title_logo_umamusume.png"),
-                    reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                  "Texture2D")));
+                    reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
+                                                                  "UnityEngine",
+                                                                  "Texture2D")));
             auto *m_TextureField = il2cpp_class_get_field_from_name(imgCommon->klass->parent,
                                                                     "m_Texture");
             il2cpp_field_set_value(imgCommon, m_TextureField, texture);
@@ -1492,8 +1511,9 @@ Il2CppObject *Sprite_get_texture_hook(Il2CppObject *thisObj) {
         auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                 replaceAssets,
                 uobject_name,
-                reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
-                                              "Texture2D")));
+                reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
+                                                              "UnityEngine",
+                                                              "Texture2D")));
         if (newTexture) {
             reinterpret_cast<void (*)(Il2CppObject *, int)>(
                     il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
@@ -1525,8 +1545,9 @@ Il2CppObject *Renderer_get_material_hook(Il2CppObject *thisObj) {
                 auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                         replaceAssets,
                         uobject_name,
-                        reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                      "Texture2D")));
+                        reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
+                                                                      "UnityEngine",
+                                                                      "Texture2D")));
                 if (newTexture) {
                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                             il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
@@ -1563,8 +1584,9 @@ Il2CppArray *Renderer_get_materials_hook(Il2CppObject *thisObj) {
                     auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                             replaceAssets,
                             uobject_name,
-                            reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                          "UnityEngine", "Texture2D")));
+                            reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                                    "UnityEngine.CoreModule.dll",
+                                    "UnityEngine", "Texture2D")));
                     if (newTexture) {
                         reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                 il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
@@ -1600,8 +1622,9 @@ Il2CppObject *Renderer_get_sharedMaterial_hook(Il2CppObject *thisObj) {
                 auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                         replaceAssets,
                         uobject_name,
-                        reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                      "Texture2D")));
+                        reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
+                                                                      "UnityEngine",
+                                                                      "Texture2D")));
                 if (newTexture) {
                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                             il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
@@ -1638,8 +1661,9 @@ Il2CppArray *Renderer_get_sharedMaterials_hook(Il2CppObject *thisObj) {
                     auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                             replaceAssets,
                             uobject_name,
-                            reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                          "UnityEngine", "Texture2D")));
+                            reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                                    "UnityEngine.CoreModule.dll",
+                                    "UnityEngine", "Texture2D")));
                     if (newTexture) {
                         reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                 il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
@@ -1673,8 +1697,9 @@ void Renderer_set_material_hook(Il2CppObject *thisObj, Il2CppObject *material) {
                 auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                         replaceAssets,
                         uobject_name,
-                        reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                      "Texture2D")));
+                        reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
+                                                                      "UnityEngine",
+                                                                      "Texture2D")));
                 if (newTexture) {
                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                             il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
@@ -1710,8 +1735,9 @@ void Renderer_set_materials_hook(Il2CppObject *thisObj, Il2CppArray *materials) 
                     auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                             replaceAssets,
                             uobject_name,
-                            reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                          "UnityEngine", "Texture2D")));
+                            reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                                    "UnityEngine.CoreModule.dll",
+                                    "UnityEngine", "Texture2D")));
                     if (newTexture) {
                         reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                 il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
@@ -1746,8 +1772,9 @@ void Renderer_set_sharedMaterial_hook(Il2CppObject *thisObj, Il2CppObject *mater
                 auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                         replaceAssets,
                         uobject_name,
-                        reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                      "Texture2D")));
+                        reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
+                                                                      "UnityEngine",
+                                                                      "Texture2D")));
                 if (newTexture) {
                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                             il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
@@ -1783,8 +1810,9 @@ void Renderer_set_sharedMaterials_hook(Il2CppObject *thisObj, Il2CppArray *mater
                     auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                             replaceAssets,
                             uobject_name,
-                            reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                          "UnityEngine", "Texture2D")));
+                            reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                                    "UnityEngine.CoreModule.dll",
+                                    "UnityEngine", "Texture2D")));
                     if (newTexture) {
                         reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                 il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
@@ -1809,8 +1837,9 @@ void Material_set_mainTexture_hook(Il2CppObject *thisObj, Il2CppObject *texture)
             auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                     replaceAssets,
                     uobject_get_name(texture),
-                    reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                  "Texture2D")));
+                    reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
+                                                                  "UnityEngine",
+                                                                  "Texture2D")));
             if (newTexture) {
                 reinterpret_cast<void (*)(Il2CppObject *, int)>(
                         il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
@@ -1838,8 +1867,9 @@ Il2CppObject *Material_get_mainTexture_hook(Il2CppObject *thisObj) {
             auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                     replaceAssets,
                     uobject_name,
-                    reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                  "Texture2D")));
+                    reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
+                                                                  "UnityEngine",
+                                                                  "Texture2D")));
             if (newTexture) {
                 reinterpret_cast<void (*)(Il2CppObject *, int)>(
                         il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
@@ -1860,8 +1890,9 @@ void Material_SetTextureI4_hook(Il2CppObject *thisObj, int nameID, Il2CppObject 
         auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                 replaceAssets,
                 uobject_get_name(texture),
-                reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
-                                              "Texture2D")));
+                reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
+                                                              "UnityEngine",
+                                                              "Texture2D")));
         if (newTexture) {
             reinterpret_cast<void (*)(Il2CppObject *, int)>(
                     il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
@@ -1884,8 +1915,9 @@ void CharaPropRendererAccessor_SetTexture_hook(Il2CppObject *thisObj, Il2CppObje
         auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                 replaceAssets,
                 uobject_get_name(texture),
-                reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll", "UnityEngine",
-                                              "Texture2D")));
+                reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
+                                                              "UnityEngine",
+                                                              "Texture2D")));
         if (newTexture) {
             reinterpret_cast<void (*)(Il2CppObject *, int)>(
                     il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
@@ -1980,7 +2012,7 @@ void *onComplete_Show_addr = nullptr;
 
 void *onComplete_Show_orig = nullptr;
 
-void onComplete_Show_hook(Il2CppObject* thisObj) {
+void onComplete_Show_hook(Il2CppObject *thisObj) {
     reinterpret_cast<decltype(onComplete_Show_hook) *>(onComplete_Show_orig)(thisObj);
     onCompleteCalled_Show = true;
     DobbyDestroy(onComplete_Show_addr);
@@ -1998,7 +2030,8 @@ void NowLoading_Show_hook(Il2CppObject *thisObj, int type, Il2CppDelegate *onCom
     }
     if (onComplete) {
         onComplete_Show_addr = reinterpret_cast<void *>(onComplete->method_ptr);
-        DobbyHook(onComplete_Show_addr, reinterpret_cast<void *>(onComplete_Show_hook), reinterpret_cast<void **>(&onComplete_Show_orig));
+        DobbyHook(onComplete_Show_addr, reinterpret_cast<void *>(onComplete_Show_hook),
+                  reinterpret_cast<void **>(&onComplete_Show_orig));
     }
     if (!g_hide_now_loading) {
         reinterpret_cast<decltype(NowLoading_Show_hook) *>(NowLoading_Show_orig)(
@@ -2012,7 +2045,8 @@ void NowLoading_Show_hook(Il2CppObject *thisObj, int type, Il2CppDelegate *onCom
             if (!onCompleteCalled_Show) {
                 auto thread = il2cpp_thread_attach(il2cpp_domain_get());
                 LOGI("NowLoading::Show: onCompleteCalled not changed, calling onComplete manually...");
-                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Show_addr)(onComplete->target);
+                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Show_addr)(
+                        onComplete->target);
                 il2cpp_thread_detach(thread);
             } else {
                 DobbyDestroy(onComplete_Show_addr);
@@ -2034,7 +2068,8 @@ void NowLoading_Show2_hook(Il2CppObject *thisObj, int type, Il2CppDelegate *onCo
     }
     if (onComplete) {
         onComplete_Show_addr = reinterpret_cast<void *>(onComplete->method_ptr);
-        DobbyHook(onComplete_Show_addr, reinterpret_cast<void *>(onComplete_Show_hook), reinterpret_cast<void **>(&onComplete_Show_orig));
+        DobbyHook(onComplete_Show_addr, reinterpret_cast<void *>(onComplete_Show_hook),
+                  reinterpret_cast<void **>(&onComplete_Show_orig));
     }
     if (!g_hide_now_loading) {
         reinterpret_cast<decltype(NowLoading_Show2_hook) *>(NowLoading_Show2_orig)(
@@ -2048,7 +2083,8 @@ void NowLoading_Show2_hook(Il2CppObject *thisObj, int type, Il2CppDelegate *onCo
             if (!onCompleteCalled_Show) {
                 LOGI("NowLoading::Show: onCompleteCalled not changed, calling onComplete manually...");
                 auto thread = il2cpp_thread_attach(il2cpp_domain_get());
-                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Show_addr)(onComplete->target);
+                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Show_addr)(
+                        onComplete->target);
                 il2cpp_thread_detach(thread);
             } else {
                 DobbyDestroy(onComplete_Show_addr);
@@ -2064,7 +2100,7 @@ void *onComplete_Hide_addr = nullptr;
 
 void *onComplete_Hide_orig = nullptr;
 
-void onComplete_Hide_hook(Il2CppObject* thisObj) {
+void onComplete_Hide_hook(Il2CppObject *thisObj) {
     reinterpret_cast<decltype(onComplete_Hide_hook) *>(onComplete_Hide_orig)(thisObj);
     onCompleteCalled_Hide = true;
     DobbyDestroy(onComplete_Hide_addr);
@@ -2076,10 +2112,12 @@ void NowLoading_Hide_hook(Il2CppObject *thisObj, Il2CppDelegate *onComplete) {
     onCompleteCalled_Hide = false;
     if (onComplete) {
         onComplete_Hide_addr = reinterpret_cast<void *>(onComplete->method_ptr);
-        DobbyHook(onComplete_Hide_addr, reinterpret_cast<void *>(onComplete_Hide_hook), reinterpret_cast<void **>(&onComplete_Hide_orig));
+        DobbyHook(onComplete_Hide_addr, reinterpret_cast<void *>(onComplete_Hide_hook),
+                  reinterpret_cast<void **>(&onComplete_Hide_orig));
     }
     if (!g_hide_now_loading) {
-        reinterpret_cast<decltype(NowLoading_Hide_hook) *>(NowLoading_Hide_orig)(thisObj, onComplete);
+        reinterpret_cast<decltype(NowLoading_Hide_hook) *>(NowLoading_Hide_orig)(thisObj,
+                                                                                 onComplete);
     }
     if (onComplete) {
         thread timeoutThread([onComplete]() {
@@ -2087,7 +2125,8 @@ void NowLoading_Hide_hook(Il2CppObject *thisObj, Il2CppDelegate *onComplete) {
             if (!onCompleteCalled_Hide) {
                 LOGI("NowLoading::Hide: onCompleteCalled not changed, calling onComplete manually...");
                 auto thread = il2cpp_thread_attach(il2cpp_domain_get());
-                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Hide_addr)(onComplete->target);
+                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Hide_addr)(
+                        onComplete->target);
                 il2cpp_thread_detach(thread);
             } else {
                 DobbyDestroy(onComplete_Hide_addr);
@@ -2104,10 +2143,14 @@ void NowLoading_Hide2_hook(Il2CppObject *thisObj, Il2CppDelegate *onComplete,
     onCompleteCalled_Hide = false;
     if (onComplete) {
         onComplete_Hide_addr = reinterpret_cast<void *>(onComplete->method_ptr);
-        DobbyHook(onComplete_Hide_addr, reinterpret_cast<void *>(onComplete_Hide_hook), reinterpret_cast<void **>(&onComplete_Hide_orig));
+        DobbyHook(onComplete_Hide_addr, reinterpret_cast<void *>(onComplete_Hide_hook),
+                  reinterpret_cast<void **>(&onComplete_Hide_orig));
     }
     if (!g_hide_now_loading) {
-        reinterpret_cast<decltype(NowLoading_Hide2_hook) *>(NowLoading_Hide2_orig)(thisObj, onComplete, overrideDuration, easeType);
+        reinterpret_cast<decltype(NowLoading_Hide2_hook) *>(NowLoading_Hide2_orig)(thisObj,
+                                                                                   onComplete,
+                                                                                   overrideDuration,
+                                                                                   easeType);
     }
     if (onComplete) {
         thread timeoutThread([onComplete]() {
@@ -2115,7 +2158,8 @@ void NowLoading_Hide2_hook(Il2CppObject *thisObj, Il2CppDelegate *onComplete,
             if (!onCompleteCalled_Hide) {
                 LOGI("NowLoading::Hide: onCompleteCalled not changed, calling onComplete manually...");
                 auto thread = il2cpp_thread_attach(il2cpp_domain_get());
-                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Hide_addr)(onComplete->target);
+                reinterpret_cast<void (*)(Il2CppObject *)>(onComplete_Hide_addr)(
+                        onComplete->target);
                 il2cpp_thread_detach(thread);
             } else {
                 DobbyDestroy(onComplete_Hide_addr);
@@ -2173,7 +2217,8 @@ Il2CppObject *(*MovieManager_GetMovieInfo)(Il2CppObject *thisObj, MoviePlayerHan
 
 void *MovieManager_SetImageUvRect_orig = nullptr;
 
-void MovieManager_SetImageUvRect_hook(Il2CppObject *thisObj, MoviePlayerHandle playerHandle, Rect_t uv) {
+void
+MovieManager_SetImageUvRect_hook(Il2CppObject *thisObj, MoviePlayerHandle playerHandle, Rect_t uv) {
     auto movieInfo = MovieManager_GetMovieInfo(thisObj, playerHandle);
     auto widthField = il2cpp_class_get_field_from_name(movieInfo->klass, "width");
     auto heightField = il2cpp_class_get_field_from_name(movieInfo->klass, "height");
@@ -2183,7 +2228,8 @@ void MovieManager_SetImageUvRect_hook(Il2CppObject *thisObj, MoviePlayerHandle p
     if (movieWidth < movieHeight) {
         auto width = static_cast<float>(Screen_get_width());
         auto height = static_cast<float>(Screen_get_height());
-        if (roundf(1080 / (max(1.0f, height / 1080.f) * g_force_landscape_ui_scale)) == static_cast<float>(uv.y)) {
+        if (roundf(1080 / (max(1.0f, height / 1080.f) * g_force_landscape_ui_scale)) ==
+            static_cast<float>(uv.y)) {
             uv.y = static_cast<short>(width);
         }
         uv.x = static_cast<short>(height);

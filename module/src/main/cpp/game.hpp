@@ -88,28 +88,32 @@ namespace Game {
     static Region CheckPackageNameByDataPath() {
         if (access(
                 std::string("/data/data/")
-                        .append(GetPackageNameByGameRegionAndGameStore(Region::JAP, Store::Google)).append(
+                        .append(GetPackageNameByGameRegionAndGameStore(Region::JAP,
+                                                                       Store::Google)).append(
                         "/cache").data(),
                 F_OK) == 0) {
             return Region::JAP;
         }
         if (access(
                 std::string("/data/data/")
-                        .append(GetPackageNameByGameRegionAndGameStore(Region::KOR, Store::Google)).append(
+                        .append(GetPackageNameByGameRegionAndGameStore(Region::KOR,
+                                                                       Store::Google)).append(
                         "/cache").data(),
                 F_OK) == 0) {
             return Region::KOR;
         }
         if (access(
                 std::string("/data/data/")
-                        .append(GetPackageNameByGameRegionAndGameStore(Region::TWN, Store::Google)).append(
+                        .append(GetPackageNameByGameRegionAndGameStore(Region::TWN,
+                                                                       Store::Google)).append(
                         "/cache").data(),
                 F_OK) == 0) {
             return Region::TWN;
         }
         if (access(
                 std::string("/data/data/")
-                        .append(GetPackageNameByGameRegionAndGameStore(Region::TWN, Store::Other)).append(
+                        .append(GetPackageNameByGameRegionAndGameStore(Region::TWN,
+                                                                       Store::Other)).append(
                         "/cache").data(),
                 F_OK) == 0) {
             currentGameStore = Store::Other;

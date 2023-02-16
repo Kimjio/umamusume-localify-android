@@ -10,20 +10,20 @@
 
 #undef DO_API
 
-namespace il2cpp_symbols
-{
-    void init(Il2CppDomain* domain);
+namespace il2cpp_symbols {
+    void init(Il2CppDomain *domain);
 
-    Il2CppClass* get_class(const char* assemblyName, const char* namespaze, const char* klassName);
+    Il2CppClass *get_class(const char *assemblyName, const char *namespaze, const char *klassName);
 
-    Il2CppMethodPointer get_method_pointer(const char* assemblyName, const char* namespaze,
-                                 const char* klassName, const char* name, int argsCount);
+    Il2CppMethodPointer get_method_pointer(const char *assemblyName, const char *namespaze,
+                                           const char *klassName, const char *name, int argsCount);
 
-    const MethodInfo* get_method(const char* assemblyName, const char* namespaze,
-                           const char* klassName, const char* name, int argsCount);
+    const MethodInfo *get_method(const char *assemblyName, const char *namespaze,
+                                 const char *klassName, const char *name, int argsCount);
 
-    Il2CppMethodPointer find_method(const char* assemblyName, const char* namespaze,
-                          const char* klassName, const std::function<bool(const MethodInfo*)>& predict);
+    Il2CppMethodPointer find_method(const char *assemblyName, const char *namespaze,
+                                    const char *klassName,
+                                    const std::function<bool(const MethodInfo *)> &predict);
 }
 
 #endif //UMAMUSUMELOCALIFYANDROID_IL2CPP_SYMBOLS_H

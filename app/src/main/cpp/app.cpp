@@ -4,7 +4,7 @@
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_kimjio_umamusumelocalify_settings_ModuleUtils_getModuleVersion(
-        JNIEnv* env,
+        JNIEnv *env,
         jclass /* this class */) {
     char nativeBridge[PROP_VALUE_MAX];
     __system_property_get("ro.com.kimjio.umamusumelocalify.version", nativeBridge);

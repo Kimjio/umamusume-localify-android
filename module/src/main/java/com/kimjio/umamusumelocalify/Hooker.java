@@ -25,21 +25,6 @@ public final class Hooker {
     private Method replacement;
     private Object owner = null;
 
-    @SuppressWarnings("JavaJniMissingFunction")
-    private native Method doHook(Member original, Method callback);
-
-    @SuppressWarnings("JavaJniMissingFunction")
-    private native boolean doUnhook(Member target);
-
-    public Object callback(Object[] args) throws InvocationTargetException, IllegalAccessException {
-        MethodCallback methodCallback = new MethodCallback(backup, args);
-        return replacement.invoke(owner, methodCallback);
-    }
-
-    public boolean unhook() {
-        return doUnhook(target);
-    }
-
     public static Hooker hook(Member target, Method replacement, Object owner) {
         Hooker hooker = new Hooker();
         try {
@@ -53,6 +38,29 @@ public final class Hooker {
         } catch (NoSuchMethodException ignored) {
         }
         return hooker;
+    }
+
+    public static void load() throws NoSuchMethodException, SecurityException {
+        Hooker.hook(
+                Notification.Builder.class.getDeclaredMethod("build"),
+                Hooker.class.getDeclaredMethod("build", MethodCallback.class),
+                new Hooker());
+        Log.i(TAG, "Notification$Builder.build() hooked");
+    }
+
+    @SuppressWarnings("JavaJniMissingFunction")
+    private native Method doHook(Member original, Method callback);
+
+    @SuppressWarnings("JavaJniMissingFunction")
+    private native boolean doUnhook(Member target);
+
+    public Object callback(Object[] args) throws InvocationTargetException, IllegalAccessException {
+        MethodCallback methodCallback = new MethodCallback(backup, args);
+        return replacement.invoke(owner, methodCallback);
+    }
+
+    public boolean unhook() {
+        return doUnhook(target);
     }
 
     Notification build(MethodCallback callback) throws InvocationTargetException, IllegalAccessException {
@@ -104,13 +112,5 @@ public final class Hooker {
         } catch (Resources.NotFoundException e) {
             return 0;
         }
-    }
-
-    public static void load() throws NoSuchMethodException, SecurityException {
-        Hooker.hook(
-                Notification.Builder.class.getDeclaredMethod("build"),
-                Hooker.class.getDeclaredMethod("build", MethodCallback.class),
-                new Hooker());
-        Log.i(TAG, "Notification$Builder.build() hooked");
     }
 }

@@ -35,23 +35,25 @@ namespace SandHook {
 
         ElfImg(std::string_view elf);
 
-        template<typename T = void*>
+        template<typename T = void *>
         requires(std::is_pointer_v<T>)
         constexpr const T getSymbAddress(std::string_view name) const {
             auto offset = getSymbOffset(name, GnuHash(name), ElfHash(name));
             if (offset > 0 && base != nullptr) {
-                return reinterpret_cast<T>(static_cast<ElfW(Addr)>((uintptr_t) base + offset - bias));
+                return reinterpret_cast<T>(static_cast<ElfW(Addr)>((uintptr_t) base + offset -
+                                                                   bias));
             } else {
                 return nullptr;
             }
         }
 
-        template<typename T = void*>
+        template<typename T = void *>
         requires(std::is_pointer_v<T>)
         constexpr const T getSymbPrefixFirstOffset(std::string_view prefix) const {
             auto offset = PrefixLookupFirst(prefix);
             if (offset > 0 && base != nullptr) {
-                return reinterpret_cast<T>(static_cast<ElfW(Addr)>((uintptr_t) base + offset - bias));
+                return reinterpret_cast<T>(static_cast<ElfW(Addr)>((uintptr_t) base + offset -
+                                                                   bias));
             } else {
                 return nullptr;
             }

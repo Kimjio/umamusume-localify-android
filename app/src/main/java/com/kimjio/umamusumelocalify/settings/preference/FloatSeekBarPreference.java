@@ -27,50 +27,13 @@ public class FloatSeekBarPreference extends Preference {
     float mSeekBarValue;
     @SuppressWarnings("WeakerAccess")
     float mMin;
-    private float mMax;
-    private float mSeekBarIncrement;
     @SuppressWarnings("WeakerAccess")
     boolean mTrackingTouch;
     @SuppressWarnings("WeakerAccess")
     SeekBar mSeekBar;
-    private TextView mSeekBarValueTextView;
     // Whether the SeekBar should respond to the left/right keys
     @SuppressWarnings("WeakerAccess")
     boolean mAdjustable;
-    // Whether to show the SeekBar value TextView next to the bar
-    private boolean mShowSeekBarValue;
-    // Whether the SeekBarPreference should continuously save the Seekbar value while it is being
-    // dragged.
-    @SuppressWarnings("WeakerAccess")
-    boolean mUpdatesContinuously;
-    /**
-     * Listener reacting to the {@link SeekBar} changing value by the user
-     */
-    private final SeekBar.OnSeekBarChangeListener mSeekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
-        @Override
-        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            if (fromUser && (mUpdatesContinuously || !mTrackingTouch)) {
-                syncValueInternal(seekBar);
-            } else {
-                // We always want to update the text while the seekbar is being dragged
-                updateLabelValue(Math.max(progress * mSeekBarIncrement + mMin, mMin));
-            }
-        }
-
-        @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
-            mTrackingTouch = true;
-        }
-
-        @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
-            mTrackingTouch = false;
-            if (seekBar.getProgress() * mSeekBarIncrement + mMin != mSeekBarValue) {
-                syncValueInternal(seekBar);
-            }
-        }
-    };
-
     /**
      * Listener reacting to the user pressing DPAD left/right keys if {@code
      * adjustable} attribute is set to true; it transfers the key presses to the {@link SeekBar}
@@ -102,6 +65,42 @@ public class FloatSeekBarPreference extends Preference {
             return mSeekBar.onKeyDown(keyCode, event);
         }
     };
+    // Whether the SeekBarPreference should continuously save the Seekbar value while it is being
+    // dragged.
+    @SuppressWarnings("WeakerAccess")
+    boolean mUpdatesContinuously;
+    private float mMax;
+    private float mSeekBarIncrement;
+    private TextView mSeekBarValueTextView;
+    /**
+     * Listener reacting to the {@link SeekBar} changing value by the user
+     */
+    private final SeekBar.OnSeekBarChangeListener mSeekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (fromUser && (mUpdatesContinuously || !mTrackingTouch)) {
+                syncValueInternal(seekBar);
+            } else {
+                // We always want to update the text while the seekbar is being dragged
+                updateLabelValue(Math.max(progress * mSeekBarIncrement + mMin, mMin));
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            mTrackingTouch = true;
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            mTrackingTouch = false;
+            if (seekBar.getProgress() * mSeekBarIncrement + mMin != mSeekBarValue) {
+                syncValueInternal(seekBar);
+            }
+        }
+    };
+    // Whether to show the SeekBar value TextView next to the bar
+    private boolean mShowSeekBarValue;
 
     public FloatSeekBarPreference(
             @NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr,
