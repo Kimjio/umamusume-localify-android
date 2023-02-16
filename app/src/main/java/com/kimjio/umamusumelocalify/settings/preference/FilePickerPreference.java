@@ -32,12 +32,12 @@ public class FilePickerPreference extends Preference implements IActivityResultP
     public FilePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         setSummaryProvider(SimpleSummaryProvider.getInstance());
-        try (TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.FilePickerPreference, defStyleAttr, defStyleRes)) {
-            mMimeType = a.getString(R.styleable.FilePickerPreference_android_mimeType);
-            if (mMimeType == null) {
-                mMimeType = MIME_OCTET_STREAM;
-            }
+        final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.FilePickerPreference, defStyleAttr, defStyleRes);
+        mMimeType = a.getString(R.styleable.FilePickerPreference_android_mimeType);
+        if (mMimeType == null) {
+            mMimeType = MIME_OCTET_STREAM;
         }
+        a.recycle();
     }
 
     public FilePickerPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
