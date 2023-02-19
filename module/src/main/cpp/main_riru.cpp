@@ -68,7 +68,7 @@ static void specializeAppProcessPost(
         JNIEnv *env, jclass clazz) {
     // Called "after" com_android_internal_os_Zygote_nativeSpecializeAppProcess in frameworks/base/core/jni/com_android_internal_os_Zygote.cpp
     if (enable_hack/*  || enable_settings_hack */) {
-        if (enable_hack && Game::currentGameRegion == Game::Region::KOR) {
+        /*if (enable_hack && Game::currentGameRegion == Game::Region::KOR) {
             SandHook::ElfImg art("libart.so");
             lsplant::InitInfo initInfo{
                     .inline_hooker = InlineHooker,
@@ -86,7 +86,7 @@ static void specializeAppProcessPost(
                         classesDex->base, classesDex->length
                 );
             }
-        }
+        }*/
         int ret;
         pthread_t ntid;
         if ((ret = pthread_create(&ntid, nullptr,

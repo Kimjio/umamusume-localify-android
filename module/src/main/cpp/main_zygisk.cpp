@@ -110,7 +110,7 @@ public:
 
     void postAppSpecialize(const AppSpecializeArgs *args) override {
         if (enable_hack /* || enable_settings_hack */) {
-            if (enable_hack && Game::currentGameRegion == Game::Region::KOR) {
+            /*if (enable_hack && Game::currentGameRegion == Game::Region::KOR) {
                 SandHook::ElfImg art("libart.so");
                 lsplant::InitInfo initInfo{
                         .inline_hooker = InlineHooker,
@@ -128,7 +128,7 @@ public:
                             classesDex->base, classesDex->length
                     );
                 }
-            }
+            }*/
             int ret;
             pthread_t ntid;
             if ((ret = pthread_create(&ntid, nullptr,
