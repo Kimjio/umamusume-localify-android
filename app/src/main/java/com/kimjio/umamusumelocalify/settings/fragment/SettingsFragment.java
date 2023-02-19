@@ -91,7 +91,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         dataStore.putBoolean(restoreNotificationPreference.getKey(), Constants.PKG_KOR.equals(packageName));*/
 
         String moduleVersion = ModuleUtils.getModuleVersion();
-        if (moduleVersion != null) {
+        if (moduleVersion != null && !moduleVersion.isBlank()) {
             Preference versionPreference = Objects.requireNonNull(findPreference("version"));
             versionPreference.setSummary(moduleVersion);
         }

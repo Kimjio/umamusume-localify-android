@@ -149,6 +149,12 @@
             android:defaultValue="false"
             android:key="hideNowLoading"
             android:title="@string/pref_hide_loading_screen" />
+
+        <SwitchPreference
+            android:icon="@drawable/ic_caption"
+            android:defaultValue="false"
+            android:key="characterSystemTextCaption"
+            android:title="@string/pref_character_system_text_caption" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_cate_etc">
