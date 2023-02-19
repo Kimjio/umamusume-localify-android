@@ -1,5 +1,5 @@
 ﻿# umamusume-localify-android
-Android port of [umamusume-localify](https://github.com/GEEKiDoS/umamusume-localify)
+[umamusume-localify](https://github.com/GEEKiDoS/umamusume-localify) のAndroid移植版です。
 
 [韓国語](README.ko-KR.md)
 
