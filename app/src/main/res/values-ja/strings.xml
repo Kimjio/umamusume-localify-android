@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Localify Settings</string>
+  <string name="error">エラー</string>
+  <string name="error_readonly">Android 13以降から設定ファイルの外部からの挿入は読み込みのみになりました。\n設定ファイルを削除後に再度アプリを起動してください。</string>
+  <string name="manage_translate">翻訳の管理</string>
+  <string name="perm_required">許可が必要です</string>
+  <string name="perm_required_message">設定ファイルの作成、編集にはデータフォルダのアクセス権限が必要です。</string>
+  <string name="prem_required_message_simple">データフォルダのアクセス権限が必要です。</string>
+  <string name="error_wrong_path">正しいフォルダを選択してください。</string>
+  <string name="support_version">対応バージョン: %1$s.*</string>
+  <string name="error_file_not_in_data_folder">データフォルダ内のファイルのみ追加ができます。</string>
+  <string name="error_is_config">設定ファイルを追加できません。</string>
+  <string name="add_files">ファイルを追加</string>
+  <string name="error_is_data_root_folder">サブフォルダのみ設定ができます。</string>
+  <string name="error_folder_not_in_data_folder">データフォルダ内のフォルダのみ選択ができます。</string>
+  <string name="restart_app">アプリを再起動</string>
+  <string name="files_empty">ファイルは追加されていません。</string>
+  <string name="unknown">不明</string>
+  <string name="error_occurred">エラーが発生しました</string>
+  <string name="no_apps">アプリがインストールされていません。</string>
+</resources>
