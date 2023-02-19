@@ -20,42 +20,42 @@ jsonファイルを編集せずに設定可能なアプリを作りました。
 
 になります。
 
-## Config
-- `enableLogger` Outputs an unoverwritten string to `data.txt` (`true` / `false`, Default: `false`)
-- `dumpStaticEntries` Outputs a hard-coded string to `data.txt` (`true` / `false`, Default: `false`)
-  - `enableLogger` must be enabled.
-- `dumpDbEntries` Outputs DB data to `original_data/` (`true` / `false`, Default: `false`)
-- `maxFps` Max FPS settings (`-1` = Default / `0` = Unlimited / `n > 0` = Limit to n, Default: `-1`)
-- `uiAnimationScale` Change UI animation scale (0 < ~, Default: `1`)
-  - Caution: Soft lock occurs when set to `0`.
-- `uiUseSystemResolution` Renders UI, live subtitles, and more at system resolution. (`true` / `false`, Default: `false`)
-- `replaceToBuiltinFont` (`replaceFont`) Use Unity builtin fonts instead of in-game fonts. (`true` / `false`, Default: `false`)
-- `replaceToCustomFont` Use custom fonts instead of in-game fonts. (`true` / `false`, Default: `false`)
-- `fontAssetBundlePath` Font asset bundle path (ex: `custom_font/GyeonggiTitle_Medium/font`)
-- `fontAssetName` Font asset name (ex: `GyeonggiTitle_Medium.fontsettings`)
-- `graphicsQuality` Change predefined graphics settings. (`-1` ~ `4`, Default: `-1`)
-  - `-1`: Follow the App's choice
-  - `0`: `Toon1280`, MSAA OFF
-  - `1`: `Toon1280x2`, MSAA x2
-  - `2`: `Toon1280x4`, MSAA x4
-  - `3`: `ToonFull`, MSAA x8
-- `antiAliasing` Change MSAA settings (`-1`, `0`, `2`, `4`, `8`, Default: `-1`)
-  - `-1`: Follow the Graphics settings
-  - `0`: MSAA OFF
-  - `2`: MSAA x2
-  - `4`: MSAA x4
-  - `8`: MSAA x8
-- `forceLandscape` Force all screens to landscape. (`true` / `false`, Default: `false`)
-- `forceLandscapeUiScale` Sets the UI scale to use for forced landscape mode. (0 < ~, Default: `1.8`)
-- `uiLoadingShowOrientationGuide` Set whether to display the loading guide when the screen is rotated (`true` / `false`, Default: `true`)
-- `replaceAssetsPath` Set the path to the folder containing the assets to replace the downloaded assets in the game.
-  - The name of the asset file to be replaced must be the same as the hash name of the original asset file.
-  - ex: `2FOXNDZ5H52B3E4JMXVAJ4FRMDE3PX7Q` (Asset containing the Home footer texture and scripts (Android))
-- `dicts` Translation file list (List of translation file paths since `/sdcard/Android/data/jp.co.cygames.umamusume/`)
+## 設定
+- `enableLogger` 書き換えられていない文字列を`data.txt`に出力します。 (`true` / `false` デフォルト: `false`)
+- `dumpStaticEntries` `data.txt`にハードコードされた文字列を出力します。 (`true` / `false` デフォルト: `false`)
+  - `enableLogger`を有効化する必要があります。
+- `dumpDbEntries` DBのデータを`original_data/`に出力します。 (`true` / `false` デフォルト: `false`)
+- `maxFps` 最大のFPS値を設定します。 (`-1` = デフォルト / `0` = 無制限 / `n > 0` = 指定した値に制限 デフォルト: `-1`)
+- `uiAnimationScale` UIアニメーションスケールの変更をします。 (0 < ~ デフォルト: `1`)
+  - 注意: `0`に設定をするとソフトロックがかかります。
+- `uiUseSystemResolution` システムの解像度でUIをレンダリングします。 (`true` / `false` デフォルト: `false`)
+- `replaceToBuiltinFont` (`replaceFont`) ゲーム内のフォントではなくUnityの内蔵フォントを使用します。 (`true` / `false` デフォルト: `false`)
+- `replaceToCustomFont` ゲーム内のフォントをカスタムフォントに変更します。 (`true` / `false` デフォルト: `false`)
+- `fontAssetBundlePath` フォントアセットバンドルパスを指定します。 (例: `custom_font/GyeonggiTitle_Medium/font`)
+- `fontAssetName` フォントアセット名 (例: `GyeonggiTitle_Medium.fontsettings`)
+- `graphicsQuality` あらかじめ設定されているグラフィック設定を変更します。 (`-1` ~ `4` デフォルト: `-1`)
+  - `-1`: アプリの設定に従う
+  - `0`: `Toon1280`、アンチエイリアシング オフ
+  - `1`: `Toon1280x2`、アンチエイリアシング x2
+  - `2`: `Toon1280x4`、アンチエイリアシング x4
+  - `3`: `ToonFull`、アンチエイリアシング x8
+- `antiAliasing` アンチエイリアシングの設定を変更します。 (`-1`、 `0`、 `2`、 `4`、 `8` デフォルト: `-1`)
+  - `-1`: グラフィックの設定に従う
+  - `0`: アンチエイリアシング OFF
+  - `2`: アンチエイリアシング x2
+  - `4`: アンチエイリアシング x4
+  - `8`: アンチエイリアシング x8
+- `forceLandscape` すべての画面表示を強制的に横にします。 (`true` / `false` デフォルト: `false`)
+- `forceLandscapeUiScale` 強制横画面表示のUIスケールを設定します。 (0 < ~ デフォルト: `1.8`)
+- `uiLoadingShowOrientationGuide` 画面を回転させた時に「読み込み中」の表示をさせるか設定をします。 (`true` / `false` デフォルト: `true`)
+- `replaceAssetsPath` ダウンロードをしたアセットをゲーム内で置き換えるためのアセットが入ったフォルダを指定します。
+  - 置換をするアセットは元のアセットファイルと同じハッシュ名である必要があります。
+  - 例: `2FOXNDZ5H52B3E4JMXVAJ4FRMDE3PX7Q` (ホームフッターのテクスチャとスクリプトを含むアセット (Android))
+- `dicts` 翻訳ファイルリスト (翻訳ファイルのパス `/sdcard/Android/data/jp.co.cygames.umamusume/`)
 
-## Known issue
-When `maxFps` is set to unlimited, the frame of the game is played from 60 FPS to 30 FPS, which is halved. (Not a typical 30FPS)
+## 既知の問題
+`maxFps`を無制限にするとゲームのフレームレートが60FPSから30FPSになってしまう。 (一般的な30FPSではありません)
 
-## Build
-1. Download the source code
-2. Use Android Studio to run the gradle task `:module:assembleRelease` to compile, the zip package will be generated in the `out` folder
+## ビルド
+1. ソースコードをダウンロードします。
+2. Android Studioを使用し、gradle task `:module:assembleRelease`を実行しコンパイルをする事で`out`フォルダ内にzipファイルが生成されます。
