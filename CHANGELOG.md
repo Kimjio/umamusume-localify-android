@@ -1,3 +1,7 @@
+## 2.15.2
+
+- Enhanced NowLoading fallback logic
+
 ## 2.15.1
 
 - Fixed an issue where the resolution was incorrect when the screen was rotated from horizontal to vertical

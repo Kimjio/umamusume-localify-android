@@ -1,3 +1,11 @@
+## 1.4.2
+
+- Add character dialogue caption option
+
+## 1.4.1
+
+- Fixed error that occur under Android 12
+
 ## 1.4.0
 
 - Add various preferences
