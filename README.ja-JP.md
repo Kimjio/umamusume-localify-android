@@ -47,7 +47,7 @@ jsonファイルを編集せずに設定可能なアプリを作りました。
   - `8`: アンチエイリアシング x8
 - `forceLandscape` すべての画面表示を強制的に横にします。 (`true` / `false` デフォルト: `false`)
 - `forceLandscapeUiScale` 強制横画面表示のUIスケールを設定します。 (0 < ~ デフォルト: `1.8`)
-- `uiLoadingShowOrientationGuide` 画面を回転させた時に「読み込み中」の表示をさせるか設定をします。 (`true` / `false` デフォルト: `true`)
+- `uiLoadingShowOrientationGuide` 画面を回転させた時に「Now Loading」の表示をさせるか設定をします。 (`true` / `false` デフォルト: `true`)
 - `replaceAssetsPath` ダウンロードをしたアセットをゲーム内で置き換えるためのアセットが入ったフォルダを指定します。
   - 置換をするアセットは元のアセットファイルと同じハッシュ名である必要があります。
   - 例: `2FOXNDZ5H52B3E4JMXVAJ4FRMDE3PX7Q` (ホームフッターのテクスチャとスクリプトを含むアセット (Android))
