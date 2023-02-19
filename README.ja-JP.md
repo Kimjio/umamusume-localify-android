@@ -9,14 +9,16 @@ Android port of [umamusume-localify](https://github.com/GEEKiDoS/umamusume-local
 3. Magiskにumamusume-localify-androidのモジュールをインストールしてください。
 4. `config.json` ファイルを `/sdcard/android/data/jp.co.cygames.umamusume/` `dicts`に参照されている翻訳ファイルを配置します。
 ## 設定アプリ
-jsonファイルを編集せずに設定可能なアプリを作成しました。
+jsonファイルを編集せずに設定可能なアプリを作りました。
 
-インストールは [GitHubのリリース](https://github.com/Kimjio/umamusume-localify-android/releases) または [Playストア](https://play.google.com/store/apps/details?id=com.kimjio.umamusumelocalify.settings)からダウンロードができます
+[GitHubのリリース](https://github.com/Kimjio/umamusume-localify-android/releases)または[Playストア](https://play.google.com/store/apps/details?id=com.kimjio.umamusumelocalify.settings)からダウンロードができます。
 
-## Note
-Working directory is `/sdcard/Android/data/jp.co.cygames.umamusume/` 
+## 備考
+日本語版ウマ娘のディレクトリは `/sdcard/Android/data/jp.co.cygames.umamusume/`
 
-(Korean version is `/sdcard/Android/data/com.kakaogames.umamusume/`)
+(韓国語版ウマ娘のディレクトリは `/sdcard/Android/data/com.kakaogames.umamusume/`)
+
+になります。
 
 ## Config
 - `enableLogger` Outputs an unoverwritten string to `data.txt` (`true` / `false`, Default: `false`)
