@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string-array name="graphics_quality">
+    <item>アプリの設定に従う</item>
+    <item>Toon1280</item>
+    <item>Toon1280x2</item>
+    <item>Toon1280x4</item>
+    <item>ToonFull</item>
+  </string-array>
+  <string-array name="graphics_quality_value">
+    <item>-1</item>
+    <item>0</item>
+    <item>1</item>
+    <item>2</item>
+    <item>3</item>
+  </string-array>
+  <string-array name="anti_aliasing">
+    <item>グラフィック品質の設定に従う</item>
+    <item>オフ</item>
+    <item>x2</item>
+    <item>x4</item>
+    <item>x8</item>
+  </string-array>
+  <string-array name="anti_aliasing_value">
+    <item>-1</item>
+    <item>0</item>
+    <item>2</item>
+    <item>4</item>
+    <item>8</item>
+  </string-array>
+  <string-array name="cyspring_update_mode">
+    <item>自動</item>
+    <item>ModeNormal</item>
+    <item>Mode60FPS</item>
+    <item>SkipFrame</item>
+    <item>SkipFramePostAlways</item>
+  </string-array>
+  <string-array name="cyspring_update_mode_value">
+    <item>null</item>
+    <item>0</item>
+    <item>1</item>
+    <item>2</item>
+    <item>3</item>
+  </string-array>
+</resources>

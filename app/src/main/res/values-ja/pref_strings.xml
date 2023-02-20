@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Logger prefs -->
+  <string name="pref_cate_logger">ログの取得</string>
+  <string name="pref_enable_logger">ログの取得を有効化</string>
+  <string name="pref_dump_static_entries">静的エントリをダンプ</string>
+  <string name="pref_dump_db_entries">データベースのエントリをダンプ</string>
+  <!-- Graphics prefs -->
+  <string name="pref_cate_graphics">グラフィック</string>
+  <string name="pref_max_fps">最大FPS値</string>
+  <string name="pref_ui_animation_scale">UIアニメーションスケール</string>
+  <string name="pref_3d_resolution_scale">3Dレンダリングの解像度スケール</string>
+  <string name="pref_graphics_quality">グラフィックの品質</string>
+  <string name="pref_anti_aliasing">アンチエイリアシング</string>
+  <string name="pref_cyspring_update_mode">CySpringアップデートモード</string>
+  <!-- Screen prefs -->
+  <string name="pref_cate_screen">画面</string>
+  <string name="pref_use_system_resolution">システムの解像度を使用する</string>
+  <string name="pref_replace_builtin_font">内蔵フォントに置き換え</string>
+  <string name="pref_replace_custom_font">カスタムフォントに置き換え</string>
+  <string name="pref_font_asset_path">フォントのアセットバンドル</string>
+  <string name="pref_font_asset_name">フォントアセット名</string>
+  <string name="pref_tmpro_font_asset_name">TextMeshProフォントアセット名</string>
+  <string name="pref_force_landscape">横画面を強制</string>
+  <string name="pref_force_landscape_ui_scale">強制横画面のUIスケール</string>
+  <string name="pref_character_system_text_caption">キャラクターのダイアログテキストをキャプションで表示</string>
+  <!-- ETC prefs -->
+  <string name="pref_cate_etc">その他</string>
+  <string name="pref_replace_assets_path">置換をするアセットが含まれるフォルダ</string>
+  <string name="pref_replace_asset_bundle">アセットバンドルを置き換え</string>
+  <string name="pref_loading_show_orientation_guide">Now Loading...内の画面回転のガイドを表示</string>
+  <string name="pref_hide_loading_screen">Now Loading...の画面を非表示</string>
+  <string name="pref_module_version">モジュールのバージョン</string>
+  <string name="pref_restore_notification">通知を復元する</string>
+  <string name="pref_static_entries_use_hash">静的エントリにハッシュを使用する</string>
+  <string name="pref_static_entries_use_text_id">静的エントリにテキストIDを使用する</string>
+  <string name="pref_text_id_file">テキストIDファイル</string>
+</resources>
