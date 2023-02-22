@@ -21,6 +21,9 @@ namespace il2cpp_symbols {
     const MethodInfo *get_method(const char *assemblyName, const char *namespaze,
                                  const char *klassName, const char *name, int argsCount);
 
+    Il2CppClass *find_class(const char *assemblyName, const char *namespaze,
+                            const std::function<bool(Il2CppClass *)> &predict);
+
     Il2CppMethodPointer find_method(const char *assemblyName, const char *namespaze,
                                     const char *klassName,
                                     const std::function<bool(const MethodInfo *)> &predict);
