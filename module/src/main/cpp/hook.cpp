@@ -38,6 +38,7 @@ string g_replace_text_db_path;
 bool g_character_system_text_caption = false;
 int g_cyspring_update_mode = -1;
 bool g_hide_now_loading = false;
+std::string g_packet_notifier;
 
 string text_id_dict;
 
@@ -415,6 +416,10 @@ optional<vector<string>> read_config() {
 
                 dicts.emplace_back(dict);
             }
+        }
+
+        if(document.HasMember("packetNotifier")) {
+            g_packet_notifier = std::string(document["packetNotifier"].GetString());
         }
     }
 

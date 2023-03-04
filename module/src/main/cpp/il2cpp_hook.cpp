@@ -3,6 +3,7 @@
 #include "il2cpp/il2cpp_symbols.h"
 #include "localify/localify.h"
 #include "logger/logger.h"
+#include "notifier/notifier.h"
 #include <codecvt>
 #include <thread>
 #include <rapidjson/rapidjson.h>
@@ -2446,6 +2447,44 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
                      id);
 }
 
+void* DecompressResponse_BUMA_orig = nullptr;
+Il2CppArray* DecompressResponse_BUMA_hook(
+        Il2CppArray* responseData)
+{
+    Il2CppArray* ret = reinterpret_cast<decltype(DecompressResponse_BUMA_hook)*>(DecompressResponse_BUMA_orig)(
+            responseData);
+    char* buf = ((char*)ret) + kIl2CppSizeOfArray;
+    const std::string data(buf,ret->max_length);
+    if(!g_packet_notifier.empty()) {
+        auto notifier_thread = std::thread([&]()
+                {
+                    notifier::notify_response(data);
+                });
+        notifier_thread.join();
+    }
+    return ret;
+}
+
+void* LZ4_decompress_safe_ext_orig = nullptr;
+int LZ4_decompress_safe_ext_hook(
+        char* src,
+        char* dst,
+        int compressedSize,
+        int dstCapacity)
+{
+    const int ret = reinterpret_cast<decltype(LZ4_decompress_safe_ext_hook)*>(LZ4_decompress_safe_ext_orig)(
+            src, dst, compressedSize, dstCapacity);
+    const std::string data(dst, ret);
+    if(!g_packet_notifier.empty()) {
+        auto notifier_thread = std::thread([&]()
+                {
+                    notifier::notify_response(data);
+                });
+        notifier_thread.join();
+    }
+    return ret;
+}
+
 void dump_all_entries() {
     vector<u16string> static_entries;
     vector<pair<const string, const u16string>> text_id_static_entries;
@@ -3337,6 +3376,21 @@ void hookMethods() {
 
     if (g_anti_aliasing != -1) {
         ADD_HOOK(set_anti_aliasing)
+    }
+
+    if(Game::currentGameRegion == Game::Region::TWN) {
+        auto DecompressResponse_BUMA_addr = il2cpp_symbols::get_method_pointer(
+                "umamusume.dll", "Gallop",
+                "HttpHelper", "DecompressResponse_BUMA", 1
+        );
+        ADD_HOOK(DecompressResponse_BUMA);
+    }
+    else if(Game::currentGameRegion == Game::Region::JAP) {
+        auto LZ4_decompress_safe_ext_addr = il2cpp_symbols::get_method_pointer(
+        	"LibNative.Runtime.dll", "LibNative.LZ4",
+        	"Plugin", "LZ4_decompress_safe_ext", 4
+        );
+        ADD_HOOK(LZ4_decompress_safe_ext);
     }
 
     LOGI("Unity Version: %s", GetUnityVersion().data());
