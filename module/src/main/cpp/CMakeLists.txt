@@ -26,6 +26,8 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/SQLiteCpp)
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/hmac_sha256)
 
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/httplib)
+
 include_directories(${CMAKE_CURRENT_LIST_DIR}/LSPlant/lsplant/src/main/jni/include)
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/LSPlant/lsplant/src/main/jni)
@@ -62,15 +64,15 @@ target_compile_definitions(sqlite3 PUBLIC SQLITE_USE_URI=1)
 
 if (${API} STREQUAL "zygisk")
     add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp jwt/jwt.cpp logger/logger.cpp notifier/notifier.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
-    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static hmac_sha256)
+    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static hmac_sha256 httplib)
 elseif (${API} STREQUAL "riru")
     find_package(riru REQUIRED CONFIG)
 
     add_library(${MODULE_NAME} SHARED main_riru.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp jwt/jwt.cpp logger/logger.cpp notifier/notifier.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
-    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static hmac_sha256 riru::riru)
+    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static hmac_sha256 httplib riru::riru)
 else ()
     add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp jwt/jwt.cpp logger/logger.cpp notifier/notifier.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
-    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static hmac_sha256)
+    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static hmac_sha256 httplib)
 endif ()
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

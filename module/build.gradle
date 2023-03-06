@@ -165,7 +165,7 @@ afterEvaluate {
                     def buildToolVersion = project.android.buildToolsVersion;
                     exec {
                         workingDir "$buildDir/intermediates/javac/$variantLowered"
-                        commandLine "$sdkDir/build-tools/$buildToolVersion/d8",
+                        commandLine "$sdkDir/build-tools/$buildToolVersion/d8${System.properties['os.name'].toLowerCase().contains('windows'.toLowerCase()) ? ".bat" : ''}",
                                 "$buildDir/intermediates/javac/$variantLowered/classes/com/kimjio/umamusumelocalify/Hooker.class",
                                 "$buildDir/intermediates/javac/$variantLowered/classes/com/kimjio/umamusumelocalify/MethodCallback.class"
                     }

@@ -13,3 +13,6 @@
 [submodule "module/src/main/cpp/hmac_sha256"]
 	path = module/src/main/cpp/hmac_sha256
 	url = https://github.com/h5p9sl/hmac_sha256.git
+[submodule "module/src/main/cpp/httplib"]
+	path = module/src/main/cpp/httplib
+	url = https://github.com/yhirose/cpp-httplib.git
