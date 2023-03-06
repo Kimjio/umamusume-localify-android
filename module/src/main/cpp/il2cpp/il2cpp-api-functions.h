@@ -58,11 +58,11 @@ DO_API(int, il2cpp_array_element_size, const Il2CppClass *array_class);
 
 char *il2cpp_array_addr_with_size(Il2CppArray *array, int32_t size, uintptr_t idx);
 
-#define il2cpp_array_addr(array, type, index) ((type*)(void*) il2cpp_array_addr_with_size (array, sizeof (type), index))
-#define il2cpp_array_get(array, type, index) ( *(type*)il2cpp_array_addr ((array), type, (index)) )
+#define il2cpp_array_addr(array, type, index) static_cast<type *>(static_cast<void *>(il2cpp_array_addr_with_size (array, sizeof (type), index)))
+#define il2cpp_array_get(array, type, index) ( *static_cast<type *>(il2cpp_array_addr ((array), type, (index))) )
 #define il2cpp_array_set(array, type, index, value)    \
     do {    \
-        type *__p = (type *) il2cpp_array_addr ((array), type, (index));    \
+        auto __p = il2cpp_array_addr ((array), type, (index));    \
         *__p = (value); \
     } while (0)
 
@@ -488,7 +488,7 @@ DO_API(const MethodInfo*, il2cpp_image_get_entry_point, const Il2CppImage *image
 
 DO_API(size_t, il2cpp_image_get_class_count, const Il2CppImage *image);
 
-DO_API(const Il2CppClass*, il2cpp_image_get_class, const Il2CppImage *image, size_t index);
+DO_API(Il2CppClass*, il2cpp_image_get_class, const Il2CppImage *image, size_t index);
 
 // Memory information
 DO_API(Il2CppManagedMemorySnapshot*, il2cpp_capture_memory_snapshot,);

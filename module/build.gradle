@@ -116,7 +116,7 @@ afterEvaluate {
             from(templatePath) {
                 include 'system.prop'
                 expand([
-                        version    : moduleVersion,
+                        version: moduleVersion,
                 ])
                 filter(FixCrLfFilter.class,
                         eol: FixCrLfFilter.CrLf.newInstance("lf"))
@@ -167,7 +167,7 @@ afterEvaluate {
                         workingDir "$buildDir/intermediates/javac/$variantLowered"
                         commandLine "$sdkDir/build-tools/$buildToolVersion/d8",
                                 "$buildDir/intermediates/javac/$variantLowered/classes/com/kimjio/umamusumelocalify/Hooker.class",
-                            "$buildDir/intermediates/javac/$variantLowered/classes/com/kimjio/umamusumelocalify/MethodCallback.class"
+                                "$buildDir/intermediates/javac/$variantLowered/classes/com/kimjio/umamusumelocalify/MethodCallback.class"
                     }
                 }
             }

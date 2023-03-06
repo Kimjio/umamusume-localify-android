@@ -10,3 +10,6 @@
 [submodule "module/src/main/cpp/LSPlant"]
 	path = module/src/main/cpp/LSPlant
 	url = https://github.com/LSPosed/LSPlant.git
+[submodule "module/src/main/cpp/hmac_sha256"]
+	path = module/src/main/cpp/hmac_sha256
+	url = https://github.com/h5p9sl/hmac_sha256.git

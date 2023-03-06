@@ -5,9 +5,9 @@
 
 ## 사용법
 1. v24 이상의 [Magisk](https://github.com/topjohnwu/Magisk) 설치 후 Zygisk 를 활성화합니다.
-2. SafetyNet을 우회하기 위해 [Shamiko](https://github.com/LSPosed/LSPosed.github.io/releases)를 설치합니다. (DenyList 활성화 시 모듈이 동작하지 않습니다.)
-2. Magisk 에서 모듈을 설치합니다.
-3. `/sdcard/Android/data/jp.co.cygames.umamusume/` 에 `config.json` 파일, `dicts` 에서 참조하는 번역 파일을 넣습니다.
+2. (선택사항, 한국어판만 해당) Frida를 사용하기 위해 [Shamiko](https://github.com/LSPosed/LSPosed.github.io/releases)를 설치하여 DroidX의 코드 삽입 방지를 우회합니다.
+3. Magisk 에서 모듈을 설치합니다.
+4. `/sdcard/Android/data/jp.co.cygames.umamusume/` 에 `config.json` 파일, `dicts` 에서 참조하는 번역 파일을 넣습니다.
 
 ## 설정 앱
 json 파일을 직접 수정하지 않고도 설정을 변경할 수 있는 앱을 만들었습니다.

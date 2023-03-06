@@ -5,12 +5,12 @@ Android port of [umamusume-localify](https://github.com/GEEKiDoS/umamusume-local
 
 ## How to use
 1. Install [Magisk](https://github.com/topjohnwu/Magisk) v24 or later and enable Zygisk
-2. Install [Shamiko](https://github.com/LSPosed/LSPosed.github.io/releases) for bypass SafetyNet (Module not work when DenyList is enabled.)
+2. (Optional, Korean version only) Install [Shamiko](https://github.com/LSPosed/LSPosed.github.io/releases) for bypass DroidX's code injection block to use Frida
 3. Install module in Magisk
 4. Put the `config.json` file in `/sdcard/android/data/jp.co.cygames.umamusume/` and the translation file referenced in `dicts`.
 
 ## Settings App
-I made an app that allows you to change settings without directly modifying the json file.
+Created an app that allows you to change settings without directly modifying the JSON file.
 
 You can install it from the [GitHub Releases](https://github.com/Kimjio/umamusume-localify-android/releases) or [Play Store](https://play.google.com/store/apps/details?id=com.kimjio.umamusumelocalify.settings)
 

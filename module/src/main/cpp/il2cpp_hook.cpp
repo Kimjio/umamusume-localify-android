@@ -11,25 +11,85 @@
 #include <sstream>
 #include <regex>
 #include <SQLiteCpp/SQLiteCpp.h>
+#include "jwt/jwt.hpp"
+
+#include <list>
+
+struct HookInfo {
+    string image;
+    string namespace_;
+    string clazz;
+    string method;
+    int paramCount;
+    void *address;
+    void *replace;
+    void **orig;
+    function<bool(const MethodInfo *)> predict;
+};
+
+list<HookInfo> hookList;
+
+#define HOOK_METHOD(image_, namespaceName, className, method_, paramCount_, ret, fn, ...) \
+  void* addr_##className##_##method_;                                                     \
+  ret (*orig_##className##_##method_)(__VA_ARGS__);                                       \
+  ret new_##className##_##method_(__VA_ARGS__)fn                                          \
+  HookInfo hookInfo_##className##_##method_ = []{ /* NOLINT(cert-err58-cpp) */            \
+  auto info = HookInfo{                                                                   \
+    .image = image_,                                                                      \
+    .namespace_ = namespaceName,                                                          \
+    .clazz = #className,                                                                  \
+    .method = #method_,                                                                   \
+    .paramCount = paramCount_,                                                            \
+    .replace = reinterpret_cast<void *>(new_##className##_##method_)                      \
+  };                                                                                      \
+  hookList.emplace_back(info);                                                            \
+  return info;                                                                            \
+  }();
+
+#define FIND_HOOK_METHOD(image_, namespaceName, className, method_, predictFn, ret, fn, ...) \
+  void* addr_##className##_##method_;                                                        \
+  ret (*orig_##className##_##method_)(__VA_ARGS__);                                          \
+  ret new_##className##_##method_(__VA_ARGS__)fn                                             \
+  HookInfo hookInfo_##className##_##method_ = []{ /* NOLINT(cert-err58-cpp) */               \
+  auto info = HookInfo{                                                                      \
+    .image = image_,                                                                         \
+    .namespace_ = namespaceName,                                                             \
+    .clazz = #className,                                                                     \
+    .method = #method_,                                                                      \
+    .replace = reinterpret_cast<void *>(new_##className##_##method_),                        \
+    .predict = predictFn                                                                     \
+  };                                                                                         \
+  hookList.emplace_back(info);                                                               \
+  return info;                                                                               \
+  }();
 
 using namespace il2cpp_symbols;
 using namespace localify;
 using namespace logger;
 
-string GotoTitleError =
-        "내부적으로 오류가 발생하여 홈으로 이동합니다.\n\n"
-        "경우에 따라서 <color=#ff911c><i>타이틀</i></color>로 돌아가거나, \n"
-        "게임 <color=#ff911c><i>다시 시작</i></color>이 필요할 수 있습니다.";
+const auto WebViewInitScript = R"(
+window.onclick = () => { location.href = 'unity:snd_sfx_UI_decide_m_01'; };
+const zoom = (window.innerWidth || window.screen.width) / 528;
+let { viewport } = document.head.getElementsByTagName('meta');
+if (!viewport) {
+    viewport = document.createElement('meta');
+    viewport.name = 'viewport';
+    document.head.appendChild(viewport);
+}
+viewport.content = `width=device-width, initial-scale=${zoom}, user-scalable=no`;
+)";
 
-string GotoTitleErrorJa =
-        "内部的にエラーが発生し、ホームに移動します。\n\n"
-        "場合によっては、<color=#ff911c><i>タイトル</i></color>に戻るか、\n"
-        "ゲーム<color=#ff911c><i>再起動</i></color>が必要になる場合がありますあります。";
+const auto GotoTitleError = "내부적으로 오류가 발생하여 홈으로 이동합니다.\n\n"
+                              "경우에 따라서 <color=#ff911c><i>타이틀</i></color>로 돌아가거나, \n"
+                              "게임 <color=#ff911c><i>다시 시작</i></color>이 필요할 수 있습니다."s;
 
-string GotoTitleErrorHan =
-        "內部發生錯誤，移動到主頁。\n\n"
-        "在某些情況下，可能需要返回<color=#ff911c><i>標題</i></color>に戻るか，\n"
-        "或者遊戲<color=#ff911c><i>重新開始</i></color>。";
+const auto GotoTitleErrorJa = "内部的にエラーが発生し、ホームに移動します。\n\n"
+                                "場合によっては、<color=#ff911c><i>タイトル</i></color>に戻るか、\n"
+                                "ゲーム<color=#ff911c><i>再起動</i></color>が必要になる場合がありますあります。"s;
+
+const auto GotoTitleErrorHan = "內部發生錯誤，移動到主頁。\n\n"
+                                 "在某些情況下，可能需要返回<color=#ff911c><i>標題</i></color>に戻るか，\n"
+                                 "或者遊戲<color=#ff911c><i>重新開始</i></color>。"s;
 
 static void *il2cpp_handle = nullptr;
 static uint64_t il2cpp_base = 0;
@@ -58,11 +118,7 @@ void *(*Array_GetValue)(Il2CppArray *thisObj, long index);
 
 Il2CppObject *sceneManager = nullptr;
 
-Il2CppObject *uiManager = nullptr;
-
 vector<string> replaceAssetNames;
-
-Il2CppObject *masterDataManager = nullptr;
 
 Il2CppObject *
 GetRuntimeType(const char *assemblyName, const char *namespaze, const char *klassName) {
@@ -74,6 +130,24 @@ GetRuntimeType(const char *assemblyName, const char *namespaze, const char *klas
     return get_type(dummyObj);
 }
 
+template<typename... T>
+Il2CppDelegate *CreateDelegate(Il2CppObject *target, void (*fn)(Il2CppObject *, T...)) {
+    auto delegate = reinterpret_cast<MulticastDelegate *>(il2cpp_object_new(
+            il2cpp_defaults.multicastdelegate_class));
+    auto delegateClass = il2cpp_defaults.delegate_class;
+    delegate->delegates = il2cpp_array_new(delegateClass, 1);
+    il2cpp_array_set(delegate->delegates, Il2CppDelegate *, 0, delegate);
+    delegate->method_ptr = reinterpret_cast<Il2CppMethodPointer>(fn);
+
+    auto methodInfo = reinterpret_cast<MethodInfo *>(il2cpp_object_new(
+            il2cpp_defaults.method_info_class));
+    methodInfo->methodPointer = delegate->method_ptr;
+    methodInfo->klass = il2cpp_defaults.method_info_class;
+    delegate->method = methodInfo;
+    delegate->target = target;
+    return delegate;
+}
+
 Boolean GetBoolean(bool value) {
     return reinterpret_cast<Boolean (*)(Il2CppString *value)>(il2cpp_symbols::get_method_pointer(
             "mscorlib.dll", "System", "Boolean", "Parse", 1))(
@@ -81,8 +155,7 @@ Boolean GetBoolean(bool value) {
 }
 
 Int32Object *GetInt32Instance(int value) {
-    return reinterpret_cast<Int32Object *>(il2cpp_value_box(
-            il2cpp_symbols::get_class("mscorlib.dll", "System", "Int32"), &value));
+    return reinterpret_cast<Int32Object *>(il2cpp_value_box(il2cpp_defaults.int32_class, &value));
 }
 
 Il2CppObject *ParseEnum(Il2CppObject *runtimeType, const string &name) {
@@ -92,10 +165,11 @@ Il2CppObject *ParseEnum(Il2CppObject *runtimeType, const string &name) {
                                                            il2cpp_string_new(name.data()));
 }
 
-Il2CppString *GetEnumName(Il2CppObject *runtimeType, int id) {
+Il2CppString *GetEnumName(Il2CppObject *runtimeType, u_int id) {
     return reinterpret_cast<Il2CppString *(*)(Il2CppObject *,
                                               Int32Object *)>(il2cpp_symbols::get_method_pointer(
-            "mscorlib.dll", "System", "Enum", "GetName", 2))(runtimeType, GetInt32Instance(id));
+            "mscorlib.dll", "System", "Enum", "GetName", 2))(runtimeType, GetInt32Instance(
+            static_cast<int>(id)));
 }
 
 unsigned long GetEnumValue(Il2CppObject *runtimeEnum) {
@@ -107,7 +181,7 @@ unsigned long GetTextIdByName(const string &name) {
     return GetEnumValue(ParseEnum(GetRuntimeType("umamusume.dll", "Gallop", "TextId"), name));
 }
 
-string GetTextIdNameById(int id) {
+string GetTextIdNameById(u_int id) {
     return localify::u16_u8(
             GetEnumName(GetRuntimeType("umamusume.dll", "Gallop", "TextId"), id)->start_char);
 }
@@ -127,15 +201,17 @@ Il2CppObject *GetCustomTMPFontFallback() {
     if (!assets) return nullptr;
     auto font = GetCustomFont();
     if (font) {
-        return reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *font, int samplingPointSize, int atlasPadding, int renderMode,
-                int atlasWidth, int atlasHeight, int atlasPopulationMode,
-                bool enableMultiAtlasSupport
-        )>
+        return reinterpret_cast<Il2CppObject *(*)(Il2CppObject *font, int samplingPointSize,
+                                                  int atlasPadding, int renderMode, int atlasWidth,
+                                                  int atlasHeight, int atlasPopulationMode,
+                                                  bool enableMultiAtlasSupport)>
         (
                 il2cpp_symbols::get_method_pointer("Unity.TextMeshPro.dll", "TMPro",
-                                                   "TMP_FontAsset", "CreateFontAsset", 1)
-        )(font, 36, 4, 4165, 8192, 8192, 1, false);
+                                                   "TMP_FontAsset", "CreateFontAsset", 1))(font, 36,
+                                                                                           4, 4165,
+                                                                                           8192,
+                                                                                           8192, 1,
+                                                                                           false);
     }
     return nullptr;
 }
@@ -181,25 +257,105 @@ long GetInt64Safety(Int64 *int64Ptr) {
     return stol(localify::u16_u8(str->start_char));
 }
 
-void *populate_with_errors_orig = nullptr;
+Il2CppDelegate *GetButtonCommonOnClickDelegate(Il2CppObject *object) {
+    if (!object) {
+        return nullptr;
+    }
+    if (object->klass != il2cpp_symbols::get_class("umamusume.dll", "Gallop", "ButtonCommon")) {
+        return nullptr;
+    }
+    auto onClickField = il2cpp_class_get_field_from_name(object->klass, "m_OnClick");
+    Il2CppObject *onClick;
+    il2cpp_field_get_value(object, onClickField, &onClick);
+    if (onClick) {
+        auto callsField = il2cpp_class_get_field_from_name(onClick->klass, "m_Calls");
+        Il2CppObject *calls;
+        il2cpp_field_get_value(onClick, callsField, &calls);
+        if (calls) {
+            auto runtimeCallsField = il2cpp_class_get_field_from_name(calls->klass,
+                                                                      "m_RuntimeCalls");
+            Il2CppObject *runtimeCalls;
+            il2cpp_field_get_value(calls, runtimeCallsField, &runtimeCalls);
 
-bool populate_with_errors_hook(void *thisObj, Il2CppString *str, TextGenerationSettings_t *settings,
-                               void *context) {
-    return reinterpret_cast<decltype(populate_with_errors_hook) * > (populate_with_errors_orig)(
-            thisObj, localify::get_localized_string(str), settings, context
-    );
+            if (runtimeCalls) {
+                FieldInfo *itemsField = il2cpp_class_get_field_from_name(runtimeCalls->klass,
+                                                                         "_items");
+                Il2CppArray *arr;
+                il2cpp_field_get_value(runtimeCalls, itemsField, &arr);
+                if (arr) {
+                    for (int i = 0; i < arr->max_length; i++) {
+                        auto value = reinterpret_cast<Il2CppObject *>(arr->vector[i]);
+                        if (value) {
+                            auto delegateField = il2cpp_class_get_field_from_name(value->klass,
+                                                                                  "Delegate");
+                            Il2CppDelegate *delegate;
+                            il2cpp_field_get_value(value, delegateField, &delegate);
+                            if (delegate) {
+                                // Unbox delegate
+                                auto callbackField = il2cpp_class_get_field_from_name(
+                                        delegate->target->klass, "callback");
+                                Il2CppDelegate *callback;
+                                il2cpp_field_get_value(delegate->target, callbackField, &callback);
+
+                                return callback;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return nullptr;
 }
 
+Il2CppObject *GetSingletonInstance(Il2CppClass *klass) {
+    if (!klass || !klass->parent) {
+        return nullptr;
+    }
+    if (string(klass->parent->name).find("Singleton`1") == string::npos) {
+        return nullptr;
+    }
+    auto instanceField = il2cpp_class_get_field_from_name(klass, "_instance");
+    Il2CppObject *instance;
+    il2cpp_field_static_get_value(instanceField, &instance);
+    return instance;
+}
+
+Il2CppString *GetApplicationServerUrl() {
+    auto GameDefine = il2cpp_symbols::get_class("umamusume.dll", "Gallop", "GameDefine");
+    return reinterpret_cast<Il2CppString *(*)()>(il2cpp_class_get_method_from_name(GameDefine,
+                                                                                   "get_ApplicationServerUrl",
+                                                                                   0)->methodPointer)();
+}
+
+HOOK_METHOD("UnityEngine.TextRenderingModule.dll", "UnityEngine", TextGenerator, PopulateWithErrors,
+            3, bool, {
+                return orig_TextGenerator_PopulateWithErrors(thisObj,
+                                                             localify::get_localized_string(str),
+                                                             settings, context);
+            }, void *thisObj, Il2CppString *str, TextGenerationSettings_t *settings, void *context);
+
+FIND_HOOK_METHOD("umamusume.dll", "Gallop", Localize, Get, [](const MethodInfo *method) {
+    return method->name == "Get"s &&
+           method->parameters->parameter_type->type == IL2CPP_TYPE_VALUETYPE;
+}, Il2CppString*, {
+                     auto orig_result = orig_Localize_Get(id);
+                     auto result = g_static_entries_use_text_id_name
+                                   ? localify::get_localized_string(GetTextIdNameById(id))
+                                   : g_static_entries_use_hash ? localify::get_localized_string(
+                                     orig_result) : localify::get_localized_string(id);
+
+                     return result ? result : orig_result;
+                 }, u_int id);
 
 void *localizeextension_text_orig = nullptr;
 
-Il2CppString *localizeextension_text_hook(int id) {
+Il2CppString *localizeextension_text_hook(u_int id) {
     auto orig_result = reinterpret_cast<decltype(localizeextension_text_hook) *>(localizeextension_text_orig)(
             id);
-    auto result = g_static_entries_use_text_id_name ?
-                  localify::get_localized_string(GetTextIdNameById(id)) :
-                  g_static_entries_use_hash ?
-                  localify::get_localized_string(orig_result) : localify::get_localized_string(id);
+    auto result = g_static_entries_use_text_id_name ? localify::get_localized_string(
+            GetTextIdNameById(id)) : g_static_entries_use_hash ? localify::get_localized_string(
+            orig_result) : localify::get_localized_string(id);
     return result ? result : orig_result;
 }
 
@@ -208,18 +364,16 @@ void *get_preferred_width_orig = nullptr;
 float
 get_preferred_width_hook(void *thisObj, Il2CppString *str, TextGenerationSettings_t *settings) {
     return reinterpret_cast<decltype(get_preferred_width_hook) * > (get_preferred_width_orig)(
-            thisObj, localify::get_localized_string(str), settings
-    );
+            thisObj, localify::get_localized_string(str), settings);
 }
 
 void *localize_get_orig = nullptr;
 
 Il2CppString *localize_get_hook(int id) {
     auto orig_result = reinterpret_cast<decltype(localize_get_hook) * > (localize_get_orig)(id);
-    auto result = g_static_entries_use_text_id_name ?
-                  localify::get_localized_string(GetTextIdNameById(id)) :
-                  g_static_entries_use_hash ?
-                  localify::get_localized_string(orig_result) : localify::get_localized_string(id);
+    auto result = g_static_entries_use_text_id_name ? localify::get_localized_string(
+            GetTextIdNameById(id)) : g_static_entries_use_hash ? localify::get_localized_string(
+            orig_result) : localify::get_localized_string(id);
 
     return result ? result : orig_result;
 }
@@ -256,8 +410,7 @@ void *an_text_set_material_to_textmesh_orig = nullptr;
 
 void an_text_set_material_to_textmesh_hook(Il2CppObject *thisObj) {
     reinterpret_cast<decltype(an_text_set_material_to_textmesh_hook) * >
-    (an_text_set_material_to_textmesh_orig)(
-            thisObj);
+    (an_text_set_material_to_textmesh_orig)(thisObj);
     if (!(assets && g_replace_to_custom_font)) return;
 
     FieldInfo *mainField = il2cpp_class_get_field_from_name(thisObj->klass, "_mainTextMesh");
@@ -338,9 +491,8 @@ void an_text_fix_data_hook(Il2CppObject *thisObj) {
 void *update_orig = nullptr;
 
 void *update_hook(Il2CppObject *thisObj, void *updateType, float deltaTime, float independentTime) {
-    return reinterpret_cast<decltype(update_hook) * > (update_orig)(thisObj, updateType,
-                                                                    deltaTime *
-                                                                    g_ui_animation_scale,
+    return reinterpret_cast<decltype(update_hook) * > (update_orig)(thisObj, updateType, deltaTime *
+                                                                                         g_ui_animation_scale,
                                                                     independentTime *
                                                                     g_ui_animation_scale);
 }
@@ -367,9 +519,8 @@ void query_setup_hook(Il2CppObject *thisObj, void *conn, Il2CppString *sql) {
         il2cpp_field_get_value(thisObj, stmtField, &stmtPtr);
         try {
             if (replacementMDB) {
-                text_queries.emplace(stmtPtr,
-                                     new SQLite::Statement(*replacementMDB,
-                                                           localify::u16_u8(sqlQuery)));
+                text_queries.emplace(stmtPtr, new SQLite::Statement(*replacementMDB,
+                                                                    localify::u16_u8(sqlQuery)));
             } else {
                 text_queries.emplace(stmtPtr, nullptr);
             }
@@ -422,8 +573,7 @@ bool Plugin_sqlite3_reset_hook(intptr_t *pStmt) {
                 stmt->clearBindings();
                 replacement_queries_can_next.insert_or_assign(pStmt, true);
             }
-        }
-        catch (exception &e) {
+        } catch (exception &e) {
         }
     }
     return reinterpret_cast<decltype(Plugin_sqlite3_reset_hook) *>(Plugin_sqlite3_reset_orig)(
@@ -442,8 +592,7 @@ bool query_step_hook(Il2CppObject *thisObj) {
             if (stmt) {
                 stmt->executeStep();
             }
-        }
-        catch (exception &e) {
+        } catch (exception &e) {
         }
     }
     return reinterpret_cast<decltype(query_step_hook) *>(query_step_orig)(thisObj);
@@ -464,8 +613,7 @@ bool prepared_query_reset_hook(Il2CppObject *thisObj) {
                 stmt->clearBindings();
                 replacement_queries_can_next.insert_or_assign(stmtPtr, true);
             }
-        }
-        catch (exception &e) {
+        } catch (exception &e) {
         }
     }
     return reinterpret_cast<decltype(prepared_query_reset_hook) *>(prepared_query_reset_orig)(
@@ -484,8 +632,7 @@ bool prepared_query_bind_text_hook(Il2CppObject *thisObj, int idx, Il2CppString 
             if (stmt) {
                 stmt->bind(idx, localify::u16_u8(text->start_char));
             }
-        }
-        catch (exception &e) {
+        } catch (exception &e) {
         }
     }
     return reinterpret_cast<decltype(prepared_query_bind_text_hook) *>(prepared_query_bind_text_orig)(
@@ -504,8 +651,7 @@ bool prepared_query_bind_int_hook(Il2CppObject *thisObj, int idx, int iValue) {
             if (stmt) {
                 stmt->bind(idx, iValue);
             }
-        }
-        catch (exception &e) {
+        } catch (exception &e) {
         }
     }
     return reinterpret_cast<decltype(prepared_query_bind_int_hook) *>(prepared_query_bind_int_orig)(
@@ -524,8 +670,7 @@ bool prepared_query_bind_long_hook(Il2CppObject *thisObj, int idx, int64_t lValu
             if (stmt) {
                 stmt->bind(idx, lValue);
             }
-        }
-        catch (exception &e) {
+        } catch (exception &e) {
         }
     }
     return reinterpret_cast<decltype(prepared_query_bind_long_hook) *>(prepared_query_bind_long_orig)(
@@ -544,8 +689,7 @@ bool prepared_query_bind_double_hook(Il2CppObject *thisObj, int idx, double rVal
             if (stmt) {
                 stmt->bind(idx, rValue);
             }
-        }
-        catch (exception &e) {
+        } catch (exception &e) {
         }
     }
     return reinterpret_cast<decltype(prepared_query_bind_double_hook) *>(prepared_query_bind_double_orig)(
@@ -605,16 +749,14 @@ Il2CppString *query_gettext_hook(Il2CppObject *thisObj, int idx) {
                                 cueId1 = stmt->getColumn(2).getInt();
                                 cueSheet = localify::u16_u8(
                                         reinterpret_cast<decltype(query_gettext_hook) *>(query_gettext_orig)(
-                                                thisObj, 1)->start_char
-                                );
+                                                thisObj, 1)->start_char);
                                 cueSheet1 = stmt->getColumn(1).getString();
                             } else {
                                 cueId = query_getint(thisObj, 3);
                                 cueId1 = stmt->getColumn(3).getInt();
                                 cueSheet = localify::u16_u8(
                                         reinterpret_cast<decltype(query_gettext_hook) *>(query_gettext_orig)(
-                                                thisObj, 2)->start_char
-                                );
+                                                thisObj, 2)->start_char);
                                 cueSheet1 = stmt->getColumn(2).getString();
                             }
                             if (cueId == cueId1 && cueSheet == cueSheet1) {
@@ -626,8 +768,7 @@ Il2CppString *query_gettext_hook(Il2CppObject *thisObj, int idx) {
                     }
                 }
             }
-        }
-        catch (exception &e) {
+        } catch (exception &e) {
         }
         return localify::get_localized_string(result);
     }
@@ -656,8 +797,7 @@ MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_hook(Il2CppObjec
                 if (replacement_queries_can_next.at(stmtPtr)) {
                     try {
                         stmt->executeStep();
-                    }
-                    catch (exception &e) {
+                    } catch (exception &e) {
                     }
                 }
                 if (stmt->hasRow()) {
@@ -667,8 +807,7 @@ MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_hook(Il2CppObjec
                     const int cueId1 = stmt->getColumn(3).getInt();
                     const string cueSheet = localify::u16_u8(
                             reinterpret_cast<decltype(query_gettext_hook) *>(query_gettext_orig)(
-                                    query, 2)->start_char
-                    );
+                                    query, 2)->start_char);
                     const string cueSheet1 = stmt->getColumn(2).getString();
 
                     if (voiceId == voiceId1 && cueId == cueId1 && cueSheet == cueSheet1) {
@@ -678,8 +817,7 @@ MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_hook(Il2CppObjec
                     }
                 }
             }
-        }
-        catch (exception &e) {
+        } catch (exception &e) {
         }
     }
     return reinterpret_cast<decltype(MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_hook) *>(
@@ -711,22 +849,20 @@ void ShowCaptionByNotification(Il2CppObject *audioManager, Il2CppObject *elem) {
 
     auto u8Text = localify::u16_u8(text->start_char);
     replaceAll(u8Text, "\n", " ");
-    if (uiManager &&
-        u16string(cueSheet->start_char).find(u"_home_") == string::npos &&
+    auto uiManager = GetSingletonInstance(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "UIManager"));
+    if (uiManager && u16string(cueSheet->start_char).find(u"_home_") == string::npos &&
         u16string(cueSheet->start_char).find(u"_tc_") == string::npos &&
         u16string(cueSheet->start_char).find(u"_title_") == string::npos &&
-        u16string(cueSheet->start_char).find(u"_gacha_") == string::npos &&
-        voiceId != 95001 &&
-        (characterId < 9000 ||
-         voiceId == 70000)) {
+        u16string(cueSheet->start_char).find(u"_gacha_") == string::npos && voiceId != 95001 &&
+        (characterId < 9000 || voiceId == 70000)) {
         auto ShowNotification = reinterpret_cast<void (*)(Il2CppObject *, Il2CppString *)>(
                 il2cpp_class_get_method_from_name(uiManager->klass, "ShowNotification",
                                                   1)->methodPointer
         );
         auto LineHeadWrap = reinterpret_cast<Il2CppString *(*)(Il2CppString *, int)>(
                 il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop", "GallopUtil",
-                                                   "LineHeadWrap", 2)
-        );
+                                                   "LineHeadWrap", 2));
 
         auto notiField = il2cpp_class_get_field_from_name(uiManager->klass, "_notification");
         Il2CppObject *notification;
@@ -776,10 +912,9 @@ void AtomSourceEx_SetParameter_hook(Il2CppObject *thisObj) {
         Il2CppArray *textArr;
         il2cpp_field_get_value(textList, itemsField, &textArr);
 
-        Il2CppObject *audioManager;
-        auto klass = il2cpp_symbols::get_class("umamusume.dll", "Gallop", "AudioManager");
-        auto instanceField = il2cpp_class_get_field_from_name(klass, "_instance");
-        il2cpp_field_static_get_value(instanceField, &audioManager);
+        auto audioManager = GetSingletonInstance(
+                il2cpp_symbols::get_class("umamusume.dll", "Gallop", "AudioManager"));
+
 
         for (int i = 0; i < textArr->max_length; i++) {
             auto elem = reinterpret_cast<Il2CppObject *>(textArr->vector[i]);
@@ -944,8 +1079,7 @@ void *story_timeline_controller_play_hook(Il2CppObject *thisObj) {
     }
 
     return reinterpret_cast<decltype(story_timeline_controller_play_hook) * >
-    (story_timeline_controller_play_orig)(
-            thisObj);
+    (story_timeline_controller_play_orig)(thisObj);
 }
 
 void *story_race_textasset_load_orig;
@@ -1022,10 +1156,8 @@ void on_populate_hook(Il2CppObject *thisObj, void *toFill) {
     }
     auto textId = textcommon_get_TextId(thisObj);
     if (textId) {
-        if (GetTextIdByName("Common0121") == textId ||
-            GetTextIdByName("Common0186") == textId ||
-            GetTextIdByName("Outgame0028") == textId ||
-            GetTextIdByName("Outgame0231") == textId ||
+        if (GetTextIdByName("Common0121") == textId || GetTextIdByName("Common0186") == textId ||
+            GetTextIdByName("Outgame0028") == textId || GetTextIdByName("Outgame0231") == textId ||
             GetTextIdByName("Character0325") == textId) {
             text_set_horizontalOverflow(thisObj, 1);
             text_set_verticalOverflow(thisObj, 1);
@@ -1053,9 +1185,8 @@ void textcommon_awake_hook(Il2CppObject *thisObj) {
 
 void *textcommon_SetTextWithLineHeadWrap_orig = nullptr;
 
-void
-textcommon_SetTextWithLineHeadWrap_hook(Il2CppObject *thisObj, Il2CppString *str,
-                                        int maxCharacter) {
+void textcommon_SetTextWithLineHeadWrap_hook(Il2CppObject *thisObj, Il2CppString *str,
+                                             int maxCharacter) {
     reinterpret_cast<decltype(textcommon_SetTextWithLineHeadWrap_hook) *>(textcommon_SetTextWithLineHeadWrap_orig)(
             thisObj, str, maxCharacter * 2);
 }
@@ -1139,16 +1270,13 @@ void TextMeshProUguiCommon_Awake_hook(Il2CppObject *thisObj) {
     reinterpret_cast<void (*)(Il2CppObject *, Il2CppObject *)>(il2cpp_class_get_method_from_name(
             thisObj->klass, "set_font", 1)->methodPointer)(thisObj, customFont);
     reinterpret_cast<void (*)(Il2CppObject *, bool)>(il2cpp_class_get_method_from_name(
-            thisObj->klass,
-            "set_enableWordWrapping",
-            1)->methodPointer)(
-            thisObj, false);
+            thisObj->klass, "set_enableWordWrapping", 1)->methodPointer)(thisObj, false);
 }
 
 void *get_modified_string_orig = nullptr;
 
-Il2CppString *get_modified_string_hook(Il2CppString *text, Il2CppObject * /*input*/,
-                                       bool allowNewLine) {
+Il2CppString *
+get_modified_string_hook(Il2CppString *text, Il2CppObject * /*input*/, bool allowNewLine) {
     if (!allowNewLine) {
         auto u8str = localify::u16_u8(text->start_char);
         replaceAll(u8str, "\n", "");
@@ -1175,15 +1303,7 @@ void load_zekken_composite_resource_hook(Il2CppObject *thisObj) {
         }
     }
     reinterpret_cast<decltype(load_zekken_composite_resource_hook) * >
-    (load_zekken_composite_resource_orig)(
-            thisObj);
-}
-
-void *UIManager_OnInitialize_orig = nullptr;
-
-void UIManager_OnInitialize_hook(Il2CppObject *thisObj) {
-    reinterpret_cast<decltype(UIManager_OnInitialize_hook) *>(UIManager_OnInitialize_orig)(thisObj);
-    uiManager = thisObj;
+    (load_zekken_composite_resource_orig)(thisObj);
 }
 
 void *wait_resize_ui_orig = nullptr;
@@ -1197,8 +1317,9 @@ wait_resize_ui_hook(Il2CppObject *thisObj, bool isPortrait, bool isShowOrientati
     if (!g_ui_loading_show_orientation_guide) {
         isShowOrientationGuide = false;
     }
-    return reinterpret_cast<decltype(wait_resize_ui_hook) * > (wait_resize_ui_orig)(
-            thisObj, isPortrait, isShowOrientationGuide);
+    return reinterpret_cast<decltype(wait_resize_ui_hook) * > (wait_resize_ui_orig)(thisObj,
+                                                                                    isPortrait,
+                                                                                    isShowOrientationGuide);
 }
 
 void *set_anti_aliasing_orig = nullptr;
@@ -1259,20 +1380,19 @@ void set_resolution_hook(int width, int height, bool fullscreen) {
     // Unity 2019 not invert width, height on landscape
     if ((width > height && systemWidth < systemHeight) || g_force_landscape) {
         if (g_ui_use_system_resolution) {
-            reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
-                    systemHeight, systemWidth,
-                    fullscreen);
+            reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(systemHeight,
+                                                                                     systemWidth,
+                                                                                     fullscreen);
             return;
         }
     }
     if (g_ui_use_system_resolution) {
-        reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
-                systemWidth, systemHeight,
-                fullscreen);
+        reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(systemWidth,
+                                                                                 systemHeight,
+                                                                                 fullscreen);
     } else {
-        reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(
-                width, height,
-                fullscreen);
+        reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(width, height,
+                                                                                 fullscreen);
     }
 }
 
@@ -1315,9 +1435,7 @@ void *apply_graphics_quality_orig = nullptr;
 
 void apply_graphics_quality_hook(Il2CppObject *thisObj, int  /*quality*/, bool  /*force*/) {
     reinterpret_cast<decltype(apply_graphics_quality_hook) * >
-    (apply_graphics_quality_orig)(thisObj,
-                                  g_graphics_quality,
-                                  true);
+    (apply_graphics_quality_orig)(thisObj, g_graphics_quality, true);
 }
 
 void *assetbundle_LoadFromFile_orig = nullptr;
@@ -1362,10 +1480,8 @@ assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2
         auto getComponent = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *,
                                                                Il2CppType *)>(il2cpp_class_get_method_from_name(
                 asset->klass, "GetComponent", 1)->methodPointer);
-        auto *assetHolder = getComponent(asset,
-                                         reinterpret_cast<Il2CppType *>(GetRuntimeType(
-                                                 "umamusume.dll", "Gallop",
-                                                 "AssetHolder")));
+        auto *assetHolder = getComponent(asset, reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                "umamusume.dll", "Gallop", "AssetHolder")));
         if (assetHolder != nullptr) {
             auto *objectList = reinterpret_cast<Il2CppObject *(*)(
                     Il2CppObject *)>(il2cpp_class_get_method_from_name(assetHolder->klass,
@@ -1385,17 +1501,15 @@ assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2
                         auto *uobject_name = uobject_get_name(obj);
                         if (!localify::u16_u8(uobject_name->start_char).empty()) {
                             auto *newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                                    replaceAssets,
-                                    uobject_name,
+                                    replaceAssets, uobject_name,
                                     reinterpret_cast<Il2CppType *>(GetRuntimeType(
-                                            "UnityEngine.CoreModule.dll",
-                                            "UnityEngine", "Texture2D")));
+                                            "UnityEngine.CoreModule.dll", "UnityEngine",
+                                            "Texture2D")));
                             if (newTexture != nullptr) {
                                 reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                         il2cpp_symbols::get_method_pointer(
                                                 "UnityEngine.CoreModule.dll", "UnityEngine",
-                                                "Object", "set_hideFlags", 1)
-                                )(newTexture, 32);
+                                                "Object", "set_hideFlags", 1))(newTexture, 32);
                                 il2cpp_field_set_value(pair, field, newTexture);
                             }
                         }
@@ -1413,17 +1527,15 @@ assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2
                             auto *uobject_name = uobject_get_name(mainTexture);
                             if (!localify::u16_u8(uobject_name->start_char).empty()) {
                                 auto *newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                                        replaceAssets,
-                                        uobject_name,
+                                        replaceAssets, uobject_name,
                                         reinterpret_cast<Il2CppType *>(GetRuntimeType(
-                                                "UnityEngine.CoreModule.dll",
-                                                "UnityEngine", "Texture2D")));
+                                                "UnityEngine.CoreModule.dll", "UnityEngine",
+                                                "Texture2D")));
                                 if (newTexture != nullptr) {
                                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                             il2cpp_symbols::get_method_pointer(
                                                     "UnityEngine.CoreModule.dll", "UnityEngine",
-                                                    "Object", "set_hideFlags", 1)
-                                    )(newTexture, 32);
+                                                    "Object", "set_hideFlags", 1))(newTexture, 32);
                                     set_mainTexture(obj, newTexture);
                                 }
                             }
@@ -1478,10 +1590,8 @@ Il2CppObject *resources_load_hook(Il2CppString *path, Il2CppType *type) {
             auto getComponent = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *,
                                                                    Il2CppType *)>(il2cpp_class_get_method_from_name(
                     gameObj->klass, "GetComponent", 1)->methodPointer);
-            auto *component = getComponent(gameObj,
-                                           reinterpret_cast<Il2CppType *>(GetRuntimeType(
-                                                   "umamusume.dll", "Gallop",
-                                                   "TitleView")));
+            auto *component = getComponent(gameObj, reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                    "umamusume.dll", "Gallop", "TitleView")));
 
             auto *imgField = il2cpp_class_get_field_from_name(component->klass, "TitleLogoImage");
             Il2CppObject *imgCommon;
@@ -1490,8 +1600,7 @@ Il2CppObject *resources_load_hook(Il2CppString *path, Il2CppType *type) {
                     replaceAssets,
                     il2cpp_string_new("assets/title/utx_obj_title_logo_umamusume.png"),
                     reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                                  "UnityEngine",
-                                                                  "Texture2D")));
+                                                                  "UnityEngine", "Texture2D")));
             auto *m_TextureField = il2cpp_class_get_field_from_name(imgCommon->klass->parent,
                                                                     "m_Texture");
             il2cpp_field_set_value(imgCommon, m_TextureField, texture);
@@ -1510,16 +1619,14 @@ Il2CppObject *Sprite_get_texture_hook(Il2CppObject *thisObj) {
     auto uobject_name = uobject_get_name(texture2D);
     if (!localify::u16_u8(uobject_name->start_char).empty()) {
         auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                replaceAssets,
-                uobject_name,
+                replaceAssets, uobject_name,
                 reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                              "UnityEngine",
-                                                              "Texture2D")));
+                                                              "UnityEngine", "Texture2D")));
         if (newTexture) {
             reinterpret_cast<void (*)(Il2CppObject *, int)>(
                     il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                       "Object", "set_hideFlags", 1)
-            )(newTexture, 32);
+                                                       "Object", "set_hideFlags", 1))(newTexture,
+                                                                                      32);
             return newTexture;
         }
     }
@@ -1544,17 +1651,14 @@ Il2CppObject *Renderer_get_material_hook(Il2CppObject *thisObj) {
             auto uobject_name = uobject_get_name(mainTexture);
             if (!localify::u16_u8(uobject_name->start_char).empty()) {
                 auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                        replaceAssets,
-                        uobject_name,
+                        replaceAssets, uobject_name,
                         reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                                      "UnityEngine",
-                                                                      "Texture2D")));
+                                                                      "UnityEngine", "Texture2D")));
                 if (newTexture) {
                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                             il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
                                                                "UnityEngine", "Object",
-                                                               "set_hideFlags", 1)
-                    )(newTexture, 32);
+                                                               "set_hideFlags", 1))(newTexture, 32);
                     set_mainTexture(material, newTexture);
                 }
             }
@@ -1583,17 +1687,15 @@ Il2CppArray *Renderer_get_materials_hook(Il2CppObject *thisObj) {
                 auto uobject_name = uobject_get_name(mainTexture);
                 if (!localify::u16_u8(uobject_name->start_char).empty()) {
                     auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                            replaceAssets,
-                            uobject_name,
+                            replaceAssets, uobject_name,
                             reinterpret_cast<Il2CppType *>(GetRuntimeType(
-                                    "UnityEngine.CoreModule.dll",
-                                    "UnityEngine", "Texture2D")));
+                                    "UnityEngine.CoreModule.dll", "UnityEngine", "Texture2D")));
                     if (newTexture) {
                         reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                 il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
                                                                    "UnityEngine", "Object",
-                                                                   "set_hideFlags", 1)
-                        )(newTexture, 32);
+                                                                   "set_hideFlags", 1))(newTexture,
+                                                                                        32);
                         set_mainTexture(material, newTexture);
                     }
                 }
@@ -1621,17 +1723,14 @@ Il2CppObject *Renderer_get_sharedMaterial_hook(Il2CppObject *thisObj) {
             auto uobject_name = uobject_get_name(mainTexture);
             if (!localify::u16_u8(uobject_name->start_char).empty()) {
                 auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                        replaceAssets,
-                        uobject_name,
+                        replaceAssets, uobject_name,
                         reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                                      "UnityEngine",
-                                                                      "Texture2D")));
+                                                                      "UnityEngine", "Texture2D")));
                 if (newTexture) {
                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                             il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
                                                                "UnityEngine", "Object",
-                                                               "set_hideFlags", 1)
-                    )(newTexture, 32);
+                                                               "set_hideFlags", 1))(newTexture, 32);
                     set_mainTexture(material, newTexture);
                 }
             }
@@ -1660,17 +1759,15 @@ Il2CppArray *Renderer_get_sharedMaterials_hook(Il2CppObject *thisObj) {
                 auto uobject_name = uobject_get_name(mainTexture);
                 if (!localify::u16_u8(uobject_name->start_char).empty()) {
                     auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                            replaceAssets,
-                            uobject_name,
+                            replaceAssets, uobject_name,
                             reinterpret_cast<Il2CppType *>(GetRuntimeType(
-                                    "UnityEngine.CoreModule.dll",
-                                    "UnityEngine", "Texture2D")));
+                                    "UnityEngine.CoreModule.dll", "UnityEngine", "Texture2D")));
                     if (newTexture) {
                         reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                 il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
                                                                    "UnityEngine", "Object",
-                                                                   "set_hideFlags", 1)
-                        )(newTexture, 32);
+                                                                   "set_hideFlags", 1))(newTexture,
+                                                                                        32);
                         set_mainTexture(material, newTexture);
                     }
                 }
@@ -1696,17 +1793,14 @@ void Renderer_set_material_hook(Il2CppObject *thisObj, Il2CppObject *material) {
             auto uobject_name = uobject_get_name(mainTexture);
             if (!localify::u16_u8(uobject_name->start_char).empty()) {
                 auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                        replaceAssets,
-                        uobject_name,
+                        replaceAssets, uobject_name,
                         reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                                      "UnityEngine",
-                                                                      "Texture2D")));
+                                                                      "UnityEngine", "Texture2D")));
                 if (newTexture) {
                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                             il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
                                                                "UnityEngine", "Object",
-                                                               "set_hideFlags", 1)
-                    )(newTexture, 32);
+                                                               "set_hideFlags", 1))(newTexture, 32);
                     set_mainTexture(material, newTexture);
                 }
             }
@@ -1734,17 +1828,15 @@ void Renderer_set_materials_hook(Il2CppObject *thisObj, Il2CppArray *materials) 
                 auto uobject_name = uobject_get_name(mainTexture);
                 if (!localify::u16_u8(uobject_name->start_char).empty()) {
                     auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                            replaceAssets,
-                            uobject_name,
+                            replaceAssets, uobject_name,
                             reinterpret_cast<Il2CppType *>(GetRuntimeType(
-                                    "UnityEngine.CoreModule.dll",
-                                    "UnityEngine", "Texture2D")));
+                                    "UnityEngine.CoreModule.dll", "UnityEngine", "Texture2D")));
                     if (newTexture) {
                         reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                 il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
                                                                    "UnityEngine", "Object",
-                                                                   "set_hideFlags", 1)
-                        )(newTexture, 32);
+                                                                   "set_hideFlags", 1))(newTexture,
+                                                                                        32);
                         set_mainTexture(material, newTexture);
                     }
                 }
@@ -1771,17 +1863,14 @@ void Renderer_set_sharedMaterial_hook(Il2CppObject *thisObj, Il2CppObject *mater
             auto uobject_name = uobject_get_name(mainTexture);
             if (!localify::u16_u8(uobject_name->start_char).empty()) {
                 auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                        replaceAssets,
-                        uobject_name,
+                        replaceAssets, uobject_name,
                         reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                                      "UnityEngine",
-                                                                      "Texture2D")));
+                                                                      "UnityEngine", "Texture2D")));
                 if (newTexture) {
                     reinterpret_cast<void (*)(Il2CppObject *, int)>(
                             il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
                                                                "UnityEngine", "Object",
-                                                               "set_hideFlags", 1)
-                    )(newTexture, 32);
+                                                               "set_hideFlags", 1))(newTexture, 32);
                     set_mainTexture(material, newTexture);
                 }
             }
@@ -1809,17 +1898,15 @@ void Renderer_set_sharedMaterials_hook(Il2CppObject *thisObj, Il2CppArray *mater
                 auto uobject_name = uobject_get_name(mainTexture);
                 if (!localify::u16_u8(uobject_name->start_char).empty()) {
                     auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                            replaceAssets,
-                            uobject_name,
+                            replaceAssets, uobject_name,
                             reinterpret_cast<Il2CppType *>(GetRuntimeType(
-                                    "UnityEngine.CoreModule.dll",
-                                    "UnityEngine", "Texture2D")));
+                                    "UnityEngine.CoreModule.dll", "UnityEngine", "Texture2D")));
                     if (newTexture) {
                         reinterpret_cast<void (*)(Il2CppObject *, int)>(
                                 il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
                                                                    "UnityEngine", "Object",
-                                                                   "set_hideFlags", 1)
-                        )(newTexture, 32);
+                                                                   "set_hideFlags", 1))(newTexture,
+                                                                                        32);
                         set_mainTexture(material, newTexture);
                     }
                 }
@@ -1836,17 +1923,14 @@ void Material_set_mainTexture_hook(Il2CppObject *thisObj, Il2CppObject *texture)
     if (texture) {
         if (!localify::u16_u8(uobject_get_name(texture)->start_char).empty()) {
             auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                    replaceAssets,
-                    uobject_get_name(texture),
+                    replaceAssets, uobject_get_name(texture),
                     reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                                  "UnityEngine",
-                                                                  "Texture2D")));
+                                                                  "UnityEngine", "Texture2D")));
             if (newTexture) {
                 reinterpret_cast<void (*)(Il2CppObject *, int)>(
                         il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
                                                            "UnityEngine", "Object", "set_hideFlags",
-                                                           1)
-                )(newTexture, 32);
+                                                           1))(newTexture, 32);
                 reinterpret_cast<decltype(Material_set_mainTexture_hook) *>(Material_set_mainTexture_orig)(
                         thisObj, newTexture);
                 return;
@@ -1866,17 +1950,14 @@ Il2CppObject *Material_get_mainTexture_hook(Il2CppObject *thisObj) {
         auto uobject_name = uobject_get_name(texture);
         if (!localify::u16_u8(uobject_name->start_char).empty()) {
             auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                    replaceAssets,
-                    uobject_name,
+                    replaceAssets, uobject_name,
                     reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                                  "UnityEngine",
-                                                                  "Texture2D")));
+                                                                  "UnityEngine", "Texture2D")));
             if (newTexture) {
                 reinterpret_cast<void (*)(Il2CppObject *, int)>(
                         il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
                                                            "UnityEngine", "Object", "set_hideFlags",
-                                                           1)
-                )(newTexture, 32);
+                                                           1))(newTexture, 32);
                 return newTexture;
             }
         }
@@ -1889,16 +1970,14 @@ void *Material_SetTextureI4_orig = nullptr;
 void Material_SetTextureI4_hook(Il2CppObject *thisObj, int nameID, Il2CppObject *texture) {
     if (texture && !localify::u16_u8(uobject_get_name(texture)->start_char).empty()) {
         auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                replaceAssets,
-                uobject_get_name(texture),
+                replaceAssets, uobject_get_name(texture),
                 reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                              "UnityEngine",
-                                                              "Texture2D")));
+                                                              "UnityEngine", "Texture2D")));
         if (newTexture) {
             reinterpret_cast<void (*)(Il2CppObject *, int)>(
                     il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                       "Object", "set_hideFlags", 1)
-            )(newTexture, 32);
+                                                       "Object", "set_hideFlags", 1))(newTexture,
+                                                                                      32);
             reinterpret_cast<decltype(Material_SetTextureI4_hook) *>(Material_SetTextureI4_orig)(
                     thisObj, nameID, newTexture);
             return;
@@ -1914,16 +1993,14 @@ void *CharaPropRendererAccessor_SetTexture_orig = nullptr;
 void CharaPropRendererAccessor_SetTexture_hook(Il2CppObject *thisObj, Il2CppObject *texture) {
     if (!localify::u16_u8(uobject_get_name(texture)->start_char).empty()) {
         auto newTexture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                replaceAssets,
-                uobject_get_name(texture),
+                replaceAssets, uobject_get_name(texture),
                 reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
-                                                              "UnityEngine",
-                                                              "Texture2D")));
+                                                              "UnityEngine", "Texture2D")));
         if (newTexture) {
             reinterpret_cast<void (*)(Il2CppObject *, int)>(
                     il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                       "Object", "set_hideFlags", 1)
-            )(newTexture, 32);
+                                                       "Object", "set_hideFlags", 1))(newTexture,
+                                                                                      32);
             reinterpret_cast<decltype(CharaPropRendererAccessor_SetTexture_hook) *>(CharaPropRendererAccessor_SetTexture_orig)(
                     thisObj, newTexture);
             return;
@@ -1938,17 +2015,17 @@ void *ChangeScreenOrientation_orig = nullptr;
 Il2CppObject *ChangeScreenOrientation_hook(ScreenOrientation targetOrientation, bool isForce) {
     return reinterpret_cast<decltype(ChangeScreenOrientation_hook) * >
     (ChangeScreenOrientation_orig)(
-            g_force_landscape ? ScreenOrientation::Landscape
-                              : targetOrientation, isForce);
+            g_force_landscape ? ScreenOrientation::Landscape : targetOrientation, isForce);
 }
 
 void *ChangeScreenOrientationPortraitAsync_orig = nullptr;
 
 Il2CppObject *ChangeScreenOrientationPortraitAsync_hook() {
-    return reinterpret_cast<Il2CppObject *(*)()>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop",
-            "Screen", "ChangeScreenOrientationLandscapeAsync", -1))();
+    return reinterpret_cast<Il2CppObject *(*)()>(il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                                    "Gallop",
+                                                                                    "Screen",
+                                                                                    "ChangeScreenOrientationLandscapeAsync",
+                                                                                    -1))();
 }
 
 void *CanvasScaler_set_referenceResolution_orig = nullptr;
@@ -1959,8 +2036,7 @@ void CanvasScaler_set_referenceResolution_hook(Il2CppObject *thisObj, Vector2_t 
         res.y /= (max(1.0f, res.y / 1080.f) * g_force_landscape_ui_scale);
     }
     return reinterpret_cast<decltype(CanvasScaler_set_referenceResolution_hook) * >
-    (CanvasScaler_set_referenceResolution_orig)(
-            thisObj, res);
+    (CanvasScaler_set_referenceResolution_orig)(thisObj, res);
 }
 
 void *SetResolution_orig = nullptr;
@@ -2001,10 +2077,8 @@ void *DeviceOrientationGuide_Show_orig = nullptr;
 void DeviceOrientationGuide_Show_hook(Il2CppObject *thisObj, bool isTargetOrientationPortrait,
                                       int target) {
     reinterpret_cast<decltype(DeviceOrientationGuide_Show_hook) * >
-    (DeviceOrientationGuide_Show_orig)(
-            thisObj,
-            !g_force_landscape && isTargetOrientationPortrait,
-            g_force_landscape ? 2 : target);
+    (DeviceOrientationGuide_Show_orig)(thisObj, !g_force_landscape && isTargetOrientationPortrait,
+                                       g_force_landscape ? 2 : target);
 }
 
 void *NowLoading_Show_orig = nullptr;
@@ -2017,18 +2091,17 @@ void NowLoading_Show_hook(Il2CppObject *thisObj, int type, Il2CppDelegate *onCom
         type = 0;
     }
     if (!g_hide_now_loading) {
-        reinterpret_cast<decltype(NowLoading_Show_hook) *>(NowLoading_Show_orig)(
-                thisObj,
-                type,
-                onComplete, overrideDuration);
+        reinterpret_cast<decltype(NowLoading_Show_hook) *>(NowLoading_Show_orig)(thisObj, type,
+                                                                                 onComplete,
+                                                                                 overrideDuration);
     }
     if (onComplete) {
         if (g_hide_now_loading) {
             reinterpret_cast<void (*)(Il2CppObject *)>(onComplete->method_ptr)(onComplete->target);
         } else {
             const bool isShown = reinterpret_cast<bool (*)(
-                    Il2CppObject *)>(il2cpp_class_get_method_from_name(
-                    thisObj->klass, "IsShown", 0)->methodPointer)(thisObj);
+                    Il2CppObject *)>(il2cpp_class_get_method_from_name(thisObj->klass, "IsShown",
+                                                                       0)->methodPointer)(thisObj);
             if (!isShown) {
                 LOGI("NowLoading::Show: onComplete not called, calling onComplete manually...");
                 reinterpret_cast<void (*)(Il2CppObject *)>(onComplete->method_ptr)(
@@ -2048,18 +2121,18 @@ void NowLoading_Show2_hook(Il2CppObject *thisObj, int type, Il2CppDelegate *onCo
         type = 0;
     }
     if (!g_hide_now_loading) {
-        reinterpret_cast<decltype(NowLoading_Show2_hook) *>(NowLoading_Show2_orig)(
-                thisObj,
-                type,
-                onComplete, overrideDuration, easeType);
+        reinterpret_cast<decltype(NowLoading_Show2_hook) *>(NowLoading_Show2_orig)(thisObj, type,
+                                                                                   onComplete,
+                                                                                   overrideDuration,
+                                                                                   easeType);
     }
     if (onComplete) {
         if (g_hide_now_loading) {
             reinterpret_cast<void (*)(Il2CppObject *)>(onComplete->method_ptr)(onComplete->target);
         } else {
             const bool isShown = reinterpret_cast<bool (*)(
-                    Il2CppObject *)>(il2cpp_class_get_method_from_name(
-                    thisObj->klass, "IsShown", 0)->methodPointer)(thisObj);
+                    Il2CppObject *)>(il2cpp_class_get_method_from_name(thisObj->klass, "IsShown",
+                                                                       0)->methodPointer)(thisObj);
             if (!isShown) {
                 LOGI("NowLoading::Show: onComplete not called, calling onComplete manually...");
                 reinterpret_cast<void (*)(Il2CppObject *)>(onComplete->method_ptr)(
@@ -2071,7 +2144,7 @@ void NowLoading_Show2_hook(Il2CppObject *thisObj, int type, Il2CppDelegate *onCo
 
 void *NowLoading_Hide_orig = nullptr;
 
-void NowLoading_Hide_hook(Il2CppObject *thisObj, Il2CppDelegate *onComplete) {
+void NowLoading_Hide_hook(Il2CppObject * /*thisObj*/, Il2CppDelegate *onComplete) {
     if (onComplete) {
         reinterpret_cast<void (*)(Il2CppObject *)>(onComplete->method_ptr)(onComplete->target);
     }
@@ -2079,8 +2152,8 @@ void NowLoading_Hide_hook(Il2CppObject *thisObj, Il2CppDelegate *onComplete) {
 
 void *NowLoading_Hide2_orig = nullptr;
 
-void NowLoading_Hide2_hook(Il2CppObject *thisObj, Il2CppDelegate *onComplete,
-                           Il2CppObject *overrideDuration, int easeType) {
+void NowLoading_Hide2_hook(Il2CppObject * /*thisObj*/, Il2CppDelegate *onComplete,
+                           Il2CppObject * /*overrideDuration*/, int /*easeType*/) {
     if (onComplete) {
         reinterpret_cast<void (*)(Il2CppObject *)>(onComplete->method_ptr)(onComplete->target);
     }
@@ -2113,10 +2186,9 @@ void SafetyNet_OnError_hook(Il2CppObject *thisObj, Il2CppString *error) {
 void *SafetyNet_GetSafetyNetStatus_orig = nullptr;
 
 void SafetyNet_GetSafetyNetStatus_hook(Il2CppString *apiKey, Il2CppString *nonce,
-                                       Il2CppDelegate *onSuccess, Il2CppDelegate *onError) {
+                                       Il2CppDelegate *onSuccess, Il2CppDelegate * /*onError*/) {
     reinterpret_cast<decltype(SafetyNet_GetSafetyNetStatus_hook) *>(SafetyNet_GetSafetyNetStatus_orig)(
-            apiKey,
-            nonce, onSuccess, onSuccess);
+            apiKey, nonce, onSuccess, onSuccess);
 }
 
 void *Device_IsIllegalUser_orig = nullptr;
@@ -2298,8 +2370,8 @@ void GallopUtil_GotoTitleOnError_hook(Il2CppString * /*text*/) {
                                                     unsigned long closeTextId)>(
             il2cpp_class_get_method_from_name(dialogData->klass, "SetSimpleOneButtonMessage",
                                               4)->methodPointer
-    )(dialogData, errorText,
-      localify::get_localized_string(il2cpp_string_new(message.data())), nullptr, okText);
+    )(dialogData, errorText, localify::get_localized_string(il2cpp_string_new(message.data())),
+      nullptr, okText);
     errorDialog = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *data,
                                                      bool isEnableOutsideClick)>(il2cpp_symbols::get_method_pointer(
             "umamusume.dll", "Gallop", "DialogManager", "PushSystemDialog", 2))(dialogData, true);
@@ -2333,28 +2405,698 @@ CriMana_Player_SetFile_hook(Il2CppObject *thisObj, Il2CppObject *binder, Il2CppS
             thisObj, binder, moviePath, setMode);
 }
 
+void OpenNewsDialog() {
+    auto webViewManager = GetSingletonInstance(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "WebViewManager"));
+    reinterpret_cast<void (*)(Il2CppObject *, Il2CppDelegate *)>(il2cpp_class_get_method_from_name(
+            webViewManager->klass, "OpenNews", 1)->methodPointer)(webViewManager, nullptr);
+}
+
+void OpenHelpDialog() {
+    auto webViewManager = GetSingletonInstance(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "WebViewManager"));
+    reinterpret_cast<void (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
+            webViewManager->klass, "OpenHelp", 0)->methodPointer)(webViewManager);
+}
+
+void OpenStoryEventHelpDialog() {
+    auto webViewManager = GetSingletonInstance(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "WebViewManager"));
+    reinterpret_cast<void (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
+            webViewManager->klass, "OpenStoryEventHelp", 0)->methodPointer)(webViewManager);
+}
+
+void OpenWebViewDialog(Il2CppString *url, Il2CppString *headerTextArg, u_long closeTextId,
+                       Il2CppDelegate *onClose = nullptr) {
+    auto dialogData = il2cpp_object_new(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "DialogCommon/Data"));
+    il2cpp_runtime_object_init(dialogData);
+
+    dialogData = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *thisObj,
+                                                    Il2CppString *headerTextArg,
+                                                    Il2CppString *message,
+                                                    Il2CppDelegate *onClickCenterButton,
+                                                    unsigned long closeTextId, int dialogFormType)>(
+            il2cpp_class_get_method_from_name(dialogData->klass, "SetSimpleOneButtonMessage",
+                                              5)->methodPointer
+    )(dialogData, headerTextArg, nullptr, onClose, closeTextId, 9);
+
+    auto webViewManager = GetSingletonInstance(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "WebViewManager"));
+    reinterpret_cast<void (*)(Il2CppObject *, Il2CppString *, Il2CppObject *, Il2CppDelegate *,
+                              Il2CppDelegate *, bool)>(il2cpp_class_get_method_from_name(
+            webViewManager->klass, "Open", 5)->methodPointer)(webViewManager, url, dialogData,
+                                                              nullptr, nullptr, false);
+}
+
+void *CriWebViewManager_OnLoadedCallback_orig = nullptr;
+
+void CriWebViewManager_OnLoadedCallback_hook(Il2CppObject *thisObj, Il2CppString *msg) {
+    if (msg && GetApplicationServerUrl() &&
+        u16string(msg->start_char).find(GetApplicationServerUrl()->start_char) == u16string::npos) {
+        reinterpret_cast<void (*)(Il2CppObject *,
+                                  Il2CppString *)>(il2cpp_class_get_method_from_name(thisObj->klass,
+                                                                                     "EvaluateJS",
+                                                                                     1)->methodPointer)(
+                thisObj, il2cpp_string_new(WebViewInitScript));
+    }
+    reinterpret_cast<decltype(CriWebViewManager_OnLoadedCallback_hook) *>(CriWebViewManager_OnLoadedCallback_orig)(
+            thisObj, msg);
+}
+
+string GetOqupieToken() {
+    if (Game::currentGameRegion != Game::Region::KOR) {
+        LOGW("GetOqupieToken: Not korean version... returning empty string.");
+        return "";
+    }
+    const auto oqupieAccessKey = "a66427394118bc5e";
+    const auto jwtToken = "f2c9ea20a25a94b7885d75f220cfcbcf";
+
+    auto Application = il2cpp_symbols::get_class("UnityEngine.CoreModule.dll", "UnityEngine",
+                                                 "Application");
+
+    auto systemLanguage = reinterpret_cast<int (*)()>(il2cpp_class_get_method_from_name(Application,
+                                                                                        "get_systemLanguage",
+                                                                                        0)->methodPointer)();
+
+    auto SystemInfo = il2cpp_symbols::get_class("UnityEngine.CoreModule.dll", "UnityEngine",
+                                                "SystemInfo");
+
+    auto deviceId = reinterpret_cast<Il2CppString *(*)()>(il2cpp_class_get_method_from_name(
+            SystemInfo, "get_deviceUniqueIdentifier", 0)->methodPointer)();
+    auto deviceIdU8 = localify::u16_u8(deviceId->start_char);
+
+    auto deviceModel = reinterpret_cast<Il2CppString *(*)()>(il2cpp_class_get_method_from_name(
+            SystemInfo, "get_deviceModel", 0)->methodPointer)();
+    auto deviceModelU8 = localify::u16_u8(deviceModel->start_char);
+
+    auto systemMemorySize = reinterpret_cast<int (*)()>(il2cpp_class_get_method_from_name(
+            SystemInfo, "get_systemMemorySize", 0)->methodPointer)();
+
+    auto operatingSystem = reinterpret_cast<Il2CppString *(*)()>(il2cpp_class_get_method_from_name(
+            SystemInfo, "get_operatingSystem", 0)->methodPointer)();
+    auto operatingSystemU8 = localify::u16_u8(operatingSystem->start_char);
+
+    auto KakaoManager = il2cpp_symbols::get_class("umamusume.dll", "", "KakaoManager");
+    auto managerInstanceField = il2cpp_class_get_field_from_name(KakaoManager, "instance");
+    Il2CppObject *manager;
+    il2cpp_field_static_get_value(managerInstanceField, &manager);
+
+    Il2CppString *playerId = reinterpret_cast<Il2CppString *(*)(
+            Il2CppObject *)>(il2cpp_class_get_method_from_name(KakaoManager, "get_PlayerID",
+                                                               0)->methodPointer)(manager);
+    auto playerIdU8 = localify::u16_u8(playerId->start_char);
+
+    auto payload = "{"s;
+    payload += R"("access_key":")";
+    payload += oqupieAccessKey;
+    payload += R"(",)";
+    payload += R"("brand_key1":"inquirykr",)";
+
+    payload += R"("userId":")";
+    payload += playerIdU8;
+    payload += R"(",)";
+
+    payload += R"("deviceId":")";
+    payload += deviceIdU8;
+    payload += R"(",)";
+
+    payload += R"("deviceModel":")";
+    payload += deviceModelU8;
+    payload += R"(",)";
+
+    payload += R"("systemMemorySize":)";
+    payload += to_string(systemMemorySize);
+    payload += R"(,)";
+
+    payload += R"("systemLanguage":)";
+    payload += to_string(systemLanguage);
+    payload += R"(,)";
+
+    payload += R"("operatingSystem":")";
+    payload += operatingSystemU8;
+    payload += R"(",)";
+
+    payload += R"("version_client":")";
+    payload += get_application_version();
+    payload += R"(",)";
+    payload += R"("exp":)";
+    auto nowSec = chrono::duration_cast<chrono::seconds>(
+            chrono::system_clock::now().time_since_epoch()).count();
+    payload += to_string(nowSec + 3600);
+    payload += "}";
+
+    auto token = jwt(jwtToken);
+    return token.encodeJWT(payload);
+}
+
+void *DialogHomeMenuMain_SetupTrainer_callback = nullptr;
+
+void *DialogHomeMenuMain_SetupTrainer_orig = nullptr;
+
+void DialogHomeMenuMain_SetupTrainer_hook(Il2CppObject *thisObj, Il2CppObject *dialog) {
+    reinterpret_cast<decltype(DialogHomeMenuMain_SetupTrainer_hook) *>(DialogHomeMenuMain_SetupTrainer_orig)(
+            thisObj, dialog);
+    auto guideButtonField = il2cpp_class_get_field_from_name(thisObj->klass, "_guideButton");
+    Il2CppObject *guideButton;
+    il2cpp_field_get_value(thisObj, guideButtonField, &guideButton);
+    auto guideCallback = GetButtonCommonOnClickDelegate(guideButton);
+    if (guideCallback) {
+        if (!DialogHomeMenuMain_SetupTrainer_callback) {
+            auto newFn = *([]() {
+                OpenWebViewDialog(il2cpp_string_new("https://guide.umms.kakaogames.com"),
+                                  localizeextension_text_hook(GetTextIdByName("Menu900001")),
+                                  GetTextIdByName("Common0007"));
+            });
+            DobbyHook(reinterpret_cast<void *>(guideCallback->method_ptr),
+                      reinterpret_cast<void *>(newFn), &DialogHomeMenuMain_SetupTrainer_callback);
+        }
+    }
+}
+
+void *DialogHomeMenuMain_SetupOther_callback = nullptr;
+
+void *DialogHomeMenuMain_SetupOther_orig = nullptr;
+
+void DialogHomeMenuMain_SetupOther_hook(Il2CppObject *thisObj) {
+    reinterpret_cast<decltype(DialogHomeMenuMain_SetupOther_hook) *>(DialogHomeMenuMain_SetupOther_orig)(
+            thisObj);
+    auto helpButtonField = il2cpp_class_get_field_from_name(thisObj->klass, "_helpButton");
+    Il2CppObject *helpButton;
+    il2cpp_field_get_value(thisObj, helpButtonField, &helpButton);
+    auto helpCallback = GetButtonCommonOnClickDelegate(helpButton);
+    if (helpCallback) {
+        if (!DialogHomeMenuMain_SetupOther_callback) {
+            auto newFn = *([]() {
+                OpenHelpDialog();
+            });
+            DobbyHook(reinterpret_cast<void *>(helpCallback->method_ptr),
+                      reinterpret_cast<void *>(newFn), &DialogHomeMenuMain_SetupOther_callback);
+        }
+    }
+}
+
+void *DialogHomeMenuSupport_OnSelectMenu_orig = nullptr;
+
+void DialogHomeMenuSupport_OnSelectMenu_hook(int menu) {
+    switch (menu) {
+        case 0: {
+            // FAQ
+            auto closeText = GetTextIdByName("Common0007");
+            auto faqText = GetTextIdByName("Menu0013");
+            auto url = string(
+                    " https://kakaogames.oqupie.com/portals/1576/categories/3438?jwt=").append(
+                    GetOqupieToken());
+            OpenWebViewDialog(il2cpp_string_new(url.data()), localizeextension_text_hook(faqText),
+                              closeText);
+            return;
+        }
+        case 1: {
+            // QNA
+            auto closeText = GetTextIdByName("Common0007");
+            auto qnaText = GetTextIdByName("Common0050");
+            auto url = string("https://kakaogames.oqupie.com/portals/finder?jwt=").append(
+                    GetOqupieToken());
+            OpenWebViewDialog(il2cpp_string_new(url.data()), localizeextension_text_hook(qnaText),
+                              closeText);
+            return;
+        }
+        case 2: {
+            // Term of service
+            auto closeText = GetTextIdByName("Common0007");
+            auto termOfService = GetTextIdByName("Outgame0082");
+            OpenWebViewDialog(il2cpp_string_new(
+                                      "https://web-data-game.kakaocdn.net/real/www/html/terms/index.html?service=S0001&type=T001&country=kr&lang=ko"),
+                              localizeextension_text_hook(termOfService), closeText);
+        }
+        case 3: {
+            // Privacy policy
+            auto closeText = GetTextIdByName("Common0007");
+            auto privacyPolicy = GetTextIdByName("AccoutDataLink0087");
+            OpenWebViewDialog(il2cpp_string_new(
+                                      "https://web-data-game.kakaocdn.net/real/www/html/terms/index.html?service=S0001&type=T003&country=kr&lang=ko"),
+                              localizeextension_text_hook(privacyPolicy), closeText);
+        }
+        default:
+            reinterpret_cast<decltype(DialogHomeMenuSupport_OnSelectMenu_hook) *>(DialogHomeMenuSupport_OnSelectMenu_orig)(
+                    menu);
+    }
+}
+
+void *DialogTitleMenu_OnSelectMenu_orig = nullptr;
+
+void DialogTitleMenu_OnSelectMenu_hook(int menu) {
+    switch (menu) {
+        case 0:
+            OpenNewsDialog();
+            return;
+        case 2: {
+            auto closeText = GetTextIdByName("Common0007");
+            auto qnaText = GetTextIdByName("Common0050");
+            auto url = string("https://kakaogames.oqupie.com/portals/finder?jwt=").append(
+                    GetOqupieToken());
+            OpenWebViewDialog(il2cpp_string_new(url.data()), localizeextension_text_hook(qnaText),
+                              closeText);
+            return;
+        }
+        default:
+            reinterpret_cast<decltype(DialogTitleMenu_OnSelectMenu_hook) *>(DialogTitleMenu_OnSelectMenu_orig)(
+                    menu);
+    }
+}
+
+void *DialogTitleMenu_OnSelectMenu_KaKaoNotLogin_orig = nullptr;
+
+void DialogTitleMenu_OnSelectMenu_KaKaoNotLogin_hook(int menu) {
+    if (menu == 0) {
+        OpenNewsDialog();
+        return;
+    }
+    reinterpret_cast<decltype(DialogTitleMenu_OnSelectMenu_KaKaoNotLogin_hook) *>(DialogTitleMenu_OnSelectMenu_KaKaoNotLogin_orig)(
+            menu);
+}
+
+void *DialogTutorialGuide_OnPushHelpButton_orig = nullptr;
+
+void DialogTutorialGuide_OnPushHelpButton_hook(Il2CppObject * /*thisObj*/) {
+    OpenHelpDialog();
+}
+
+void *DialogSingleModeTopMenu_Setup_help_callback = nullptr;
+
+void *DialogSingleModeTopMenu_Setup_guide_callback = nullptr;
+
+void *DialogSingleModeTopMenu_Setup_orig = nullptr;
+
+void DialogSingleModeTopMenu_Setup_hook(Il2CppObject *thisObj) {
+    reinterpret_cast<decltype(DialogSingleModeTopMenu_Setup_hook) *>(DialogSingleModeTopMenu_Setup_orig)(
+            thisObj);
+    auto helpButtonField = il2cpp_class_get_field_from_name(thisObj->klass, "_helpButton");
+    Il2CppObject *helpButton;
+    il2cpp_field_get_value(thisObj, helpButtonField, &helpButton);
+    auto helpCallback = GetButtonCommonOnClickDelegate(helpButton);
+    if (helpCallback) {
+        if (!DialogSingleModeTopMenu_Setup_help_callback) {
+            auto newFn = *([]() {
+                OpenHelpDialog();
+            });
+            DobbyHook(reinterpret_cast<void *>(helpCallback->method_ptr),
+                      reinterpret_cast<void *>(newFn),
+                      &DialogSingleModeTopMenu_Setup_help_callback);
+        }
+    }
+
+    auto guideButtonField = il2cpp_class_get_field_from_name(thisObj->klass, "_guideButton");
+    Il2CppObject *guideButton;
+    il2cpp_field_get_value(thisObj, guideButtonField, &guideButton);
+    auto guideCallback = GetButtonCommonOnClickDelegate(guideButton);
+    if (guideCallback) {
+        auto newFn = *([]() {
+            OpenWebViewDialog(il2cpp_string_new("https://guide.umms.kakaogames.com"),
+                              localizeextension_text_hook(GetTextIdByName("Menu900001")),
+                              GetTextIdByName("Common0007"));
+        });
+        if (!DialogSingleModeTopMenu_Setup_guide_callback) {
+            DobbyHook(reinterpret_cast<void *>(guideCallback->method_ptr),
+                      reinterpret_cast<void *>(newFn),
+                      &DialogSingleModeTopMenu_Setup_guide_callback);
+        }
+    }
+}
+
+void *ChampionsInfoWebViewButton_OnClick_orig = nullptr;
+
+void ChampionsInfoWebViewButton_OnClick_hook(Il2CppObject * /*thisObj*/) {
+    auto KakaoManager = il2cpp_symbols::get_class("umamusume.dll", "", "KakaoManager");
+    auto managerInstanceField = il2cpp_class_get_field_from_name(KakaoManager, "instance");
+    Il2CppObject *manager;
+    il2cpp_field_static_get_value(managerInstanceField, &manager);
+
+    auto url = reinterpret_cast<Il2CppString *(*)(Il2CppObject *, Il2CppString *)>(
+            il2cpp_class_get_method_from_name(manager->klass, "GetKakaoOptionValue",
+                                              1)->methodPointer
+    )(manager, il2cpp_string_new("kakaoUmaChampion"));
+
+    OpenWebViewDialog(url, localizeextension_text_hook(GetTextIdByName("Common0161")),
+                      GetTextIdByName("Common0007"));
+}
+
+void *StoryEventTopViewController_OnClickHelpButton_orig = nullptr;
+
+void StoryEventTopViewController_OnClickHelpButton_hook(Il2CppObject * /*thisObj*/) {
+    OpenStoryEventHelpDialog();
+}
+
+void *PartsNewsButton_Setup_callback = nullptr;
+
+void *PartsNewsButton_Setup_orig = nullptr;
+
+void PartsNewsButton_Setup_hook(Il2CppObject *thisObj, Il2CppDelegate *onUpdateBadge) {
+    reinterpret_cast<decltype(PartsNewsButton_Setup_hook) *>(PartsNewsButton_Setup_orig)(thisObj,
+                                                                                         onUpdateBadge);
+
+    auto buttonField = il2cpp_class_get_field_from_name(thisObj->klass, "_button");
+    Il2CppObject *button;
+    il2cpp_field_get_value(thisObj, buttonField, &button);
+
+    if (button) {
+        auto callback = GetButtonCommonOnClickDelegate(button);
+        if (callback) {
+            if (!PartsNewsButton_Setup_callback) {
+                auto newFn = *([](Il2CppObject * /*thisObj*/) {
+                    OpenNewsDialog();
+                });
+                DobbyHook(reinterpret_cast<void *>(callback->method_ptr),
+                          reinterpret_cast<void *>(newFn), &PartsNewsButton_Setup_callback);
+            }
+        }
+    }
+}
+
+void *PartsEpisodeExtraVoiceButton_Setup_callback = nullptr;
+
+void *PartsEpisodeExtraVoiceButton_Setup_orig = nullptr;
+
+void PartsEpisodeExtraVoiceButton_Setup_hook(Il2CppObject *thisObj, Il2CppString *cueSheetName,
+                                             Il2CppString *cueName, int storyId) {
+    reinterpret_cast<decltype(PartsEpisodeExtraVoiceButton_Setup_hook) *>(PartsEpisodeExtraVoiceButton_Setup_orig)(
+            thisObj, cueSheetName, cueName, storyId);
+
+    auto buttonField = il2cpp_class_get_field_from_name(thisObj->klass, "_playVoiceButton");
+    Il2CppObject *button;
+    il2cpp_field_get_value(thisObj, buttonField, &button);
+
+    if (button) {
+        auto callback = GetButtonCommonOnClickDelegate(button);
+        if (callback) {
+            if (!PartsEpisodeExtraVoiceButton_Setup_callback) {
+                auto newFn = *([](Il2CppObject *innerThisObj) {
+                    auto storyIdField = il2cpp_class_get_field_from_name(innerThisObj->klass,
+                                                                         "storyId");
+                    int storyId;
+                    il2cpp_field_get_value(innerThisObj, storyIdField, &storyId);
+
+                    FieldInfo *thisField;
+                    void *iter = nullptr;
+                    while (FieldInfo *field = il2cpp_class_get_fields(innerThisObj->klass, &iter)) {
+                        if (string(field->name).find("this") != string::npos) {
+                            thisField = field;
+                        }
+                    }
+                    Il2CppObject *thisObj;
+                    il2cpp_field_get_value(innerThisObj, thisField, &thisObj);
+
+                    reinterpret_cast<void (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
+                            thisObj->klass, "StopVoiceIfNeed", 0)->methodPointer)(thisObj);
+
+                    auto onLeft = CreateDelegate(innerThisObj,
+                                                 *([](Il2CppObject *thisObj, Il2CppObject *) {
+                                                     auto storyIdField = il2cpp_class_get_field_from_name(
+                                                             thisObj->klass, "storyId");
+                                                     int storyId;
+                                                     il2cpp_field_get_value(thisObj, storyIdField,
+                                                                            &storyId);
+
+                                                     auto masterDataManager = GetSingletonInstance(
+                                                             il2cpp_symbols::get_class(
+                                                                     "umamusume.dll", "Gallop",
+                                                                     "MasterDataManager"));
+                                                     auto masterBannerData = reinterpret_cast<Il2CppObject *(*)(
+                                                             Il2CppObject *)>(il2cpp_class_get_method_from_name(
+                                                             masterDataManager->klass,
+                                                             "get_masterBannerData",
+                                                             0)->methodPointer)(masterDataManager);
+
+                                                     auto bannerList = reinterpret_cast<Il2CppObject *(*)(
+                                                             Il2CppObject *,
+                                                             int)>(il2cpp_class_get_method_from_name(
+                                                             masterBannerData->klass,
+                                                             "GetListWithGroupId",
+                                                             1)->methodPointer)(masterBannerData,
+                                                                                7);
+
+                                                     FieldInfo *itemsField = il2cpp_class_get_field_from_name(
+                                                             bannerList->klass, "_items");
+                                                     Il2CppArray *arr;
+                                                     il2cpp_field_get_value(bannerList, itemsField,
+                                                                            &arr);
+
+                                                     int announceId = -1;
+
+                                                     for (int i = 0; i < arr->max_length; i++) {
+                                                         auto item = reinterpret_cast<Il2CppObject *>(arr->vector[i]);
+                                                         if (item) {
+                                                             auto typeField = il2cpp_class_get_field_from_name(
+                                                                     item->klass, "Type");
+                                                             int type;
+                                                             il2cpp_field_get_value(item, typeField,
+                                                                                    &type);
+                                                             auto conditionValueField = il2cpp_class_get_field_from_name(
+                                                                     item->klass, "ConditionValue");
+                                                             int conditionValue;
+                                                             il2cpp_field_get_value(item,
+                                                                                    conditionValueField,
+                                                                                    &conditionValue);
+                                                             if (type == 7 &&
+                                                                 conditionValue == storyId) {
+                                                                 auto transitionField = il2cpp_class_get_field_from_name(
+                                                                         item->klass, "Transition");
+                                                                 il2cpp_field_get_value(item,
+                                                                                        transitionField,
+                                                                                        &announceId);
+                                                                 break;
+                                                             }
+                                                         }
+                                                     }
+
+                                                     if (announceId == -1 && storyId < 1005) {
+                                                         announceId = storyId - 1002;
+                                                     }
+
+                                                     auto action = CreateDelegate(thisObj,
+                                                                                  *([](Il2CppObject *) {}));
+
+                                                     reinterpret_cast<void (*)(int,
+                                                                               Il2CppDelegate *,
+                                                                               Il2CppDelegate *)>(il2cpp_symbols::get_method_pointer(
+                                                             "umamusume.dll", "Gallop",
+                                                             "DialogAnnounceEvent", "Open", 3))(
+                                                             announceId, action, action);
+                                                 }));
+
+                    if (storyId < 1005) {
+                        auto onRight = CreateDelegate(innerThisObj,
+                                                      *([](Il2CppObject *thisObj, Il2CppObject *) {
+                                                          auto storyIdField = il2cpp_class_get_field_from_name(
+                                                                  thisObj->klass, "storyId");
+                                                          int storyId;
+                                                          il2cpp_field_get_value(thisObj,
+                                                                                 storyIdField,
+                                                                                 &storyId);
+
+                                                          auto cueSheetNameField = il2cpp_class_get_field_from_name(
+                                                                  thisObj->klass, "cueSheetName");
+                                                          Il2CppString *cueSheetName;
+                                                          il2cpp_field_get_value(thisObj,
+                                                                                 cueSheetNameField,
+                                                                                 &cueSheetName);
+
+                                                          auto cueNameField = il2cpp_class_get_field_from_name(
+                                                                  thisObj->klass, "cueName");
+                                                          Il2CppString *cueName;
+                                                          il2cpp_field_get_value(thisObj,
+                                                                                 cueNameField,
+                                                                                 &cueName);
+
+                                                          auto optionKey = string(
+                                                                  "kakaoUmaAnnounceEvent").append(
+                                                                  to_string(storyId));
+
+                                                          auto KakaoManager = il2cpp_symbols::get_class(
+                                                                  "umamusume.dll", "",
+                                                                  "KakaoManager");
+                                                          auto managerInstanceField = il2cpp_class_get_field_from_name(
+                                                                  KakaoManager, "instance");
+                                                          Il2CppObject *manager;
+                                                          il2cpp_field_static_get_value(
+                                                                  managerInstanceField, &manager);
+
+                                                          auto url = reinterpret_cast<Il2CppString *(*)(
+                                                                  Il2CppObject *, Il2CppString *)>(
+                                                                  il2cpp_class_get_method_from_name(
+                                                                          manager->klass,
+                                                                          "GetKakaoOptionValue",
+                                                                          1)->methodPointer
+                                                          )(manager,
+                                                            il2cpp_string_new(optionKey.data()));
+
+
+                                                          auto masterDataManager = GetSingletonInstance(
+                                                                  il2cpp_symbols::get_class(
+                                                                          "umamusume.dll", "Gallop",
+                                                                          "MasterDataManager"));
+                                                          auto masterString = reinterpret_cast<Il2CppObject *(*)(
+                                                                  Il2CppObject *)>(il2cpp_class_get_method_from_name(
+                                                                  masterDataManager->klass,
+                                                                  "get_masterString",
+                                                                  0)->methodPointer)(
+                                                                  masterDataManager);
+
+                                                          auto title = reinterpret_cast<Il2CppString *(*)(
+                                                                  Il2CppObject *, int category,
+                                                                  int index)>(
+                                                                  il2cpp_class_get_method_from_name(
+                                                                          masterString->klass,
+                                                                          "GetText",
+                                                                          2)->methodPointer
+                                                          )(masterString, 214, storyId);
+
+                                                          FieldInfo *thisField;
+                                                          void *iter = nullptr;
+                                                          while (FieldInfo *field = il2cpp_class_get_fields(
+                                                                  thisObj->klass, &iter)) {
+                                                              if (string(field->name).find(
+                                                                      "this") != string::npos) {
+                                                                  thisField = field;
+                                                              }
+                                                          }
+                                                          Il2CppObject *parentObj;
+                                                          il2cpp_field_get_value(thisObj, thisField,
+                                                                                 &parentObj);
+
+                                                          OpenWebViewDialog(url, title,
+                                                                            GetTextIdByName(
+                                                                                    "Common0007"),
+                                                                            CreateDelegate(
+                                                                                    parentObj,
+                                                                                    *([](Il2CppObject *thisObj) {
+                                                                                        reinterpret_cast<void (*)(
+                                                                                                Il2CppObject *)>(il2cpp_class_get_method_from_name(
+                                                                                                thisObj->klass,
+                                                                                                "StopVoiceIfNeed",
+                                                                                                0)->methodPointer)(
+                                                                                                thisObj);
+                                                                                    })));
+
+                                                          reinterpret_cast<void (*)(Il2CppObject *,
+                                                                                    Il2CppString *,
+                                                                                    Il2CppString *)>(il2cpp_class_get_method_from_name(
+                                                                  parentObj->klass,
+                                                                  "PlayAnnounceVoice",
+                                                                  2)->methodPointer)(parentObj,
+                                                                                     cueSheetName,
+                                                                                     cueName);
+                                                      }));
+
+                        auto dialogData = il2cpp_object_new(
+                                il2cpp_symbols::get_class("umamusume.dll", "Gallop",
+                                                          "DialogCommon/Data"));
+                        il2cpp_runtime_object_init(dialogData);
+
+                        dialogData = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *thisObj,
+                                                                        Il2CppString *headerTextArg,
+                                                                        Il2CppString *message,
+                                                                        Il2CppDelegate *onRight,
+                                                                        unsigned long leftTextId,
+                                                                        unsigned long rightTextId,
+                                                                        Il2CppDelegate *onLeft,
+                                                                        int dialogFormType)>(
+                                il2cpp_class_get_method_from_name(dialogData->klass,
+                                                                  "SetSimpleTwoButtonMessage",
+                                                                  7)->methodPointer
+                        )(dialogData,
+                          localizeextension_text_hook(GetTextIdByName("StoryEvent0079")),
+                          il2cpp_string_new("해당 스토리 이벤트는 개최 정보가 누락되어있습니다.\n\n웹 페이지를 보시겠습니까?"),
+                          onRight, GetTextIdByName("Common0002"), GetTextIdByName("Common0001"),
+                          onLeft, 2);
+
+                        reinterpret_cast<Il2CppObject *(*)(
+                                Il2CppObject *data)>(il2cpp_symbols::get_method_pointer(
+                                "umamusume.dll", "Gallop", "DialogManager", "PushDialog", 1))(
+                                dialogData);
+                    } else {
+                        reinterpret_cast<void (*)(Il2CppObject *,
+                                                  Il2CppObject *)>(onLeft->method_ptr)(
+                                onLeft->target, nullptr);
+                    }
+                });
+                DobbyHook(reinterpret_cast<void *>(callback->method_ptr),
+                          reinterpret_cast<void *>(newFn),
+                          &PartsEpisodeExtraVoiceButton_Setup_callback);
+            }
+        }
+    }
+}
+
+void *BannerUI_OnClickBannerItem_orig = nullptr;
+
+void BannerUI_OnClickBannerItem_hook(Il2CppObject *thisObj, Il2CppObject *buttonInfo) {
+    auto master = reinterpret_cast<Il2CppObject *(*)(
+            Il2CppObject *)>(il2cpp_class_get_method_from_name(buttonInfo->klass, "get_Master",
+                                                               0)->methodPointer)(buttonInfo);
+    auto masterTypeField = il2cpp_class_get_field_from_name(master->klass, "Type");
+    int masterType;
+    il2cpp_field_get_value(master, masterTypeField, &masterType);
+    auto masterTransitionField = il2cpp_class_get_field_from_name(master->klass, "Transition");
+    int masterTransition;
+    il2cpp_field_get_value(master, masterTransitionField, &masterTransition);
+    if (masterType == 6) {
+        OpenWebViewDialog(il2cpp_string_new("https://m.cafe.daum.net/umamusume-kor/ZBhv"),
+                          localizeextension_text_hook(GetTextIdByName("Common0161")),
+                          GetTextIdByName("Common0007"));
+        return;
+    }
+    reinterpret_cast<decltype(BannerUI_OnClickBannerItem_hook) *>(BannerUI_OnClickBannerItem_orig)(
+            thisObj, buttonInfo);
+}
+
+void *KakaoManager_OnKakaoShowInAppWebView_orig = nullptr;
+
+void KakaoManager_OnKakaoShowInAppWebView_hook(Il2CppObject * /*thisObj*/, Il2CppString *url,
+                                               Il2CppDelegate * /*isSuccess*/) {
+    if (url->start_char == u"https://m.cafe.daum.net/umamusume-kor/_boards?type=notice"s) {
+        auto NewsDialogInfo = il2cpp_symbols::get_class("umamusume.dll", "Gallop",
+                                                        "HomeStartCheckSequence/NewsDialogInfo");
+        auto instance = il2cpp_object_new(NewsDialogInfo);
+        il2cpp_runtime_object_init(instance);
+        auto newsOpened = reinterpret_cast<bool (*)(
+                Il2CppObject *)>(il2cpp_class_get_method_from_name(instance->klass, "Check",
+                                                                   0)->methodPointer)(instance);
+        if (!newsOpened) {
+            OpenNewsDialog();
+        }
+        return;
+    }
+
+    auto closeText = GetTextIdByName("Common0007");
+
+    OpenWebViewDialog(url, il2cpp_string_new(""), closeText);
+}
+
+bool rotationFl = false;
+
+void *TapEffectController_Disable_orig = nullptr;
+
+void TapEffectController_Disable_hook(Il2CppObject *thisObj) {
+    if (!rotationFl) {
+        rotationFl = true;
+        return;
+    }
+    reinterpret_cast<decltype(TapEffectController_Disable_hook) *>(TapEffectController_Disable_orig)(
+            thisObj);
+}
+
 void (*SendNotification)(Il2CppObject *thisObj, Il2CppString *ChannelId, Il2CppString *title,
-                         Il2CppString *message,
-                         DateTime date, Il2CppString *path, int id);
+                         Il2CppString *message, DateTime date, Il2CppString *path, int id);
 
 Il2CppString *(*createFavIconFilePath)(Il2CppObject *thisObj, int unitId);
 
 void *GeneratePushNotifyCharaIconPng_orig = nullptr;
 
 Il2CppString *GeneratePushNotifyCharaIconPng_hook(Il2CppObject *thisObj, int unitId, int dressId,
-                                                  Boolean  /*forceGen*/) {
+                                                  Boolean /*forceGen*/) {
     return reinterpret_cast<decltype(GeneratePushNotifyCharaIconPng_hook) * >
-    (GeneratePushNotifyCharaIconPng_orig)(
-            thisObj, unitId, dressId,
-            GetBoolean(true));
-}
-
-void *MasterDataManager_ctor_orig = nullptr;
-
-void MasterDataManager_ctor_hook(Il2CppObject *thisObj) {
-    reinterpret_cast<decltype(MasterDataManager_ctor_hook) * >
-    (MasterDataManager_ctor_orig)(thisObj);
-    masterDataManager = thisObj;
+    (GeneratePushNotifyCharaIconPng_orig)(thisObj, unitId, dressId, GetBoolean(true));
 }
 
 void
@@ -2381,16 +3123,17 @@ SendNotificationWithExplicitID_hook(AndroidNotification notificationObj, Il2CppS
     }
 
     reinterpret_cast<decltype(SendNotificationWithExplicitID_hook) * >
-    (SendNotificationWithExplicitID_orig)(
-            notificationObj, channelId, id);
+    (SendNotificationWithExplicitID_orig)(notificationObj, channelId, id);
 }
 
 void *ScheduleLocalPushes_orig = nullptr;
 
 void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unixTimes,
-                              Il2CppArray *values, int  /*_priority*/, Il2CppString * /*imgPath*/) {
+                              Il2CppArray *values, int /*_priority*/, Il2CppString * /*imgPath*/) {
 
     auto charaId = GetInt64Safety(reinterpret_cast<Int64 *>(Array_GetValue(values, 0)));
+    auto masterDataManager = GetSingletonInstance(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "MasterDataManager"));
     if (!masterDataManager) {
         return;
     }
@@ -2405,8 +3148,7 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
             il2cpp_class_get_method_from_name(masterString->klass, "GetText", 2)->methodPointer
     )(masterString, cateId, (int) charaId);
     // ex. 1841001
-    auto messageKey = string(to_string(cateId)).append(
-            to_string(charaId));
+    auto messageKey = string(to_string(cateId)).append(to_string(charaId));
     auto messageIl2CppStr = localify::get_localized_string(stoi(messageKey));
     if (!messageIl2CppStr) {
         messageIl2CppStr = messageIl2CppStrOrig;
@@ -2419,9 +3161,7 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
         DeleteAllLocalPushes(thisObj);
         return;
     }
-    RegisterNotificationChannel(thisObj,
-                                il2cpp_string_new(typeStr),
-                                il2cpp_string_new(channelId),
+    RegisterNotificationChannel(thisObj, il2cpp_string_new(typeStr), il2cpp_string_new(channelId),
                                 il2cpp_string_new(string(typeStr).append(" 알림").data()));
     auto dateTime = FromUnixTimeToLocaleTime(
             GetInt64Safety(reinterpret_cast<Int64 *>(Array_GetValue(unixTimes, 0))));
@@ -2441,9 +3181,7 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
     document.Accept(writer);
     SendNotification(thisObj, il2cpp_string_new(channelId), il2cpp_string_new("우마무스메"),
-                     il2cpp_string_new(buffer.GetString()), dateTime,
-                     il2cpp_string_new(
-                             "icon"),
+                     il2cpp_string_new(buffer.GetString()), dateTime, il2cpp_string_new("icon"),
                      id);
 }
 
@@ -2497,13 +3235,12 @@ void dump_all_entries() {
 
             if (g_static_entries_use_text_id_name) {
                 const string textIdName = GetTextIdNameById(i);
-                text_id_static_entries.emplace_back(
-                        textIdName, u16string(str->start_char));
+                text_id_static_entries.emplace_back(textIdName, u16string(str->start_char));
                 if (localify::get_localized_string(textIdName) == nullptr ||
                     localify::u16_u8(localify::get_localized_string(textIdName)->start_char) ==
                     localify::u16_u8(str->start_char)) {
-                    text_id_not_matched_entries.emplace_back(
-                            textIdName, u16string(str->start_char));
+                    text_id_not_matched_entries.emplace_back(textIdName,
+                                                             u16string(str->start_char));
                 }
             } else if (g_static_entries_use_hash) {
                 static_entries.emplace_back(str->start_char);
@@ -2552,8 +3289,7 @@ uint64_t get_module_base(const char *module_name) {
                          PRIx64
                          " %s %*"
                          PRIx64
-                         " %*x:%*x %*u %s\n", &start, &end,
-                   flags, path);
+                         " %*x:%*x %*u %s\n", &start, &end, flags, path);
 #if defined(__aarch64__)
             if (strstr(flags, "x") == 0)
                 continue;
@@ -2571,62 +3307,43 @@ uint64_t get_module_base(const char *module_name) {
 void hookMethods() {
     load_assets = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *thisObj, Il2CppString *name,
                                                      Il2CppObject *type)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.AssetBundleModule.dll", "UnityEngine",
-                    "AssetBundle", "LoadAsset", 2)
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.AssetBundleModule.dll", "UnityEngine",
+                                               "AssetBundle", "LoadAsset", 2));
 
     get_all_asset_names = reinterpret_cast<Il2CppArray *(*)(Il2CppObject *thisObj)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.AssetBundleModule.dll", "UnityEngine",
-                    "AssetBundle", "GetAllAssetNames", 0)
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.AssetBundleModule.dll", "UnityEngine",
+                                               "AssetBundle", "GetAllAssetNames", 0));
 
     uobject_get_name = reinterpret_cast<Il2CppString *(*)(Il2CppObject *uObject)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.CoreModule.dll", "UnityEngine",
-                    "Object", "GetName", -1)
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
+                                               "Object", "GetName", -1));
 
     uobject_IsNativeObjectAlive = reinterpret_cast<bool (*)(Il2CppObject *uObject)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.CoreModule.dll", "UnityEngine",
-                    "Object", "IsNativeObjectAlive", 1)
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
+                                               "Object", "IsNativeObjectAlive", 1));
 
     get_unityVersion = reinterpret_cast<Il2CppString *(*)()>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.CoreModule.dll", "UnityEngine",
-                    "Application", "get_unityVersion", -1)
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
+                                               "Application", "get_unityVersion", -1));
 
     FromUnixTimeToLocaleTime = reinterpret_cast<DateTime (*)(long unixTime)>(
-            il2cpp_symbols::get_method_pointer(
-                    "umamusume.dll", "Gallop",
-                    "TimeUtil", "FromUnixTimeToLocaleTime", 1)
-    );
+            il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop", "TimeUtil",
+                                               "FromUnixTimeToLocaleTime", 1));
 
     Array_GetValue = reinterpret_cast<void *(*)(Il2CppArray *, long index)>(
-            il2cpp_symbols::get_method_pointer(
-                    "mscorlib.dll", "System",
-                    "Array", "GetValue", 1)
-    );
+            il2cpp_symbols::get_method_pointer("mscorlib.dll", "System", "Array", "GetValue", 1));
 
-    auto populate_with_errors_addr = il2cpp_symbols::get_method_pointer(
-            "UnityEngine.TextRenderingModule.dll",
-            "UnityEngine", "TextGenerator",
-            "PopulateWithErrors", 3
-    );
+    addr_TextGenerator_PopulateWithErrors = reinterpret_cast<void *>(il2cpp_symbols::get_method_pointer(
+            "UnityEngine.TextRenderingModule.dll", "UnityEngine", "TextGenerator",
+            "PopulateWithErrors", 3));
 
     auto get_preferred_width_addr = il2cpp_symbols::get_method_pointer(
-            "UnityEngine.TextRenderingModule.dll",
-            "UnityEngine", "TextGenerator",
-            "GetPreferredWidth", 2
-    );
+            "UnityEngine.TextRenderingModule.dll", "UnityEngine", "TextGenerator",
+            "GetPreferredWidth", 2);
 
-    auto localizeextension_text_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop", "LocalizeExtention", "Text", 1
-    );
+    auto localizeextension_text_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                          "LocalizeExtention",
+                                                                          "Text", 1);
 
 // have to do this way because there's Get(TextId id) and Get(string id)
 // the string one looks like will not be called by elsewhere
@@ -2637,254 +3354,188 @@ void hookMethods() {
                                                                     IL2CPP_TYPE_VALUETYPE;
                                                          });
 
-    auto update_addr = il2cpp_symbols::get_method_pointer(
-            "DOTween.dll", "DG.Tweening.Core", "TweenManager", "Update", 3
-    );
+    auto update_addr = il2cpp_symbols::get_method_pointer("DOTween.dll", "DG.Tweening.Core",
+                                                          "TweenManager", "Update", 3);
 
-    auto query_setup_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "Query", "_Setup", 2
-    );
+    auto query_setup_addr = il2cpp_symbols::get_method_pointer("LibNative.Runtime.dll",
+                                                               "LibNative.Sqlite3", "Query",
+                                                               "_Setup", 2);
 
-    auto Plugin_sqlite3_step_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "Plugin", "sqlite3_step", 1
-    );
+    auto Plugin_sqlite3_step_addr = il2cpp_symbols::get_method_pointer("LibNative.Runtime.dll",
+                                                                       "LibNative.Sqlite3",
+                                                                       "Plugin", "sqlite3_step", 1);
 
-    auto Plugin_sqlite3_reset_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "Plugin", "sqlite3_reset", 1
-    );
+    auto Plugin_sqlite3_reset_addr = il2cpp_symbols::get_method_pointer("LibNative.Runtime.dll",
+                                                                        "LibNative.Sqlite3",
+                                                                        "Plugin", "sqlite3_reset",
+                                                                        1);
 
-    auto query_step_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "Query", "Step", 0
-    );
+    auto query_step_addr = il2cpp_symbols::get_method_pointer("LibNative.Runtime.dll",
+                                                              "LibNative.Sqlite3", "Query", "Step",
+                                                              0);
 
-    auto prepared_query_reset_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "PreparedQuery", "Reset", 0
-    );
+    auto prepared_query_reset_addr = il2cpp_symbols::get_method_pointer("LibNative.Runtime.dll",
+                                                                        "LibNative.Sqlite3",
+                                                                        "PreparedQuery", "Reset",
+                                                                        0);
 
-    auto prepared_query_bind_text_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "PreparedQuery", "BindText", 2
-    );
+    auto prepared_query_bind_text_addr = il2cpp_symbols::get_method_pointer("LibNative.Runtime.dll",
+                                                                            "LibNative.Sqlite3",
+                                                                            "PreparedQuery",
+                                                                            "BindText", 2);
 
-    auto prepared_query_bind_int_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "PreparedQuery", "BindInt", 2
-    );
+    auto prepared_query_bind_int_addr = il2cpp_symbols::get_method_pointer("LibNative.Runtime.dll",
+                                                                           "LibNative.Sqlite3",
+                                                                           "PreparedQuery",
+                                                                           "BindInt", 2);
 
-    auto prepared_query_bind_long_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "PreparedQuery", "BindLong", 2
-    );
+    auto prepared_query_bind_long_addr = il2cpp_symbols::get_method_pointer("LibNative.Runtime.dll",
+                                                                            "LibNative.Sqlite3",
+                                                                            "PreparedQuery",
+                                                                            "BindLong", 2);
 
     auto prepared_query_bind_double_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "PreparedQuery", "BindDouble", 2
-    );
+            "LibNative.Runtime.dll", "LibNative.Sqlite3", "PreparedQuery", "BindDouble", 2);
 
-    auto query_gettext_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "Query", "GetText", 1
-    );
+    auto query_gettext_addr = il2cpp_symbols::get_method_pointer("LibNative.Runtime.dll",
+                                                                 "LibNative.Sqlite3", "Query",
+                                                                 "GetText", 1);
 
     query_getint = reinterpret_cast<int (*)(Il2CppObject *,
                                             int)>(il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "Query", "GetInt", 1
-    ));
+            "LibNative.Runtime.dll", "LibNative.Sqlite3", "Query", "GetInt", 1));
 
-    auto query_dispose_addr = il2cpp_symbols::get_method_pointer(
-            "LibNative.Runtime.dll", "LibNative.Sqlite3",
-            "Query", "Dispose", 0
-    );
+    auto query_dispose_addr = il2cpp_symbols::get_method_pointer("LibNative.Runtime.dll",
+                                                                 "LibNative.Sqlite3", "Query",
+                                                                 "Dispose", 0);
 
     auto MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "MasterCharacterSystemText", "_CreateOrmByQueryResultWithCharacterId", 2
-    );
+            "umamusume.dll", "Gallop", "MasterCharacterSystemText",
+            "_CreateOrmByQueryResultWithCharacterId", 2);
 
     auto AtomSourceEx_SetParameter_addr = il2cpp_symbols::get_method_pointer(
-            "Cute.Cri.Assembly.dll", "Cute.Cri",
-            "AtomSourceEx", "SetParameter", 0
-    );
+            "Cute.Cri.Assembly.dll", "Cute.Cri", "AtomSourceEx", "SetParameter", 0);
 
     auto CySpringUpdater_set_SpringUpdateMode_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop.Model.Component",
-            "CySpringUpdater", "set_SpringUpdateMode", 1
-    );
+            "umamusume.dll", "Gallop.Model.Component", "CySpringUpdater", "set_SpringUpdateMode",
+            1);
 
     auto CySpringUpdater_get_SpringUpdateMode_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop.Model.Component",
-            "CySpringUpdater", "get_SpringUpdateMode", 0
-    );
+            "umamusume.dll", "Gallop.Model.Component", "CySpringUpdater", "get_SpringUpdateMode",
+            0);
 
-    auto story_timeline_controller_play_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "StoryTimelineController", "Play", 0);
+    auto story_timeline_controller_play_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                                  "Gallop",
+                                                                                  "StoryTimelineController",
+                                                                                  "Play", 0);
 
-    auto story_race_textasset_load_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "StoryRaceTextAsset", "Load", 0);
+    auto story_race_textasset_load_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                             "Gallop",
+                                                                             "StoryRaceTextAsset",
+                                                                             "Load", 0);
 
-    auto get_modified_string_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "GallopUtil", "GetModifiedString", -1);
+    auto get_modified_string_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                       "GallopUtil",
+                                                                       "GetModifiedString", -1);
 
-    auto UIManager_OnInitialize_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "UIManager", "OnInitialize", 0
-    );
+    auto on_populate_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                               "TextCommon", "OnPopulateMesh", 1);
 
-    auto on_populate_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "TextCommon", "OnPopulateMesh", 1
-    );
-
-    auto textcommon_awake_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "TextCommon", "Awake", 0
-    );
+    auto textcommon_awake_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                    "TextCommon", "Awake", 0);
 
     auto textcommon_SetSystemTextWithLineHeadWrap_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "TextCommon", "SetSystemTextWithLineHeadWrap", 2
+            "umamusume.dll", "Gallop", "TextCommon", "SetSystemTextWithLineHeadWrap", 2
 
     );
 
     auto textcommon_SetTextWithLineHeadWrapWithColorTag_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "TextCommon", "SetTextWithLineHeadWrapWithColorTag", 2
+            "umamusume.dll", "Gallop", "TextCommon", "SetTextWithLineHeadWrapWithColorTag", 2
 
     );
 
     auto textcommon_SetTextWithLineHeadWrap_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "TextCommon", "SetTextWithLineHeadWrap", 2
+            "umamusume.dll", "Gallop", "TextCommon", "SetTextWithLineHeadWrap", 2
 
     );
 
-    auto TextMeshProUguiCommon_Awake_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "TextMeshProUguiCommon", "Awake", 0
-    );
+    auto TextMeshProUguiCommon_Awake_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                               "Gallop",
+                                                                               "TextMeshProUguiCommon",
+                                                                               "Awake", 0);
 
     textcommon_get_TextId = reinterpret_cast<int (*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop",
-            "TextCommon", "get_TextId", 0
-    ));
+            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                "TextCommon", "get_TextId", 0));
 
     text_get_text = reinterpret_cast<Il2CppString *(*)(Il2CppObject *)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.UI.dll", "UnityEngine.UI",
-                    "Text", "get_text", 0
-            )
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.UI.dll", "UnityEngine.UI", "Text",
+                                               "get_text", 0));
     text_set_text = reinterpret_cast<void (*)(Il2CppObject *, Il2CppString *)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.UI.dll", "UnityEngine.UI",
-                    "Text", "set_text", 1
-            )
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.UI.dll", "UnityEngine.UI", "Text",
+                                               "set_text", 1));
 
     text_assign_font = reinterpret_cast<void (*)(Il2CppObject *)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.UI.dll", "UnityEngine.UI",
-                    "Text", "AssignDefaultFont", 0
-            )
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.UI.dll", "UnityEngine.UI", "Text",
+                                               "AssignDefaultFont", 0));
 
     text_set_font = reinterpret_cast<void (*)(Il2CppObject *, Il2CppObject *)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.UI.dll", "UnityEngine.UI",
-                    "Text", "set_font", 1
-            )
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.UI.dll", "UnityEngine.UI", "Text",
+                                               "set_font", 1));
 
     text_get_font = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.UI.dll", "UnityEngine.UI",
-                    "Text", "get_font", 0
-            )
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.UI.dll", "UnityEngine.UI", "Text",
+                                               "get_font", 0));
 
     text_get_size = reinterpret_cast<int (*)(Il2CppObject *)>(
-            il2cpp_symbols::get_method_pointer(
-                    "umamusume.dll", "Gallop",
-                    "TextCommon", "get_FontSize", 0
-            )
-    );
+            il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop", "TextCommon",
+                                               "get_FontSize", 0));
 
     text_set_size = reinterpret_cast<void (*)(Il2CppObject *, int)>(
-            il2cpp_symbols::get_method_pointer(
-                    "umamusume.dll", "Gallop",
-                    "TextCommon", "set_FontSize", 1
-            )
-    );
+            il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop", "TextCommon",
+                                               "set_FontSize", 1));
 
     text_get_linespacing = reinterpret_cast<float (*)(Il2CppObject *)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.UI.dll", "UnityEngine.UI",
-                    "Text", "get_lineSpacing", 0
-            )
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.UI.dll", "UnityEngine.UI", "Text",
+                                               "get_lineSpacing", 0));
 
     text_set_style = reinterpret_cast<void (*)(Il2CppObject *, int)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.UI.dll", "UnityEngine.UI",
-                    "Text", "set_fontStyle", 1
-            )
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.UI.dll", "UnityEngine.UI", "Text",
+                                               "set_fontStyle", 1));
 
     text_set_linespacing = reinterpret_cast<void (*)(Il2CppObject *, float)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.UI.dll", "UnityEngine.UI",
-                    "Text", "set_lineSpacing", 1
-            )
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.UI.dll", "UnityEngine.UI", "Text",
+                                               "set_lineSpacing", 1));
 
     text_set_horizontalOverflow = reinterpret_cast<void (*)(Il2CppObject *, int)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.UI.dll", "UnityEngine.UI",
-                    "Text", "set_horizontalOverflow", 1
-            )
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.UI.dll", "UnityEngine.UI", "Text",
+                                               "set_horizontalOverflow", 1));
 
     text_set_verticalOverflow = reinterpret_cast<void (*)(Il2CppObject *, int)>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.UI.dll", "UnityEngine.UI",
-                    "Text", "set_verticalOverflow", 1
-            )
-    );
+            il2cpp_symbols::get_method_pointer("UnityEngine.UI.dll", "UnityEngine.UI", "Text",
+                                               "set_verticalOverflow", 1));
 
-    auto set_fps_addr = il2cpp_symbols::get_method_pointer(
-            "UnityEngine.CoreModule.dll", "UnityEngine",
-            "Application", "set_targetFrameRate", 1);
+    auto set_fps_addr = il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                           "UnityEngine", "Application",
+                                                           "set_targetFrameRate", 1);
 
-    auto an_text_fix_data_addr = reinterpret_cast<void (*)(
-            Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("Plugins.dll",
-                                                                       "AnimateToUnity", "AnText",
-                                                                       "_FixData", 0));
+    auto an_text_fix_data_addr = il2cpp_symbols::get_method_pointer("Plugins.dll", "AnimateToUnity",
+                                                                    "AnText", "_FixData", 0);
 
-    auto an_text_set_material_to_textmesh_addr = reinterpret_cast<void (*)(
-            Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("Plugins.dll",
-                                                                       "AnimateToUnity", "AnText",
-                                                                       "_SetMaterialToTextMesh",
-                                                                       0));
+    auto an_text_set_material_to_textmesh_addr = il2cpp_symbols::get_method_pointer("Plugins.dll",
+                                                                                    "AnimateToUnity",
+                                                                                    "AnText",
+                                                                                    "_SetMaterialToTextMesh",
+                                                                                    0);
 
-    auto load_zekken_composite_resource_addr = reinterpret_cast<void (*)(
-            Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
-                                                                       "ModelLoader",
-                                                                       "LoadZekkenCompositeResourceInternal",
-                                                                       0));
+    auto load_zekken_composite_resource_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                                  "Gallop",
+                                                                                  "ModelLoader",
+                                                                                  "LoadZekkenCompositeResourceInternal",
+                                                                                  0);
 
-    auto wait_resize_ui_addr = reinterpret_cast<void (*)(Il2CppObject *thisObj, bool isPortrait,
-                                                         bool isShowOrientationGuide)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop", "UIManager", "WaitResizeUI", 2));
+    auto wait_resize_ui_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                  "UIManager", "WaitResizeUI", 2);
 
     auto set_anti_aliasing_addr = il2cpp_resolve_icall(
             "UnityEngine.QualitySettings::set_antiAliasing(System.Int32)");
@@ -2893,127 +3544,93 @@ void hookMethods() {
             "UnityEngine.Light::set_shadowResolution(UnityEngine.Light,UnityEngine.Rendering.LightShadowResolution)");
 
     display_get_main = reinterpret_cast<Il2CppObject *(*)()>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.CoreModule.dll",
-            "UnityEngine",
-            "Display", "get_main", -1));
+            "UnityEngine.CoreModule.dll", "UnityEngine", "Display", "get_main", -1));
 
     get_system_width = reinterpret_cast<int (*)(Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.CoreModule.dll",
-            "UnityEngine",
-            "Display", "get_systemWidth", 0));
+            "UnityEngine.CoreModule.dll", "UnityEngine", "Display", "get_systemWidth", 0));
 
     get_system_height = reinterpret_cast<int (*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.CoreModule.dll",
-            "UnityEngine",
-            "Display", "get_systemHeight", 0));
+            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                "UnityEngine", "Display",
+                                                                "get_systemHeight", 0));
 
-    auto set_resolution_addr = reinterpret_cast<void (*)(
-            int)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine",
-                                                     "Screen", "SetResolution", 3));
+    auto set_resolution_addr = il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                  "UnityEngine", "Screen",
+                                                                  "SetResolution", 3);
 
-    auto apply_graphics_quality_addr = reinterpret_cast<void (*)(
-            Il2CppObject *, Il2CppObject *, bool)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop",
-            "GraphicSettings", "ApplyGraphicsQuality", 2));
+    auto apply_graphics_quality_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                          "GraphicSettings",
+                                                                          "ApplyGraphicsQuality",
+                                                                          2);
 
-    auto GraphicSettings_GetVirtualResolution_addr = reinterpret_cast<Vector2Int_t(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop",
-            "GraphicSettings", "GetVirtualResolution", 0));
+    auto GraphicSettings_GetVirtualResolution_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "GraphicSettings", "GetVirtualResolution", 0);
 
-    auto GraphicSettings_GetVirtualResolution3D_addr = reinterpret_cast<Vector2Int_t(*)(
-            Il2CppObject *, bool)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop",
-            "GraphicSettings", "GetVirtualResolution3D", 1));
+    auto GraphicSettings_GetVirtualResolution3D_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "GraphicSettings", "GetVirtualResolution3D", 1);
 
-    auto ChangeScreenOrientation_addr = reinterpret_cast<void (*)(
-            ScreenOrientation, bool)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop",
-            "Screen", "ChangeScreenOrientation", 2));
+    auto ChangeScreenOrientation_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                           "Gallop", "Screen",
+                                                                           "ChangeScreenOrientation",
+                                                                           2);
 
-    auto ChangeScreenOrientationPortraitAsync_addr = reinterpret_cast<Il2CppObject *(*)()>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop", "Screen", "ChangeScreenOrientationPortraitAsync", -1));
+    auto ChangeScreenOrientationPortraitAsync_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "Screen", "ChangeScreenOrientationPortraitAsync", -1);
 
     Screen_get_width = reinterpret_cast<int (*)()>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.CoreModule.dll",
-            "UnityEngine",
-            "Screen", "get_width", -1));
+            "UnityEngine.CoreModule.dll", "UnityEngine", "Screen", "get_width", -1));
 
     Screen_get_height = reinterpret_cast<int (*)()>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.CoreModule.dll",
-            "UnityEngine",
-            "Screen", "get_height", -1));
+            "UnityEngine.CoreModule.dll", "UnityEngine", "Screen", "get_height", -1));
 
-    auto Screen_set_orientation_addr = reinterpret_cast<void (*)(
-            ScreenOrientation)>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.CoreModule.dll",
-            "UnityEngine",
-            "Screen", "set_orientation", 1));
+    auto Screen_set_orientation_addr = il2cpp_symbols::get_method_pointer(
+            "UnityEngine.CoreModule.dll", "UnityEngine", "Screen", "set_orientation", 1);
 
-    auto SetResolution_addr = reinterpret_cast<void (*)(int, int, bool,
-                                                        bool)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "Screen", "SetResolution", 4));
+    auto SetResolution_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                 "Screen", "SetResolution", 4);
 
-    auto DeviceOrientationGuide_Show_addr = reinterpret_cast<void (*)(bool,
-                                                                      int)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "DeviceOrientationGuide", "Show", 2));
+    auto DeviceOrientationGuide_Show_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                               "Gallop",
+                                                                               "DeviceOrientationGuide",
+                                                                               "Show", 2);
 
-    auto NowLoading_Show_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "NowLoading", "Show", 3);
+    auto NowLoading_Show_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                   "NowLoading", "Show", 3);
 
-    auto NowLoading_Show2_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "NowLoading", "Show", 4);
+    auto NowLoading_Show2_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                    "NowLoading", "Show", 4);
 
-    auto NowLoading_Hide_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "NowLoading", "Hide", 1);
+    auto NowLoading_Hide_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                   "NowLoading", "Hide", 1);
 
-    auto NowLoading_Hide2_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "NowLoading", "Hide", 3);
+    auto NowLoading_Hide2_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                    "NowLoading", "Hide", 3);
 
-    auto WaitDeviceOrientation_addr = reinterpret_cast<void (*)(
-            ScreenOrientation)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "Screen", "WaitDeviceOrientation", 1));
+    auto WaitDeviceOrientation_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                         "Screen",
+                                                                         "WaitDeviceOrientation",
+                                                                         1);
 
-    auto CanvasScaler_set_referenceResolution_addr = reinterpret_cast<void (*)(Il2CppObject *,
-                                                                               float)>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.UI.dll",
-            "UnityEngine.UI", "CanvasScaler", "set_referenceResolution", 1));
+    auto CanvasScaler_set_referenceResolution_addr = il2cpp_symbols::get_method_pointer(
+            "UnityEngine.UI.dll", "UnityEngine.UI", "CanvasScaler", "set_referenceResolution", 1);
 
-    auto SafetyNet_OnSuccess_addr = reinterpret_cast<void (*)(Il2CppObject *,
-                                                              float)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "SafetyNet", "OnSuccess", 1));
+    auto SafetyNet_OnSuccess_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                       "SafetyNet", "OnSuccess", 1);
 
-    auto SafetyNet_OnError_addr = reinterpret_cast<void (*)(Il2CppObject *,
-                                                            float)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll",
-            "Gallop", "SafetyNet", "OnError", 1));
+    auto SafetyNet_OnError_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                     "SafetyNet", "OnError", 1);
 
-    auto SafetyNet_GetSafetyNetStatus_addr = reinterpret_cast<void (*)(Il2CppObject *,
-                                                                       float)>(il2cpp_symbols::get_method_pointer(
-            "Cute.Core.Assembly.dll",
-            "Cute.Core", "SafetyNet", "GetSafetyNetStatus", 4));
+    auto SafetyNet_GetSafetyNetStatus_addr = il2cpp_symbols::get_method_pointer(
+            "Cute.Core.Assembly.dll", "Cute.Core", "SafetyNet", "GetSafetyNetStatus", 4);
 
-    auto Device_IsIllegalUser_addr = reinterpret_cast<void (*)(Il2CppObject *,
-                                                               float)>(il2cpp_symbols::get_method_pointer(
-            "Cute.Core.Assembly.dll",
-            "Cute.Core", "Device", "IsIllegalUser", -1));
+    auto Device_IsIllegalUser_addr = il2cpp_symbols::get_method_pointer("Cute.Core.Assembly.dll",
+                                                                        "Cute.Core", "Device",
+                                                                        "IsIllegalUser", -1);
 
     MoviePlayerBase_get_MovieInfo = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
-            "Cute.Cri.Assembly.dll", "Cute.Cri", "MoviePlayerBase", "get_MovieInfo", 0));
+            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("Cute.Cri.Assembly.dll", "Cute.Cri",
+                                                                "MoviePlayerBase", "get_MovieInfo",
+                                                                0));
 
     MovieManager_GetMovieInfo = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *,
                                                                    MoviePlayerHandle)>(il2cpp_symbols::get_method_pointer(
@@ -3026,54 +3643,105 @@ void hookMethods() {
             "Cute.Cri.Assembly.dll", "Cute.Cri", "MovieManager", "SetScreenSize", 2);
 
 
-    auto MoviePlayerForUI_AdjustScreenSize_addr = reinterpret_cast<void (*)(Il2CppObject *,
-                                                                            Vector2_t,
-                                                                            bool)>(il2cpp_symbols::get_method_pointer(
-            "Cute.Cri.Assembly.dll", "Cute.Cri", "MoviePlayerForUI", "AdjustScreenSize", 2));
+    auto MoviePlayerForUI_AdjustScreenSize_addr = il2cpp_symbols::get_method_pointer(
+            "Cute.Cri.Assembly.dll", "Cute.Cri", "MoviePlayerForUI", "AdjustScreenSize", 2);
 
-    auto MoviePlayerForObj_AdjustScreenSize_addr = reinterpret_cast<void (*)(Il2CppObject *,
-                                                                             Vector2_t,
-                                                                             bool)>(il2cpp_symbols::get_method_pointer(
-            "Cute.Cri.Assembly.dll", "Cute.Cri", "MoviePlayerForObj", "AdjustScreenSize", 2));
+    auto MoviePlayerForObj_AdjustScreenSize_addr = il2cpp_symbols::get_method_pointer(
+            "Cute.Cri.Assembly.dll", "Cute.Cri", "MoviePlayerForObj", "AdjustScreenSize", 2);
 
-    auto FrameRateController_OverrideByNormalFrameRate_addr = reinterpret_cast<void (*)(
-            Il2CppObject *, int)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
-                                                                     "FrameRateController",
-                                                                     "OverrideByNormalFrameRate",
-                                                                     1));
+    auto FrameRateController_OverrideByNormalFrameRate_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "FrameRateController", "OverrideByNormalFrameRate", 1);
 
-    auto FrameRateController_OverrideByMaxFrameRate_addr = reinterpret_cast<void (*)(Il2CppObject *,
-                                                                                     int)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop", "FrameRateController", "OverrideByMaxFrameRate", 1));
+    auto FrameRateController_OverrideByMaxFrameRate_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "FrameRateController", "OverrideByMaxFrameRate", 1);
 
-    auto FrameRateController_ResetOverride_addr = reinterpret_cast<void (*)(Il2CppObject *,
-                                                                            int)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop", "FrameRateController", "ResetOverride", 1));
+    auto FrameRateController_ResetOverride_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "FrameRateController", "ResetOverride", 1);
 
-    auto FrameRateController_ReflectionFrameRate_addr = reinterpret_cast<void (*)(Il2CppObject *,
-                                                                                  int)>(il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop", "FrameRateController", "ReflectionFrameRate", 0));
+    auto FrameRateController_ReflectionFrameRate_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "FrameRateController", "ReflectionFrameRate", 0);
 
-    auto GallopUtil_GotoTitleOnError_addr = reinterpret_cast<void (*)(
-            Il2CppString *)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
-                                                                "GallopUtil", "GotoTitleOnError",
-                                                                1));
+    auto GallopUtil_GotoTitleOnError_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                               "Gallop",
+                                                                               "GallopUtil",
+                                                                               "GotoTitleOnError",
+                                                                               1);
 
-    auto DialogCommon_Close_addr = reinterpret_cast<void (*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
-                                                                "DialogCommon", "Close", 0));
+    auto DialogCommon_Close_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                      "DialogCommon", "Close", 0);
 
     auto GameSystem_FixedUpdate_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
                                                                           "GameSystem",
                                                                           "FixedUpdate", 0);
 
     auto CriMana_Player_SetFile_addr =
-            GetUnityVersion() == Unity2020 ?
-            il2cpp_symbols::get_method_pointer(
+            GetUnityVersion() == Unity2020 ? il2cpp_symbols::get_method_pointer(
                     "CriMw.CriWare.Runtime.dll", "CriWare.CriMana", "Player", "SetFile", 3)
-                                           :
-            il2cpp_symbols::get_method_pointer(
+                                           : il2cpp_symbols::get_method_pointer(
                     "Cute.Cri.Assembly.dll", "CriMana", "Player", "SetFile", 3);
+
+    auto CriWebViewManager_OnLoadedCallback_addr = il2cpp_symbols::get_method_pointer(
+            "Cute.Core.Assembly.dll", "Cute.Core", "WebViewManager", "OnLoadedCallback", 1);
+
+    auto DialogHomeMenuMain_SetupTrainer_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                                   "Gallop",
+                                                                                   "DialogHomeMenuMain",
+                                                                                   "SetupTrainer",
+                                                                                   1);
+
+    auto DialogHomeMenuMain_SetupOther_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                                 "Gallop",
+                                                                                 "DialogHomeMenuMain",
+                                                                                 "SetupOther", 0);
+
+    auto DialogHomeMenuSupport_OnSelectMenu_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "DialogHomeMenuSupport", "OnSelectMenu", 1);
+
+    auto DialogTitleMenu_OnSelectMenu_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                                "Gallop",
+                                                                                "DialogTitleMenu",
+                                                                                "OnSelectMenu", 1);
+
+    auto DialogTitleMenu_OnSelectMenu_KaKaoNotLogin_addr = il2cpp_symbols::find_method(
+            "umamusume.dll", "Gallop", "DialogTitleMenu", [](const MethodInfo *method) {
+                return method->name == "OnSelectMenu"s &&
+                       il2cpp_type_get_name(method->parameters->parameter_type) ==
+                       "Gallop.DialogTitleMenu.KaKaoNotLoginMenu"s;
+            });
+
+    auto DialogTutorialGuide_OnPushHelpButton_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "DialogTutorialGuide", "OnPushHelpButton", 0);
+
+    auto DialogSingleModeTopMenu_Setup_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                                 "Gallop",
+                                                                                 "DialogSingleModeTopMenu",
+                                                                                 "Setup", 0);
+
+    auto ChampionsInfoWebViewButton_OnClick_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "ChampionsInfoWebViewButton", "OnClick", 0);
+
+    auto StoryEventTopViewController_OnClickHelpButton_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "StoryEventTopViewController", "OnClickHelpButton", 0);
+
+    auto PartsNewsButton_Setup_addr = il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
+                                                                         "PartsNewsButton", "Setup",
+                                                                         1);
+
+    auto PartsEpisodeExtraVoiceButton_Setup_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "PartsEpisodeExtraVoiceButton", "Setup", 3);
+
+    auto BannerUI_OnClickBannerItem_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                              "Gallop", "BannerUI",
+                                                                              "OnClickBannerItem",
+                                                                              1);
+
+    auto KakaoManager_OnKakaoShowInAppWebView_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "", "KakaoManager", "OnKakaoShowInAppWebView", 2);
+
+    auto TapEffectController_Disable_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                               "Gallop",
+                                                                               "TapEffectController",
+                                                                               "Disable", 0);
 
     load_from_file = reinterpret_cast<Il2CppObject *(*)(
             Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
@@ -3085,19 +3753,16 @@ void hookMethods() {
     "LoadFromMemoryAsync",
     1));*/
 
-    auto PathResolver_GetLocalPath_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
-            "_Cyan.dll", "Cyan.LocalFile", "PathResolver",
-            "GetLocalPath", 2));
+    auto PathResolver_GetLocalPath_addr = il2cpp_symbols::get_method_pointer("_Cyan.dll",
+                                                                             "Cyan.LocalFile",
+                                                                             "PathResolver",
+                                                                             "GetLocalPath", 2);
 
-    auto assetbundle_unload_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "Unload", 1));
+    auto assetbundle_unload_addr = il2cpp_symbols::get_method_pointer(
+            "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "Unload", 1);
 
-    auto assetbundle_LoadFromFile_addr = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
-            "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle",
-            "LoadFromFile", 1));
+    auto assetbundle_LoadFromFile_addr = il2cpp_symbols::get_method_pointer(
+            "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "LoadFromFile", 1);
 
     if (!assets && !g_font_assetbundle_path.empty() && g_replace_to_custom_font) {
         auto assetbundlePath = localify::u8_u16(g_font_assetbundle_path);
@@ -3150,80 +3815,91 @@ void hookMethods() {
     if (_name_##_addr) DobbyHook(reinterpret_cast<void *>(_name_##_addr), reinterpret_cast<void *>(_name_##_hook), reinterpret_cast<void **>(&_name_##_orig)); \
     else LOGW("ADD_HOOK: %s_addr is null", #_name_);
 
+#define ADD_HOOK_NEW(_name_) \
+    LOGI("ADD_HOOK_NEW: %s", #_name_); \
+    if (addr_##_name_) DobbyHook(reinterpret_cast<void *>(addr_##_name_), reinterpret_cast<void *>(new_##_name_), reinterpret_cast<void **>(&orig_##_name_)); \
+    else LOGW("ADD_HOOK_NEW: addr_%s is null", #_name_);
+
     if (Game::currentGameRegion == Game::Region::KOR && g_restore_notification && false) {
-        SendNotification = reinterpret_cast<void (*)(
-                Il2CppObject *, Il2CppString *, Il2CppString *,
-                Il2CppString *,
-                DateTime, Il2CppString *, int)>(il2cpp_symbols::get_method_pointer("umamusume.dll",
-                                                                                   "Gallop",
-                                                                                   "PushNotificationManager",
-                                                                                   "SendNotification",
-                                                                                   6));
+        SendNotification = reinterpret_cast<void (*)(Il2CppObject *, Il2CppString *, Il2CppString *,
+                                                     Il2CppString *, DateTime, Il2CppString *,
+                                                     int)>(il2cpp_symbols::get_method_pointer(
+                "umamusume.dll", "Gallop", "PushNotificationManager", "SendNotification", 6));
 
-        createFavIconFilePath = reinterpret_cast<Il2CppString *(*)(
-                Il2CppObject *, int)>(il2cpp_symbols::get_method_pointer("umamusume.dll",
-                                                                         "Gallop",
-                                                                         "PushNotificationManager",
-                                                                         "createFavIconFilePath",
-                                                                         1));
+        createFavIconFilePath = reinterpret_cast<Il2CppString *(*)(Il2CppObject *,
+                                                                   int)>(il2cpp_symbols::get_method_pointer(
+                "umamusume.dll", "Gallop", "PushNotificationManager", "createFavIconFilePath", 1));
 
-        RegisterNotificationChannel = reinterpret_cast<void (*)(
-                Il2CppObject *, Il2CppString *, Il2CppString *,
-                Il2CppString *)>(il2cpp_symbols::get_method_pointer("umamusume.dll",
-                                                                    "Gallop",
-                                                                    "PushNotificationManager",
-                                                                    "RegisterNotificationChannel",
-                                                                    3));
+        RegisterNotificationChannel = reinterpret_cast<void (*)(Il2CppObject *, Il2CppString *,
+                                                                Il2CppString *,
+                                                                Il2CppString *)>(il2cpp_symbols::get_method_pointer(
+                "umamusume.dll", "Gallop", "PushNotificationManager", "RegisterNotificationChannel",
+                3));
 
-        IsDenyTime = reinterpret_cast<Boolean (*)(
-                Il2CppObject *, Il2CppObject *)>(il2cpp_symbols::get_method_pointer("umamusume.dll",
-                                                                                    "Gallop",
-                                                                                    "PushNotificationManager",
-                                                                                    "IsDenyTime",
-                                                                                    1));
+        IsDenyTime = reinterpret_cast<Boolean (*)(Il2CppObject *,
+                                                  Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
+                "umamusume.dll", "Gallop", "PushNotificationManager", "IsDenyTime", 1));
 
         DeleteAllLocalPushes = reinterpret_cast<void (*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("umamusume.dll",
-                                                                    "Gallop",
+                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
                                                                     "PushNotificationManager",
                                                                     "RegisterNotificationChannel",
                                                                     3));
 
-        auto ScheduleLocalPushes_addr = reinterpret_cast<void (*)(
-                Il2CppObject *, int)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
-                                                                         "PushNotificationManager",
-                                                                         "ScheduleLocalPushes", 5));
+        auto ScheduleLocalPushes_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                           "Gallop",
+                                                                           "PushNotificationManager",
+                                                                           "ScheduleLocalPushes",
+                                                                           5);
 
-        auto SendNotificationWithExplicitID_addr = reinterpret_cast<void (*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer(
-                "Unity.Notifications.Android.dll",
-                "Unity.Notifications.Android",
-                "AndroidNotificationCenter",
-                "SendNotificationWithExplicitID",
-                3));
+        auto SendNotificationWithExplicitID_addr = il2cpp_symbols::get_method_pointer(
+                "Unity.Notifications.Android.dll", "Unity.Notifications.Android",
+                "AndroidNotificationCenter", "SendNotificationWithExplicitID", 3);
 
-        auto GeneratePushNotifyCharaIconPng_addr = reinterpret_cast<void (*)(
-                Il2CppObject *, int, int, Boolean)>(il2cpp_symbols::get_method_pointer(
-                "umamusume.dll",
-                "Gallop",
-                "PushNotificationManager",
-                "GeneratePushNotifyCharaIconPng",
-                3));
+        auto GeneratePushNotifyCharaIconPng_addr = il2cpp_symbols::get_method_pointer(
+                "umamusume.dll", "Gallop", "PushNotificationManager",
+                "GeneratePushNotifyCharaIconPng", 3);
 
-        auto MasterDataManager_ctor_addr = reinterpret_cast<void (*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("umamusume.dll",
-                                                                    "Gallop",
-                                                                    "MasterDataManager",
-                                                                    ".ctor",
-                                                                    0));
-
-        ADD_HOOK(MasterDataManager_ctor)
+        auto MasterDataManager_ctor_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                              "Gallop",
+                                                                              "MasterDataManager",
+                                                                              ".ctor", 0);
 
         ADD_HOOK(SendNotificationWithExplicitID)
 
         ADD_HOOK(GeneratePushNotifyCharaIconPng)
 
         ADD_HOOK(ScheduleLocalPushes)
+    }
+
+    if (Game::currentGameRegion == Game::Region::KOR /* && g_restore_gallop_webview */) {
+        ADD_HOOK(KakaoManager_OnKakaoShowInAppWebView)
+
+        ADD_HOOK(BannerUI_OnClickBannerItem)
+
+        ADD_HOOK(PartsEpisodeExtraVoiceButton_Setup)
+
+        ADD_HOOK(PartsNewsButton_Setup)
+
+        ADD_HOOK(StoryEventTopViewController_OnClickHelpButton)
+
+        ADD_HOOK(ChampionsInfoWebViewButton_OnClick)
+
+        ADD_HOOK(DialogSingleModeTopMenu_Setup)
+
+        ADD_HOOK(DialogTutorialGuide_OnPushHelpButton)
+
+        ADD_HOOK(DialogTitleMenu_OnSelectMenu_KaKaoNotLogin)
+
+        ADD_HOOK(DialogTitleMenu_OnSelectMenu)
+
+        ADD_HOOK(DialogHomeMenuSupport_OnSelectMenu)
+
+        ADD_HOOK(DialogHomeMenuMain_SetupOther)
+
+        ADD_HOOK(DialogHomeMenuMain_SetupTrainer)
+
+        ADD_HOOK(CriWebViewManager_OnLoadedCallback)
     }
 
     ADD_HOOK(CriMana_Player_SetFile)
@@ -3272,12 +3948,10 @@ void hookMethods() {
 
     ADD_HOOK(load_zekken_composite_resource)
 
-    ADD_HOOK(UIManager_OnInitialize)
-
     ADD_HOOK(wait_resize_ui)
 
     // hook UnityEngine.TextGenerator::PopulateWithErrors to modify text
-    ADD_HOOK(populate_with_errors)
+    ADD_HOOK_NEW(TextGenerator_PopulateWithErrors)
 
     ADD_HOOK(textcommon_SetTextWithLineHeadWrap)
     ADD_HOOK(textcommon_SetTextWithLineHeadWrapWithColorTag)
@@ -3342,6 +4016,7 @@ void hookMethods() {
         ADD_HOOK(MoviePlayerForUI_AdjustScreenSize)
         ADD_HOOK(MoviePlayerForObj_AdjustScreenSize)
         ADD_HOOK(GraphicSettings_GetVirtualResolution)
+        // ADD_HOOK(TapEffectController_Disable)
     }
 
     ADD_HOOK(on_populate)
@@ -3420,76 +4095,49 @@ void il2cpp_load_assetbundle() {
             replaceAssetNames.emplace_back(u8Name);
         }
 
-        auto AssetBundleRequest_GetResult_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
+        auto AssetBundleRequest_GetResult_addr = il2cpp_symbols::get_method_pointer(
                 "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundleRequest",
-                "GetResult", 0));
+                "GetResult", 0);
 
-        auto assetbundle_load_asset_addr = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *thisObj,
-                                                                              Il2CppString *name,
-                                                                              Il2CppObject *runtimeType)>(
-                il2cpp_symbols::get_method_pointer(
-                        "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle",
-                        "LoadAsset", 2)
-        );
+        auto assetbundle_load_asset_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "LoadAsset", 2);
 
-        auto resources_load_addr = reinterpret_cast<Il2CppObject *(*)(Il2CppString *path,
-                                                                      Il2CppType *)>(il2cpp_symbols::get_method_pointer(
-                "UnityEngine.CoreModule.dll", "UnityEngine", "Resources", "Load", 2));
+        auto resources_load_addr = il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
+                                                                      "UnityEngine", "Resources",
+                                                                      "Load", 2);
 
-        auto Sprite_get_texture_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_resolve_icall(
-                "UnityEngine.Sprite::get_texture(UnityEngine.Sprite)"));
+        auto Sprite_get_texture_addr = il2cpp_resolve_icall(
+                "UnityEngine.Sprite::get_texture(UnityEngine.Sprite)");
 
-        auto Renderer_get_material_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                    "UnityEngine", "Renderer",
-                                                                    "get_material", 0));
+        auto Renderer_get_material_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Renderer", "get_material", 0);
 
-        auto Renderer_get_materials_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                    "UnityEngine", "Renderer",
-                                                                    "get_materials", 0));
+        auto Renderer_get_materials_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Renderer", "get_materials", 0);
 
-        auto Renderer_get_sharedMaterial_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                    "UnityEngine", "Renderer",
-                                                                    "get_sharedMaterial", 0));
+        auto Renderer_get_sharedMaterial_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Renderer", "get_sharedMaterial", 0);
 
-        auto Renderer_get_sharedMaterials_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                    "UnityEngine", "Renderer",
-                                                                    "get_sharedMaterials", 0));
+        auto Renderer_get_sharedMaterials_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Renderer", "get_sharedMaterials", 0);
 
-        auto Renderer_set_material_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                    "UnityEngine", "Renderer",
-                                                                    "set_material", 1));
+        auto Renderer_set_material_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Renderer", "set_material", 1);
 
-        auto Renderer_set_materials_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                    "UnityEngine", "Renderer",
-                                                                    "set_materials", 1));
+        auto Renderer_set_materials_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Renderer", "set_materials", 1);
 
-        auto Renderer_set_sharedMaterial_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                    "UnityEngine", "Renderer",
-                                                                    "set_sharedMaterial", 1));
+        auto Renderer_set_sharedMaterial_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Renderer", "set_sharedMaterial", 1);
 
-        auto Renderer_set_sharedMaterials_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                    "UnityEngine", "Renderer",
-                                                                    "set_sharedMaterials", 1));
+        auto Renderer_set_sharedMaterials_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Renderer", "set_sharedMaterials", 1);
 
-        auto Material_get_mainTexture_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                    "UnityEngine", "Material",
-                                                                    "get_mainTexture", 0));
+        auto Material_get_mainTexture_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Material", "get_mainTexture", 0);
 
-        auto Material_set_mainTexture_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll",
-                                                                    "UnityEngine", "Material",
-                                                                    "set_mainTexture", 1));
+        auto Material_set_mainTexture_addr = il2cpp_symbols::get_method_pointer(
+                "UnityEngine.CoreModule.dll", "UnityEngine", "Material", "set_mainTexture", 1);
 
         auto Material_SetTextureI4_addr = il2cpp_symbols::find_method("UnityEngine.CoreModule.dll",
                                                                       "UnityEngine", "Material",
@@ -3500,10 +4148,8 @@ void il2cpp_load_assetbundle() {
                                                                                  IL2CPP_TYPE_I4;
                                                                       });
 
-        auto CharaPropRendererAccessor_SetTexture_addr = reinterpret_cast<Il2CppObject *(*)(
-                Il2CppObject *)>(il2cpp_symbols::get_method_pointer("umamusume.dll", "Gallop",
-                                                                    "CharaPropRendererAccessor",
-                                                                    "SetTexture", 1));
+        auto CharaPropRendererAccessor_SetTexture_addr = il2cpp_symbols::get_method_pointer(
+                "umamusume.dll", "Gallop", "CharaPropRendererAccessor", "SetTexture", 1);
 
         ADD_HOOK(AssetBundleRequest_GetResult)
 
@@ -3538,6 +4184,13 @@ void il2cpp_load_assetbundle() {
         ADD_HOOK(CharaPropRendererAccessor_SetTexture)
     }
 
+    /*if (g_force_landscape) {
+        auto enumerator = reinterpret_cast<Il2CppObject * (*)()>(il2cpp_symbols::get_method_pointer(
+                "umamusume.dll",
+                "Gallop",
+                "Screen", "ChangeScreenOrientationLandscapeAsync", -1))();
+        ExecuteCoroutine(enumerator);
+    }*/
 }
 
 void il2cpp_hook_init(void *handle) {
@@ -3565,18 +4218,13 @@ void il2cpp_hook_init(void *handle) {
 
 string get_application_version() {
     reinterpret_cast<void (*)()>(
-            il2cpp_symbols::get_method_pointer(
-                    "UnityEngine.AndroidJNIModule.dll",
-                    "UnityEngine",
-                    "AndroidJNI",
-                    "AttachCurrentThread",
-                    -1))();
-    auto version = string(localify::u16_u8(
-            reinterpret_cast<Il2CppString *(*)()>(
-                    il2cpp_symbols::get_method_pointer(
-                            "umamusume.dll", "Gallop",
-                            "DeviceHelper", "GetAppVersionName",
-                            -1))()->start_char));
+            il2cpp_symbols::get_method_pointer("UnityEngine.AndroidJNIModule.dll", "UnityEngine",
+                                               "AndroidJNI", "AttachCurrentThread", -1))();
+    auto version = string(localify::u16_u8(reinterpret_cast<Il2CppString *(*)()>(
+                                                   il2cpp_symbols::get_method_pointer(
+                                                           "umamusume.dll", "Gallop",
+                                                           "DeviceHelper", "GetAppVersionName",
+                                                           -1))()->start_char));
     return version;
 }
 

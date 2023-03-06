@@ -200,6 +200,24 @@ namespace il2cpp_symbols {
         return nullptr;
     }
 
+    Il2CppClass *find_class(const char *assemblyName, const char *namespaze,
+                            const std::function<bool(Il2CppClass *)> &predict) {
+        auto assembly = il2cpp_domain_assembly_open(il2cpp_domain, assemblyName);
+        if (assembly) {
+            auto image = il2cpp_assembly_get_image(assembly);
+            if (image) {
+                auto classCount = il2cpp_image_get_class_count(image);
+                for (int i = 0; i < classCount; i++) {
+                    if (predict(il2cpp_image_get_class(image, i))) {
+                        return il2cpp_image_get_class(image, i);
+                    }
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
     Il2CppMethodPointer find_method(const char *assemblyName, const char *namespaze,
                                     const char *klassName,
                                     const std::function<bool(const MethodInfo *)> &predict) {
