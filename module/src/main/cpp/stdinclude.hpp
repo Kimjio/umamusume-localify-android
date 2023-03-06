@@ -64,6 +64,7 @@ extern bool g_dump_entries;
 extern bool g_dump_db_entries;
 extern bool g_static_entries_use_hash;
 extern bool g_static_entries_use_text_id_name;
+extern string g_packet_notifier;
 /**
  * -1 Auto (Default behavior)
  * 0 Toon1280, Anti: 0
