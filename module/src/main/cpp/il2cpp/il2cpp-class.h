@@ -141,8 +141,8 @@ typedef struct MethodInfo {
     Il2CppMethodPointer methodPointer [[maybe_unused]];
     uintptr_t invoker_method [[maybe_unused]];
     const char *name [[maybe_unused]];
-    uintptr_t klass [[maybe_unused]];
-    uintptr_t return_type [[maybe_unused]];
+    Il2CppClass *klass [[maybe_unused]];
+    const Il2CppType *return_type [[maybe_unused]];
     const ParameterInfo *parameters [[maybe_unused]];
     uintptr_t methodDefinition [[maybe_unused]];
     uintptr_t genericContainer [[maybe_unused]];
@@ -313,6 +313,10 @@ typedef struct Il2CppDelegate {
 
     bool method_is_virtual;
 } Il2CppDelegate;
+
+typedef struct MulticastDelegate : Il2CppDelegate {
+    Il2CppArray *delegates;
+} MulticastDelegate;
 
 typedef struct Il2CppInternalThread {
     Il2CppObject obj;
