@@ -80,16 +80,16 @@ viewport.content = `width=device-width, initial-scale=${zoom}, user-scalable=no`
 )";
 
 const auto GotoTitleError = "내부적으로 오류가 발생하여 홈으로 이동합니다.\n\n"
-                              "경우에 따라서 <color=#ff911c><i>타이틀</i></color>로 돌아가거나, \n"
-                              "게임 <color=#ff911c><i>다시 시작</i></color>이 필요할 수 있습니다."s;
+                            "경우에 따라서 <color=#ff911c><i>타이틀</i></color>로 돌아가거나, \n"
+                            "게임 <color=#ff911c><i>다시 시작</i></color>이 필요할 수 있습니다."s;
 
 const auto GotoTitleErrorJa = "内部的にエラーが発生し、ホームに移動します。\n\n"
-                                "場合によっては、<color=#ff911c><i>タイトル</i></color>に戻るか、\n"
-                                "ゲーム<color=#ff911c><i>再起動</i></color>が必要になる場合がありますあります。"s;
+                              "場合によっては、<color=#ff911c><i>タイトル</i></color>に戻るか、\n"
+                              "ゲーム<color=#ff911c><i>再起動</i></color>が必要になる場合がありますあります。"s;
 
 const auto GotoTitleErrorHan = "內部發生錯誤，移動到主頁。\n\n"
-                                 "在某些情況下，可能需要返回<color=#ff911c><i>標題</i></color>に戻るか，\n"
-                                 "或者遊戲<color=#ff911c><i>重新開始</i></color>。"s;
+                               "在某些情況下，可能需要返回<color=#ff911c><i>標題</i></color>に戻るか，\n"
+                               "或者遊戲<color=#ff911c><i>重新開始</i></color>。"s;
 
 static void *il2cpp_handle = nullptr;
 static uint64_t il2cpp_base = 0;
@@ -116,6 +116,8 @@ DateTime (*FromUnixTimeToLocaleTime)(long unixTime);
 
 void *(*Array_GetValue)(Il2CppArray *thisObj, long index);
 
+int (*Array_get_Length)(Il2CppObject *thisObj);
+
 Il2CppObject *sceneManager = nullptr;
 
 vector<string> replaceAssetNames;
@@ -130,8 +132,8 @@ GetRuntimeType(const char *assemblyName, const char *namespaze, const char *klas
     return get_type(dummyObj);
 }
 
-template<typename... T>
-Il2CppDelegate *CreateDelegate(Il2CppObject *target, void (*fn)(Il2CppObject *, T...)) {
+template<typename... T, typename R>
+Il2CppDelegate *CreateDelegate(Il2CppObject *target, R (*fn)(Il2CppObject *, T...)) {
     auto delegate = reinterpret_cast<MulticastDelegate *>(il2cpp_object_new(
             il2cpp_defaults.multicastdelegate_class));
     auto delegateClass = il2cpp_defaults.delegate_class;
@@ -2043,13 +2045,15 @@ void *SetResolution_orig = nullptr;
 
 void SetResolution_hook(int w, int h, bool fullscreen, bool forceUpdate) {
     if (!resolutionIsSet || GetUnityVersion() == Unity2020) {
-        if (sceneManager || GetUnityVersion() == Unity2019 && w < h) {
+        if (sceneManager ||
+            (GetUnityVersion() == Unity2019 || GetUnityVersion() == Unity2019Twn) && w < h) {
             resolutionIsSet = true;
         }
         reinterpret_cast<decltype(SetResolution_hook) * > (SetResolution_orig)(w, h, fullscreen,
                                                                                forceUpdate);
         if (g_force_landscape) {
-            if (GetUnityVersion() == Unity2019 || (w < h && GetUnityVersion() == Unity2020)) {
+            if ((GetUnityVersion() == Unity2019 || GetUnityVersion() == Unity2019Twn) ||
+                (w < h && GetUnityVersion() == Unity2020)) {
                 reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(h, w,
                                                                                          fullscreen);
             }
@@ -2604,8 +2608,7 @@ void DialogHomeMenuSupport_OnSelectMenu_hook(int menu) {
             // FAQ
             auto closeText = GetTextIdByName("Common0007");
             auto faqText = GetTextIdByName("Menu0013");
-            auto url = string(
-                    " https://kakaogames.oqupie.com/portals/1576/categories/3438?jwt=").append(
+            auto url = "https://kakaogames.oqupie.com/portals/1576/categories/3438?jwt="s.append(
                     GetOqupieToken());
             OpenWebViewDialog(il2cpp_string_new(url.data()), localizeextension_text_hook(faqText),
                               closeText);
@@ -2615,7 +2618,7 @@ void DialogHomeMenuSupport_OnSelectMenu_hook(int menu) {
             // QNA
             auto closeText = GetTextIdByName("Common0007");
             auto qnaText = GetTextIdByName("Common0050");
-            auto url = string("https://kakaogames.oqupie.com/portals/finder?jwt=").append(
+            auto url = "https://kakaogames.oqupie.com/portals/finder?jwt="s.append(
                     GetOqupieToken());
             OpenWebViewDialog(il2cpp_string_new(url.data()), localizeextension_text_hook(qnaText),
                               closeText);
@@ -2653,7 +2656,7 @@ void DialogTitleMenu_OnSelectMenu_hook(int menu) {
         case 2: {
             auto closeText = GetTextIdByName("Common0007");
             auto qnaText = GetTextIdByName("Common0050");
-            auto url = string("https://kakaogames.oqupie.com/portals/finder?jwt=").append(
+            auto url = "https://kakaogames.oqupie.com/portals/finder?jwt="s.append(
                     GetOqupieToken());
             OpenWebViewDialog(il2cpp_string_new(url.data()), localizeextension_text_hook(qnaText),
                               closeText);
@@ -3185,42 +3188,111 @@ void ScheduleLocalPushes_hook(Il2CppObject *thisObj, int type, Il2CppArray *unix
                      id);
 }
 
-void* DecompressResponse_BUMA_orig = nullptr;
-Il2CppArray* DecompressResponse_BUMA_hook(
-        Il2CppArray* responseData)
-{
-    Il2CppArray* ret = reinterpret_cast<decltype(DecompressResponse_BUMA_hook)*>(DecompressResponse_BUMA_orig)(
-            responseData);
-    char* buf = ((char*)ret) + kIl2CppSizeOfArray;
-    const std::string data(buf,ret->max_length);
-    if(!g_packet_notifier.empty()) {
-        auto notifier_thread = std::thread([&]()
-                {
-                    notifier::notify_response(data);
-                });
-        notifier_thread.join();
+void DumpMsgPackFile(const string &file_path, const char *buffer, const size_t len) {
+    auto parent_path = filesystem::path(file_path).parent_path();
+    if (!filesystem::exists(parent_path)) {
+        filesystem::create_directories(parent_path);
     }
-    return ret;
+    ofstream file{file_path, ios::binary};
+    file.write(buffer, static_cast<int>(len));
+    file.flush();
+    file.close();
 }
 
-void* LZ4_decompress_safe_ext_orig = nullptr;
-int LZ4_decompress_safe_ext_hook(
-        char* src,
-        char* dst,
-        int compressedSize,
-        int dstCapacity)
-{
-    const int ret = reinterpret_cast<decltype(LZ4_decompress_safe_ext_hook)*>(LZ4_decompress_safe_ext_orig)(
-            src, dst, compressedSize, dstCapacity);
-    const std::string data(dst, ret);
-    if(!g_packet_notifier.empty()) {
-        auto notifier_thread = std::thread([&]()
-                {
-                    notifier::notify_response(data);
-                });
-        notifier_thread.join();
+string current_time() {
+    auto ms = chrono::duration_cast<chrono::milliseconds>(
+            chrono::system_clock::now().time_since_epoch());
+    return to_string(ms.count());
+}
+
+void *HttpHelper_Initialize_orig = nullptr;
+
+void HttpHelper_Initialize_hook(Il2CppObject *httpManager) {
+    reinterpret_cast<decltype(HttpHelper_Initialize_hook) *>(HttpHelper_Initialize_orig)(
+            httpManager);
+
+    if (g_dump_msgpack_request) {
+        auto CompressFunc = CreateDelegate(httpManager,
+                                           *([](Il2CppObject * /*thisObj*/, Il2CppArray *in) {
+                                               if (in->max_length<
+                                                       0 || in->max_length>IL2CPP_ARRAY_MAX_SIZE) {
+                                                   LOGW("Wrong address...");
+                                                   return static_cast<Il2CppArray *>(nullptr);
+                                               }
+                                               auto length = Array_get_Length(&(in->obj));
+                                               char *buf = reinterpret_cast<char *>(in) +
+                                                           kIl2CppSizeOfArray;
+                                               const string data(buf, length);
+
+                                               auto out_path = "/sdcard/Android/data/"s.append(
+                                                       Game::GetCurrentPackageName()).append(
+                                                       "/msgpack_dump/").append(
+                                                       current_time()).append("Q.msgpack");
+
+                                               DumpMsgPackFile(out_path, data.data(),
+                                                               data.length());
+                                               if (!g_packet_notifier.empty()) {
+                                                   auto notifier_thread = thread([&]() {
+                                                       notifier::notify_request(data);
+                                                   });
+                                                   notifier_thread.join();
+                                               }
+                                               if (Game::currentGameRegion == Game::Region::TWN ||
+                                                   Game::currentGameRegion == Game::Region::JAP) {
+                                                   // AES128 + LZ4 + α + base64
+                                                   return reinterpret_cast<Il2CppArray *(*)(
+                                                           Il2CppArray *)>(il2cpp_symbols::get_method_pointer(
+                                                           "umamusume.dll", "Gallop", "HttpHelper",
+                                                           "CompressRequest", 1))(in);
+                                               }
+                                               return in;
+                                           }));
+
+        reinterpret_cast<void (*)(Il2CppObject *,
+                                  Il2CppDelegate *)>(il2cpp_class_get_method_from_name(
+                httpManager->klass, "set_CompressFunc", 1)->methodPointer)(httpManager,
+                                                                           CompressFunc);
     }
-    return ret;
+
+    auto DecompressFunc = CreateDelegate(httpManager,
+                                         *([](Il2CppObject * /*thisObj*/, Il2CppArray *in) {
+                                             if (in->max_length<
+                                                     0 || in->max_length>IL2CPP_ARRAY_MAX_SIZE) {
+                                                 LOGW("Wrong address...");
+                                                 return static_cast<Il2CppArray *>(nullptr);
+                                             }
+                                             if (Game::currentGameRegion == Game::Region::TWN ||
+                                                 Game::currentGameRegion == Game::Region::JAP) {
+                                                 // AES128 + LZ4 + α + base64
+                                                 in = reinterpret_cast<Il2CppArray *(*)(
+                                                         Il2CppArray *)>(il2cpp_symbols::get_method_pointer(
+                                                         "umamusume.dll", "Gallop", "HttpHelper",
+                                                         "DecompressResponse", 1))(in);
+                                             }
+
+                                             auto length = Array_get_Length(&(in->obj));
+                                             char *buf = reinterpret_cast<char *>(in) +
+                                                         kIl2CppSizeOfArray;
+                                             const string data(buf, length);
+
+                                             auto out_path = "/sdcard/Android/data/"s.append(
+                                                     Game::GetCurrentPackageName()).append(
+                                                     "/msgpack_dump/").append(
+                                                     current_time()).append("R.msgpack");
+
+                                             DumpMsgPackFile(out_path, data.data(), data.length());
+                                             if (!g_packet_notifier.empty()) {
+                                                 auto notifier_thread = thread([&]() {
+                                                     notifier::notify_response(data);
+                                                 });
+                                                 notifier_thread.join();
+                                             }
+                                             return in;
+                                         }));
+
+    reinterpret_cast<void (*)(Il2CppObject *, Il2CppDelegate *)>(il2cpp_class_get_method_from_name(
+            httpManager->klass, "set_DecompressFunc", 1)->methodPointer)(httpManager,
+                                                                         DecompressFunc);
 }
 
 void dump_all_entries() {
@@ -3273,28 +3345,28 @@ void init_il2cpp_api() {
 
 uint64_t get_module_base(const char *module_name) {
     uint64_t addr = 0;
-    char line[1024];
+    auto line = array<char, 1024>();
     uint64_t start = 0;
     uint64_t end = 0;
-    char flags[5];
-    char path[PATH_MAX];
+    auto flags = array<char, 5>();
+    auto path = array<char, PATH_MAX>();
 
     FILE *fp = fopen("/proc/self/maps", "r");
     if (fp != nullptr) {
-        while (fgets(line, sizeof(line), fp)) {
-            strcpy(path, "");
-            sscanf(line, "%"
-                         PRIx64
-                         "-%"
-                         PRIx64
-                         " %s %*"
-                         PRIx64
-                         " %*x:%*x %*u %s\n", &start, &end, flags, path);
+        while (fgets(line.data(), sizeof(line), fp)) {
+            strcpy(path.data(), "");
+            sscanf(line.data(), "%"
+                                PRIx64
+                                "-%"
+                                PRIx64
+                                " %s %*"
+                                PRIx64
+                                " %*x:%*x %*u %s\n", &start, &end, flags.data(), path.data());
 #if defined(__aarch64__)
-            if (strstr(flags, "x") == 0)
+            if (strstr(flags.data(), "x") == 0)
                 continue;
 #endif
-            if (strstr(path, module_name)) {
+            if (strstr(path.data(), module_name)) {
                 addr = start;
                 break;
             }
@@ -3332,6 +3404,9 @@ void hookMethods() {
 
     Array_GetValue = reinterpret_cast<void *(*)(Il2CppArray *, long index)>(
             il2cpp_symbols::get_method_pointer("mscorlib.dll", "System", "Array", "GetValue", 1));
+
+    Array_get_Length = reinterpret_cast<int (*)(Il2CppObject *)>(
+            il2cpp_symbols::get_method_pointer("mscorlib.dll", "System", "Array", "get_Length", 0));
 
     addr_TextGenerator_PopulateWithErrors = reinterpret_cast<void *>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.TextRenderingModule.dll", "UnityEngine", "TextGenerator",
@@ -3767,7 +3842,7 @@ void hookMethods() {
     if (!assets && !g_font_assetbundle_path.empty() && g_replace_to_custom_font) {
         auto assetbundlePath = localify::u8_u16(g_font_assetbundle_path);
         if (!assetbundlePath.starts_with(u"/")) {
-            assetbundlePath.insert(0, u16string(u"/sdcard/Android/data/").append(
+            assetbundlePath.insert(0, u"/sdcard/Android/data/"s.append(
                     localify::u8_u16(Game::GetCurrentPackageName())).append(u"/"));
         }
         assets = load_from_file(
@@ -3779,9 +3854,9 @@ void hookMethods() {
 
         /* Load from Memory Async
 
-         std::ifstream infile(localify::u16_u8(assetbundlePath).data(), std::ios_base::binary);
+        ifstream infile(localify::u16_u8(assetbundlePath).data(), ios_base::binary);
 
-        std::vector<char> buffer((std::istreambuf_iterator<char>(infile)), std::istreambuf_iterator<char>());
+        vector<char> buffer((istreambuf_iterator<char>(infile)), istreambuf_iterator<char>());
 
         Il2CppArray* assetBytes = il2cpp_array_new(il2cpp_defaults.byte_class, buffer.size());
 
@@ -3799,7 +3874,7 @@ void hookMethods() {
                 "UnityEngine.CoreModule.dll", "UnityEngine", "AsyncOperation", "get_isDone",
                 0));
 
-        std::thread load_thread([createReq, get_assetBundle, get_isDone]() {
+        thread load_thread([createReq, get_assetBundle, get_isDone]() {
             while (!get_isDone(createReq)) {}
             assets = get_assetBundle(createReq);
         });
@@ -4053,20 +4128,13 @@ void hookMethods() {
         ADD_HOOK(set_anti_aliasing)
     }
 
-    if(Game::currentGameRegion == Game::Region::TWN) {
-        auto DecompressResponse_BUMA_addr = il2cpp_symbols::get_method_pointer(
-                "umamusume.dll", "Gallop",
-                "HttpHelper", "DecompressResponse_BUMA", 1
-        );
-        ADD_HOOK(DecompressResponse_BUMA);
+    if (g_dump_msgpack) {
+        auto HttpHelper_Initialize_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
+                                                                             "Gallop", "HttpHelper",
+                                                                             "Initialize", 1);
+        ADD_HOOK(HttpHelper_Initialize)
     }
-    else if(Game::currentGameRegion == Game::Region::JAP) {
-        auto LZ4_decompress_safe_ext_addr = il2cpp_symbols::get_method_pointer(
-        	"LibNative.Runtime.dll", "LibNative.LZ4",
-        	"Plugin", "LZ4_decompress_safe_ext", 4
-        );
-        ADD_HOOK(LZ4_decompress_safe_ext);
-    }
+
 
     LOGI("Unity Version: %s", GetUnityVersion().data());
 }
@@ -4075,7 +4143,7 @@ void il2cpp_load_assetbundle() {
     if (!replaceAssets && !g_replace_assetbundle_file_path.empty()) {
         auto assetbundlePath = localify::u8_u16(g_replace_assetbundle_file_path);
         if (!assetbundlePath.starts_with(u"/")) {
-            assetbundlePath.insert(0, u16string(u"/sdcard/Android/data/").append(
+            assetbundlePath.insert(0, u"/sdcard/Android/data/"s.append(
                     localify::u8_u16(Game::GetCurrentPackageName())).append(u"/"));
         }
         replaceAssets = load_from_file(

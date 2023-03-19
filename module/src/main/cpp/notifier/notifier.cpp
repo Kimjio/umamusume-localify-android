@@ -18,7 +18,7 @@ namespace notifier {
         auto res = client->Post("/notify/response", data, "application/x-msgpack");
         const auto error = res.error();
         if (error != httplib::Error::Success) {
-            LOGE("Unexpected error from notifier: %s\n", httplib::to_string(error).c_str());
+            LOGW("Unexpected error from notifier: %s\n", httplib::to_string(error).data());
         }
     }
 
@@ -30,7 +30,7 @@ namespace notifier {
         auto res = client->Post("/notify/request", data, "application/x-msgpack");
         const auto error = res.error();
         if (error != httplib::Error::Success) {
-            LOGE("Unexpected error from notifier: %s\n", httplib::to_string(error).c_str());
+            LOGW("Unexpected error from notifier: %s\n", httplib::to_string(error).data());
         }
     }
 }
