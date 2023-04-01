@@ -22,7 +22,7 @@
                 android:layout_height="?collapsingToolbarLayoutLargeSize"
                 app:layout_scrollFlags="scroll|snap|exitUntilCollapsed">
 
-                <com.google.android.material.textview.MaterialTextView
+                <TextView
                     style="@style/TextAppearance.Material3.HeadlineMedium"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -73,7 +73,7 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <com.google.android.material.textview.MaterialTextView
+                <TextView
                     style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -105,7 +105,7 @@
                     android:contentDescription="@string/no_apps"
                     android:src="@drawable/ic_app_not_found" />
 
-                <com.google.android.material.textview.MaterialTextView
+                <TextView
                     style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

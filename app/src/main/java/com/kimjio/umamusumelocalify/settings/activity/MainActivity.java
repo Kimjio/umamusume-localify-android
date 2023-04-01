@@ -47,12 +47,30 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
 
     public static final String KEY_LAST_SELECTED = "last_selected_index";
     public static final String KEY_LAST_SELECTED_PACKAGE = "last_selected_package";
-    private static final String TAG = "MainActivity";
+
     private SharedPreferences preferences;
 
     private String currentPackageName;
 
     private SettingsFragment fragment;
+
+    private final ActivityResultLauncher<Uri> requestDocumentTree = registerForActivityResult(
+            new ActivityResultContracts.OpenDocumentTree(), result -> {
+                if (result != null) {
+                    if (!result.getPath().endsWith("Android/data/" + currentPackageName)) {
+                        showWrongPathDialog();
+                        return;
+                    }
+                    getContentResolver().takePersistableUriPermission(result,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    preferences.edit().putString(currentPackageName, result.toString()).apply();
+                    initFragment(DocumentFile.fromTreeUri(this, result));
+                } else {
+                    binding.progress.setVisibility(View.GONE);
+                    binding.permRequired.setVisibility(View.VISIBLE);
+                }
+            });
 
     private boolean createdAfterStateSaved = false;
 
@@ -70,7 +88,8 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
 
         binding.requestButton.setOnClickListener(v -> requestFolderAccess());
 
-        @SuppressLint("QueryPermissionsNeeded") List<PackageInfo> packageInfoList = getPackageManager()
+        @SuppressLint("QueryPermissionsNeeded")
+        List<PackageInfo> packageInfoList = getPackageManager()
                 .getInstalledPackages(PackageManager.GET_META_DATA)
                 .stream()
                 .filter(item -> ((item.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) &&
@@ -101,23 +120,7 @@ public class MainActivity extends BaseActivity<MainActivityBinding> {
             binding.progress.setVisibility(View.GONE);
             binding.appNotFound.setVisibility(View.VISIBLE);
         }
-    }    private final ActivityResultLauncher<Uri> requestDocumentTree = registerForActivityResult(
-            new ActivityResultContracts.OpenDocumentTree(), result -> {
-                if (result != null) {
-                    if (!result.getPath().endsWith("Android/data/" + currentPackageName)) {
-                        showWrongPathDialog();
-                        return;
-                    }
-                    getContentResolver().takePersistableUriPermission(result,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION |
-                                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    preferences.edit().putString(currentPackageName, result.toString()).apply();
-                    initFragment(DocumentFile.fromTreeUri(this, result));
-                } else {
-                    binding.progress.setVisibility(View.GONE);
-                    binding.permRequired.setVisibility(View.VISIBLE);
-                }
-            });
+    }
 
     @Override
     public boolean onCreateOptionsMenu(@NonNull Menu menu) {

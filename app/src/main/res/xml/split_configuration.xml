@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SplitPairRule
+        app:splitRatio="0.5"
+        app:finishPrimaryWithSecondary="true"
+        app:finishSecondaryWithPrimary="true">
+        <SplitPairFilter
+            app:primaryActivityName=".activity.MainActivity"
+            app:secondaryActivityName=".activity.*"/>
+    </SplitPairRule>
+</resources>
