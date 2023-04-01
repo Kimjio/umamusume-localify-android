@@ -41,6 +41,7 @@ bool g_hide_now_loading = false;
 bool g_dump_msgpack = false;
 bool g_dump_msgpack_request = false;
 string g_packet_notifier;
+bool g_restore_gallop_webview = true;
 
 string text_id_dict;
 
@@ -430,6 +431,11 @@ optional<vector<string>> read_config() {
 
         if (document.HasMember("packetNotifier")) {
             g_packet_notifier = document["packetNotifier"].GetString();
+        }
+
+        if (Game::currentGameRegion == Game::Region::KOR &&
+            document.HasMember("restoreGallopWebview")) {
+            g_restore_gallop_webview = document["restoreGallopWebview"].GetBool();
         }
     }
 

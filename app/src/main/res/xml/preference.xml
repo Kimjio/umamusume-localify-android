@@ -26,10 +26,10 @@
             android:title="@string/pref_dump_db_entries" />
 
         <Preference
+            android:fragment="com.kimjio.umamusumelocalify.settings.fragment.MsgPackSettingsFragment"
             android:icon="@drawable/ic_dump_msgpack"
             android:key="msgpackDump"
-            android:title="@string/pref_dump_msgpack"
-            android:fragment="com.kimjio.umamusumelocalify.settings.fragment.MsgPackSettingsFragment" />
+            android:title="@string/pref_dump_msgpack" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_cate_graphics">
@@ -157,8 +157,8 @@
             android:title="@string/pref_hide_loading_screen" />
 
         <SwitchPreference
-            android:icon="@drawable/ic_caption"
             android:defaultValue="false"
+            android:icon="@drawable/ic_caption"
             android:key="characterSystemTextCaption"
             android:title="@string/pref_character_system_text_caption" />
     </PreferenceCategory>
@@ -171,6 +171,15 @@
             app:icon="@drawable/ic_notification"
             android:key="restoreNotification"
             android:title="@string/pref_restore_notification" />-->
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="restoreGallopWebview"
+            android:summary="@string/pref_restore_gallop_webview_summary"
+            android:title="@string/pref_restore_gallop_webview"
+            app:icon="@drawable/ic_web"
+            app:isPreferenceVisible="false"
+            tools:isPreferenceVisible="true" />
 
         <com.kimjio.umamusumelocalify.settings.preference.FolderPickerPreference
             android:icon="@drawable/ic_replace_assets_folder"
@@ -203,8 +212,8 @@
         <com.kimjio.umamusumelocalify.settings.preference.FilePickerPreference
             android:icon="@drawable/ic_json"
             android:key="textIdDict"
-            android:title="@string/pref_text_id_file"
-            android:mimeType="application/json" />
+            android:mimeType="application/json"
+            android:title="@string/pref_text_id_file" />
 
         <Preference
             android:icon="@drawable/ic_translate"

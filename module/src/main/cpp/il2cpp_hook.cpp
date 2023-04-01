@@ -150,6 +150,26 @@ Il2CppDelegate *CreateDelegate(Il2CppObject *target, R (*fn)(Il2CppObject *, T..
     return delegate;
 }
 
+template<typename... T>
+Il2CppDelegate *CreateUnityAction(Il2CppObject *target, void (*fn)(Il2CppObject *, T...)) {
+    auto delegate = reinterpret_cast<MulticastDelegate *>(
+            il2cpp_object_new(
+                    il2cpp_symbols::get_class("UnityEngine.CoreModule.dll", "UnityEngine.Events",
+                                              "UnityAction")));
+    auto delegateClass = il2cpp_defaults.delegate_class;
+    delegate->delegates = il2cpp_array_new(delegateClass, 1);
+    il2cpp_array_set(delegate->delegates, Il2CppDelegate *, 0, delegate);
+    delegate->method_ptr = reinterpret_cast<Il2CppMethodPointer>(fn);
+
+    auto methodInfo = reinterpret_cast<MethodInfo *>(il2cpp_object_new(
+            il2cpp_defaults.method_info_class));
+    methodInfo->methodPointer = delegate->method_ptr;
+    methodInfo->klass = il2cpp_defaults.method_info_class;
+    delegate->method = methodInfo;
+    delegate->target = target;
+    return delegate;
+}
+
 Boolean GetBoolean(bool value) {
     return reinterpret_cast<Boolean (*)(Il2CppString *value)>(il2cpp_symbols::get_method_pointer(
             "mscorlib.dll", "System", "Boolean", "Parse", 1))(
@@ -2776,257 +2796,271 @@ void PartsNewsButton_Setup_hook(Il2CppObject *thisObj, Il2CppDelegate *onUpdateB
     }
 }
 
-void *PartsEpisodeExtraVoiceButton_Setup_callback = nullptr;
+void *PartsEpisodeList_SetupStoryExtraEpisodeList_orig = nullptr;
 
-void *PartsEpisodeExtraVoiceButton_Setup_orig = nullptr;
+void PartsEpisodeList_SetupStoryExtraEpisodeList_hook(Il2CppObject *thisObj,
+                                                      Il2CppObject *extraSubCategory,
+                                                      Il2CppObject *partDataList,
+                                                      Il2CppObject *partData,
+                                                      Il2CppDelegate *onClick) {
+    reinterpret_cast<decltype(PartsEpisodeList_SetupStoryExtraEpisodeList_hook) *>(PartsEpisodeList_SetupStoryExtraEpisodeList_orig)(
+            thisObj, extraSubCategory, partDataList, partData, onClick);
 
-void PartsEpisodeExtraVoiceButton_Setup_hook(Il2CppObject *thisObj, Il2CppString *cueSheetName,
-                                             Il2CppString *cueName, int storyId) {
-    reinterpret_cast<decltype(PartsEpisodeExtraVoiceButton_Setup_hook) *>(PartsEpisodeExtraVoiceButton_Setup_orig)(
-            thisObj, cueSheetName, cueName, storyId);
+    int partDataId = reinterpret_cast<int (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
+            partData->klass, "get_Id", 0)->methodPointer)(partData);
 
-    auto buttonField = il2cpp_class_get_field_from_name(thisObj->klass, "_playVoiceButton");
+    auto voiceButtonField = il2cpp_class_get_field_from_name(thisObj->klass, "_voiceButton");
+    Il2CppObject *voiceButton;
+    il2cpp_field_get_value(thisObj, voiceButtonField, &voiceButton);
+
+    auto buttonField = il2cpp_class_get_field_from_name(voiceButton->klass, "_playVoiceButton");
     Il2CppObject *button;
-    il2cpp_field_get_value(thisObj, buttonField, &button);
+    il2cpp_field_get_value(voiceButton, buttonField, &button);
 
     if (button) {
         auto callback = GetButtonCommonOnClickDelegate(button);
         if (callback) {
-            if (!PartsEpisodeExtraVoiceButton_Setup_callback) {
-                auto newFn = *([](Il2CppObject *innerThisObj) {
-                    auto storyIdField = il2cpp_class_get_field_from_name(innerThisObj->klass,
-                                                                         "storyId");
-                    int storyId;
-                    il2cpp_field_get_value(innerThisObj, storyIdField, &storyId);
+            auto newFn = *([](Il2CppObject *innerThisObj) {
+                auto storyIdField = il2cpp_class_get_field_from_name(innerThisObj->klass,
+                                                                     "storyId");
+                int storyId;
+                il2cpp_field_get_value(innerThisObj, storyIdField, &storyId);
 
-                    FieldInfo *thisField;
-                    void *iter = nullptr;
-                    while (FieldInfo *field = il2cpp_class_get_fields(innerThisObj->klass, &iter)) {
-                        if (string(field->name).find("this") != string::npos) {
-                            thisField = field;
-                        }
+                FieldInfo *thisField;
+                void *iter = nullptr;
+                while (FieldInfo *field = il2cpp_class_get_fields(innerThisObj->klass, &iter)) {
+                    if (string(field->name).find("this") != string::npos) {
+                        thisField = field;
                     }
-                    Il2CppObject *thisObj;
-                    il2cpp_field_get_value(innerThisObj, thisField, &thisObj);
+                }
+                Il2CppObject *thisObj;
+                il2cpp_field_get_value(innerThisObj, thisField, &thisObj);
 
-                    reinterpret_cast<void (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
-                            thisObj->klass, "StopVoiceIfNeed", 0)->methodPointer)(thisObj);
+                reinterpret_cast<void (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
+                        thisObj->klass, "StopVoiceIfNeed", 0)->methodPointer)(thisObj);
 
-                    auto onLeft = CreateDelegate(innerThisObj,
-                                                 *([](Il2CppObject *thisObj, Il2CppObject *) {
-                                                     auto storyIdField = il2cpp_class_get_field_from_name(
-                                                             thisObj->klass, "storyId");
-                                                     int storyId;
-                                                     il2cpp_field_get_value(thisObj, storyIdField,
-                                                                            &storyId);
+                auto onLeft = CreateDelegate(innerThisObj,
+                                             *([](Il2CppObject *thisObj, Il2CppObject *) {
+                                                 auto storyIdField = il2cpp_class_get_field_from_name(
+                                                         thisObj->klass, "storyId");
+                                                 int storyId;
+                                                 il2cpp_field_get_value(thisObj, storyIdField,
+                                                                        &storyId);
 
-                                                     auto masterDataManager = GetSingletonInstance(
-                                                             il2cpp_symbols::get_class(
-                                                                     "umamusume.dll", "Gallop",
-                                                                     "MasterDataManager"));
-                                                     auto masterBannerData = reinterpret_cast<Il2CppObject *(*)(
-                                                             Il2CppObject *)>(il2cpp_class_get_method_from_name(
-                                                             masterDataManager->klass,
-                                                             "get_masterBannerData",
-                                                             0)->methodPointer)(masterDataManager);
+                                                 auto masterDataManager = GetSingletonInstance(
+                                                         il2cpp_symbols::get_class(
+                                                                 "umamusume.dll", "Gallop",
+                                                                 "MasterDataManager"));
+                                                 auto masterBannerData = reinterpret_cast<Il2CppObject *(*)(
+                                                         Il2CppObject *)>(il2cpp_class_get_method_from_name(
+                                                         masterDataManager->klass,
+                                                         "get_masterBannerData",
+                                                         0)->methodPointer)(masterDataManager);
 
-                                                     auto bannerList = reinterpret_cast<Il2CppObject *(*)(
-                                                             Il2CppObject *,
-                                                             int)>(il2cpp_class_get_method_from_name(
-                                                             masterBannerData->klass,
-                                                             "GetListWithGroupId",
-                                                             1)->methodPointer)(masterBannerData,
-                                                                                7);
+                                                 auto bannerList = reinterpret_cast<Il2CppObject *(*)(
+                                                         Il2CppObject *,
+                                                         int)>(il2cpp_class_get_method_from_name(
+                                                         masterBannerData->klass,
+                                                         "GetListWithGroupId",
+                                                         1)->methodPointer)(masterBannerData,
+                                                                            7);
 
-                                                     FieldInfo *itemsField = il2cpp_class_get_field_from_name(
-                                                             bannerList->klass, "_items");
-                                                     Il2CppArray *arr;
-                                                     il2cpp_field_get_value(bannerList, itemsField,
-                                                                            &arr);
+                                                 FieldInfo *itemsField = il2cpp_class_get_field_from_name(
+                                                         bannerList->klass, "_items");
+                                                 Il2CppArray *arr;
+                                                 il2cpp_field_get_value(bannerList, itemsField,
+                                                                        &arr);
 
-                                                     int announceId = -1;
+                                                 int announceId = -1;
 
-                                                     for (int i = 0; i < arr->max_length; i++) {
-                                                         auto item = reinterpret_cast<Il2CppObject *>(arr->vector[i]);
-                                                         if (item) {
-                                                             auto typeField = il2cpp_class_get_field_from_name(
-                                                                     item->klass, "Type");
-                                                             int type;
-                                                             il2cpp_field_get_value(item, typeField,
-                                                                                    &type);
-                                                             auto conditionValueField = il2cpp_class_get_field_from_name(
-                                                                     item->klass, "ConditionValue");
-                                                             int conditionValue;
+                                                 for (int i = 0; i < arr->max_length; i++) {
+                                                     auto item = reinterpret_cast<Il2CppObject *>(arr->vector[i]);
+                                                     if (item) {
+                                                         auto typeField = il2cpp_class_get_field_from_name(
+                                                                 item->klass, "Type");
+                                                         int type;
+                                                         il2cpp_field_get_value(item, typeField,
+                                                                                &type);
+                                                         auto conditionValueField = il2cpp_class_get_field_from_name(
+                                                                 item->klass, "ConditionValue");
+                                                         int conditionValue;
+                                                         il2cpp_field_get_value(item,
+                                                                                conditionValueField,
+                                                                                &conditionValue);
+                                                         if (type == 7 &&
+                                                             conditionValue == storyId) {
+                                                             auto transitionField = il2cpp_class_get_field_from_name(
+                                                                     item->klass, "Transition");
                                                              il2cpp_field_get_value(item,
-                                                                                    conditionValueField,
-                                                                                    &conditionValue);
-                                                             if (type == 7 &&
-                                                                 conditionValue == storyId) {
-                                                                 auto transitionField = il2cpp_class_get_field_from_name(
-                                                                         item->klass, "Transition");
-                                                                 il2cpp_field_get_value(item,
-                                                                                        transitionField,
-                                                                                        &announceId);
-                                                                 break;
-                                                             }
+                                                                                    transitionField,
+                                                                                    &announceId);
+                                                             break;
                                                          }
                                                      }
+                                                 }
 
-                                                     if (announceId == -1 && storyId < 1005) {
-                                                         announceId = storyId - 1002;
-                                                     }
+                                                 if (announceId == -1 && storyId < 1005) {
+                                                     announceId = storyId - 1002;
+                                                 }
 
-                                                     auto action = CreateDelegate(thisObj,
-                                                                                  *([](Il2CppObject *) {}));
+                                                 auto action = CreateDelegate(thisObj,
+                                                                              *([](Il2CppObject *) {}));
 
-                                                     reinterpret_cast<void (*)(int,
-                                                                               Il2CppDelegate *,
-                                                                               Il2CppDelegate *)>(il2cpp_symbols::get_method_pointer(
-                                                             "umamusume.dll", "Gallop",
-                                                             "DialogAnnounceEvent", "Open", 3))(
-                                                             announceId, action, action);
-                                                 }));
+                                                 reinterpret_cast<void (*)(int,
+                                                                           Il2CppDelegate *,
+                                                                           Il2CppDelegate *)>(il2cpp_symbols::get_method_pointer(
+                                                         "umamusume.dll", "Gallop",
+                                                         "DialogAnnounceEvent", "Open", 3))(
+                                                         announceId, action, action);
+                                             }));
 
-                    if (storyId < 1005) {
-                        auto onRight = CreateDelegate(innerThisObj,
-                                                      *([](Il2CppObject *thisObj, Il2CppObject *) {
-                                                          auto storyIdField = il2cpp_class_get_field_from_name(
-                                                                  thisObj->klass, "storyId");
-                                                          int storyId;
-                                                          il2cpp_field_get_value(thisObj,
-                                                                                 storyIdField,
-                                                                                 &storyId);
+                if (storyId < 1005) {
+                    auto onRight = CreateDelegate(innerThisObj,
+                                                  *([](Il2CppObject *thisObj, Il2CppObject *) {
+                                                      auto storyIdField = il2cpp_class_get_field_from_name(
+                                                              thisObj->klass, "storyId");
+                                                      int storyId;
+                                                      il2cpp_field_get_value(thisObj,
+                                                                             storyIdField,
+                                                                             &storyId);
 
-                                                          auto cueSheetNameField = il2cpp_class_get_field_from_name(
-                                                                  thisObj->klass, "cueSheetName");
-                                                          Il2CppString *cueSheetName;
-                                                          il2cpp_field_get_value(thisObj,
-                                                                                 cueSheetNameField,
-                                                                                 &cueSheetName);
+                                                      auto cueSheetNameField = il2cpp_class_get_field_from_name(
+                                                              thisObj->klass, "cueSheetName");
+                                                      Il2CppString *cueSheetName;
+                                                      il2cpp_field_get_value(thisObj,
+                                                                             cueSheetNameField,
+                                                                             &cueSheetName);
 
-                                                          auto cueNameField = il2cpp_class_get_field_from_name(
-                                                                  thisObj->klass, "cueName");
-                                                          Il2CppString *cueName;
-                                                          il2cpp_field_get_value(thisObj,
-                                                                                 cueNameField,
-                                                                                 &cueName);
+                                                      auto cueNameField = il2cpp_class_get_field_from_name(
+                                                              thisObj->klass, "cueName");
+                                                      Il2CppString *cueName;
+                                                      il2cpp_field_get_value(thisObj,
+                                                                             cueNameField,
+                                                                             &cueName);
 
-                                                          auto optionKey = string(
-                                                                  "kakaoUmaAnnounceEvent").append(
-                                                                  to_string(storyId));
+                                                      auto optionKey = string(
+                                                              "kakaoUmaAnnounceEvent").append(
+                                                              to_string(storyId));
 
-                                                          auto KakaoManager = il2cpp_symbols::get_class(
-                                                                  "umamusume.dll", "",
-                                                                  "KakaoManager");
-                                                          auto managerInstanceField = il2cpp_class_get_field_from_name(
-                                                                  KakaoManager, "instance");
-                                                          Il2CppObject *manager;
-                                                          il2cpp_field_static_get_value(
-                                                                  managerInstanceField, &manager);
+                                                      auto KakaoManager = il2cpp_symbols::get_class(
+                                                              "umamusume.dll", "",
+                                                              "KakaoManager");
+                                                      auto managerInstanceField = il2cpp_class_get_field_from_name(
+                                                              KakaoManager, "instance");
+                                                      Il2CppObject *manager;
+                                                      il2cpp_field_static_get_value(
+                                                              managerInstanceField, &manager);
 
-                                                          auto url = reinterpret_cast<Il2CppString *(*)(
-                                                                  Il2CppObject *, Il2CppString *)>(
-                                                                  il2cpp_class_get_method_from_name(
-                                                                          manager->klass,
-                                                                          "GetKakaoOptionValue",
-                                                                          1)->methodPointer
-                                                          )(manager,
-                                                            il2cpp_string_new(optionKey.data()));
+                                                      auto url = reinterpret_cast<Il2CppString *(*)(
+                                                              Il2CppObject *, Il2CppString *)>(
+                                                              il2cpp_class_get_method_from_name(
+                                                                      manager->klass,
+                                                                      "GetKakaoOptionValue",
+                                                                      1)->methodPointer
+                                                      )(manager,
+                                                        il2cpp_string_new(optionKey.data()));
 
 
-                                                          auto masterDataManager = GetSingletonInstance(
-                                                                  il2cpp_symbols::get_class(
-                                                                          "umamusume.dll", "Gallop",
-                                                                          "MasterDataManager"));
-                                                          auto masterString = reinterpret_cast<Il2CppObject *(*)(
-                                                                  Il2CppObject *)>(il2cpp_class_get_method_from_name(
-                                                                  masterDataManager->klass,
-                                                                  "get_masterString",
-                                                                  0)->methodPointer)(
-                                                                  masterDataManager);
+                                                      auto masterDataManager = GetSingletonInstance(
+                                                              il2cpp_symbols::get_class(
+                                                                      "umamusume.dll", "Gallop",
+                                                                      "MasterDataManager"));
+                                                      auto masterString = reinterpret_cast<Il2CppObject *(*)(
+                                                              Il2CppObject *)>(il2cpp_class_get_method_from_name(
+                                                              masterDataManager->klass,
+                                                              "get_masterString",
+                                                              0)->methodPointer)(
+                                                              masterDataManager);
 
-                                                          auto title = reinterpret_cast<Il2CppString *(*)(
-                                                                  Il2CppObject *, int category,
-                                                                  int index)>(
-                                                                  il2cpp_class_get_method_from_name(
-                                                                          masterString->klass,
-                                                                          "GetText",
-                                                                          2)->methodPointer
-                                                          )(masterString, 214, storyId);
+                                                      auto title = reinterpret_cast<Il2CppString *(*)(
+                                                              Il2CppObject *, int category,
+                                                              int index)>(
+                                                              il2cpp_class_get_method_from_name(
+                                                                      masterString->klass,
+                                                                      "GetText",
+                                                                      2)->methodPointer
+                                                      )(masterString, 214, storyId);
 
-                                                          FieldInfo *thisField;
-                                                          void *iter = nullptr;
-                                                          while (FieldInfo *field = il2cpp_class_get_fields(
-                                                                  thisObj->klass, &iter)) {
-                                                              if (string(field->name).find(
-                                                                      "this") != string::npos) {
-                                                                  thisField = field;
-                                                              }
+                                                      FieldInfo *thisField;
+                                                      void *iter = nullptr;
+                                                      while (FieldInfo *field = il2cpp_class_get_fields(
+                                                              thisObj->klass, &iter)) {
+                                                          if (string(field->name).find(
+                                                                  "this") != string::npos) {
+                                                              thisField = field;
                                                           }
-                                                          Il2CppObject *parentObj;
-                                                          il2cpp_field_get_value(thisObj, thisField,
-                                                                                 &parentObj);
+                                                      }
+                                                      Il2CppObject *parentObj;
+                                                      il2cpp_field_get_value(thisObj, thisField,
+                                                                             &parentObj);
 
-                                                          OpenWebViewDialog(url, title,
-                                                                            GetTextIdByName(
-                                                                                    "Common0007"),
-                                                                            CreateDelegate(
-                                                                                    parentObj,
-                                                                                    *([](Il2CppObject *thisObj) {
-                                                                                        reinterpret_cast<void (*)(
-                                                                                                Il2CppObject *)>(il2cpp_class_get_method_from_name(
-                                                                                                thisObj->klass,
-                                                                                                "StopVoiceIfNeed",
-                                                                                                0)->methodPointer)(
-                                                                                                thisObj);
-                                                                                    })));
+                                                      OpenWebViewDialog(url, title,
+                                                                        GetTextIdByName(
+                                                                                "Common0007"),
+                                                                        CreateDelegate(
+                                                                                parentObj,
+                                                                                *([](Il2CppObject *thisObj) {
+                                                                                    reinterpret_cast<void (*)(
+                                                                                            Il2CppObject *)>(il2cpp_class_get_method_from_name(
+                                                                                            thisObj->klass,
+                                                                                            "StopVoiceIfNeed",
+                                                                                            0)->methodPointer)(
+                                                                                            thisObj);
+                                                                                })));
 
-                                                          reinterpret_cast<void (*)(Il2CppObject *,
-                                                                                    Il2CppString *,
-                                                                                    Il2CppString *)>(il2cpp_class_get_method_from_name(
-                                                                  parentObj->klass,
-                                                                  "PlayAnnounceVoice",
-                                                                  2)->methodPointer)(parentObj,
-                                                                                     cueSheetName,
-                                                                                     cueName);
-                                                      }));
+                                                      reinterpret_cast<void (*)(Il2CppObject *,
+                                                                                Il2CppString *,
+                                                                                Il2CppString *)>(il2cpp_class_get_method_from_name(
+                                                              parentObj->klass,
+                                                              "PlayAnnounceVoice",
+                                                              2)->methodPointer)(parentObj,
+                                                                                 cueSheetName,
+                                                                                 cueName);
+                                                  }));
 
-                        auto dialogData = il2cpp_object_new(
-                                il2cpp_symbols::get_class("umamusume.dll", "Gallop",
-                                                          "DialogCommon/Data"));
-                        il2cpp_runtime_object_init(dialogData);
+                    auto dialogData = il2cpp_object_new(
+                            il2cpp_symbols::get_class("umamusume.dll", "Gallop",
+                                                      "DialogCommon/Data"));
+                    il2cpp_runtime_object_init(dialogData);
 
-                        dialogData = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *thisObj,
-                                                                        Il2CppString *headerTextArg,
-                                                                        Il2CppString *message,
-                                                                        Il2CppDelegate *onRight,
-                                                                        unsigned long leftTextId,
-                                                                        unsigned long rightTextId,
-                                                                        Il2CppDelegate *onLeft,
-                                                                        int dialogFormType)>(
-                                il2cpp_class_get_method_from_name(dialogData->klass,
-                                                                  "SetSimpleTwoButtonMessage",
-                                                                  7)->methodPointer
-                        )(dialogData,
-                          localizeextension_text_hook(GetTextIdByName("StoryEvent0079")),
-                          il2cpp_string_new("해당 스토리 이벤트는 개최 정보가 누락되어있습니다.\n\n웹 페이지를 보시겠습니까?"),
-                          onRight, GetTextIdByName("Common0002"), GetTextIdByName("Common0001"),
-                          onLeft, 2);
+                    dialogData = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *thisObj,
+                                                                    Il2CppString *headerTextArg,
+                                                                    Il2CppString *message,
+                                                                    Il2CppDelegate *onRight,
+                                                                    unsigned long leftTextId,
+                                                                    unsigned long rightTextId,
+                                                                    Il2CppDelegate *onLeft,
+                                                                    int dialogFormType)>(
+                            il2cpp_class_get_method_from_name(dialogData->klass,
+                                                              "SetSimpleTwoButtonMessage",
+                                                              7)->methodPointer
+                    )(dialogData,
+                      localizeextension_text_hook(GetTextIdByName("StoryEvent0079")),
+                      il2cpp_string_new("해당 스토리 이벤트는 개최 정보가 누락되어있습니다.\n\n웹 페이지를 보시겠습니까?"),
+                      onRight, GetTextIdByName("Common0002"), GetTextIdByName("Common0001"),
+                      onLeft, 2);
 
-                        reinterpret_cast<Il2CppObject *(*)(
-                                Il2CppObject *data)>(il2cpp_symbols::get_method_pointer(
-                                "umamusume.dll", "Gallop", "DialogManager", "PushDialog", 1))(
-                                dialogData);
-                    } else {
-                        reinterpret_cast<void (*)(Il2CppObject *,
-                                                  Il2CppObject *)>(onLeft->method_ptr)(
-                                onLeft->target, nullptr);
-                    }
-                });
-                DobbyHook(reinterpret_cast<void *>(callback->method_ptr),
-                          reinterpret_cast<void *>(newFn),
-                          &PartsEpisodeExtraVoiceButton_Setup_callback);
-            }
+                    reinterpret_cast<Il2CppObject *(*)(
+                            Il2CppObject *data)>(il2cpp_symbols::get_method_pointer(
+                            "umamusume.dll", "Gallop", "DialogManager", "PushDialog", 1))(
+                            dialogData);
+                } else {
+                    reinterpret_cast<void (*)(Il2CppObject *,
+                                              Il2CppObject *)>(onLeft->method_ptr)(
+                            onLeft->target, nullptr);
+                }
+            });
+            reinterpret_cast<void (*)(Il2CppObject *,
+                                      Il2CppDelegate *)>(il2cpp_class_get_method_from_name(
+                    button->klass, "SetOnClick", 1)->methodPointer)(button,
+                                                                    CreateUnityAction(
+                                                                            il2cpp_value_box(
+                                                                                    il2cpp_symbols::get_class(
+                                                                                            "mscorlib.dll",
+                                                                                            "System",
+                                                                                            "Int32"),
+                                                                                    &partDataId),
+                                                                            newFn));
         }
     }
 }
@@ -3802,8 +3836,8 @@ void hookMethods() {
                                                                          "PartsNewsButton", "Setup",
                                                                          1);
 
-    auto PartsEpisodeExtraVoiceButton_Setup_addr = il2cpp_symbols::get_method_pointer(
-            "umamusume.dll", "Gallop", "PartsEpisodeExtraVoiceButton", "Setup", 3);
+    auto PartsEpisodeList_SetupStoryExtraEpisodeList_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "PartsEpisodeList", "SetupStoryExtraEpisodeList", 4);
 
     auto BannerUI_OnClickBannerItem_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
                                                                               "Gallop", "BannerUI",
@@ -3947,12 +3981,12 @@ void hookMethods() {
         ADD_HOOK(ScheduleLocalPushes)
     }
 
-    if (Game::currentGameRegion == Game::Region::KOR /* && g_restore_gallop_webview */) {
+    ADD_HOOK(PartsEpisodeList_SetupStoryExtraEpisodeList)
+
+    if (Game::currentGameRegion == Game::Region::KOR && g_restore_gallop_webview) {
         ADD_HOOK(KakaoManager_OnKakaoShowInAppWebView)
 
         ADD_HOOK(BannerUI_OnClickBannerItem)
-
-        ADD_HOOK(PartsEpisodeExtraVoiceButton_Setup)
 
         ADD_HOOK(PartsNewsButton_Setup)
 

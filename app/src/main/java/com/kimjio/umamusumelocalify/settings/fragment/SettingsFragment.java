@@ -16,6 +16,7 @@ import androidx.preference.Preference;
 import androidx.preference.SeekBarPreference;
 import androidx.preference.TwoStatePreference;
 
+import com.kimjio.umamusumelocalify.settings.Constants;
 import com.kimjio.umamusumelocalify.settings.ModuleUtils;
 import com.kimjio.umamusumelocalify.settings.R;
 import com.kimjio.umamusumelocalify.settings.activity.BaseActivity;
@@ -52,6 +53,9 @@ public class SettingsFragment extends BaseSettingsFragment {
         restoreNotificationPreference.setDefaultValue(Constants.PKG_KOR.equals(packageName));
         restoreNotificationPreference.setVisible(Constants.PKG_KOR.equals(packageName));
         dataStore.putBoolean(restoreNotificationPreference.getKey(), Constants.PKG_KOR.equals(packageName));*/
+
+        TwoStatePreference restoreGallopWebviewPreference = Objects.requireNonNull(findPreference("restoreGallopWebview"));
+        restoreGallopWebviewPreference.setVisible(Constants.PKG_KOR.equals(packageName));
 
         String moduleVersion = ModuleUtils.getModuleVersion();
         Preference versionPreference = Objects.requireNonNull(findPreference("version"));
@@ -143,6 +147,8 @@ public class SettingsFragment extends BaseSettingsFragment {
         /*Preference restoreNotificationPreference = Objects.requireNonNull(findPreference("restoreNotification"));
         restoreNotificationPreference.setDefaultValue(Constants.PKG_KOR.equals(packageName));
         restoreNotificationPreference.setVisible(Constants.PKG_KOR.equals(packageName));*/
+        TwoStatePreference restoreGallopWebviewPreference = Objects.requireNonNull(findPreference("restoreGallopWebview"));
+        restoreGallopWebviewPreference.setVisible(Constants.PKG_KOR.equals(packageName));
         super.changeDataSource(packageName, parentPath, path);
     }
 

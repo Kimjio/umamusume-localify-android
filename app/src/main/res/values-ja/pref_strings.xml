@@ -37,6 +37,8 @@
   <string name="pref_loading_show_orientation_guide">Now Loading…内の画面回転のガイドを表示</string>
   <string name="pref_hide_loading_screen">Now Loading…の画面を非表示</string>
   <string name="pref_restore_notification">通知を復元する</string>
+  <string name="pref_restore_gallop_webview">アプリ内WebViewの復元</string>
+  <string name="pref_restore_gallop_webview_summary">サードパーティーの WebView ではなく、アプリ内の WebView を表示する。</string>
   <string name="pref_static_entries_use_hash">静的エントリにハッシュを使用する</string>
   <string name="pref_static_entries_use_text_id">静的エントリにテキストIDを使用する</string>
   <string name="pref_text_id_file">テキストIDファイル</string>

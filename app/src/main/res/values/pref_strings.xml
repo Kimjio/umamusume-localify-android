@@ -37,12 +37,16 @@
 
     <!-- ETC prefs -->
     <string name="pref_cate_etc">ETC</string>
+
     <string name="pref_replace_assets_path">The folder containing the asset to be replaced</string>
     <string name="pref_replace_asset_bundle">Asset bundle for replacement</string>
     <string name="pref_loading_show_orientation_guide">Show screen rotation guide while loading</string>
     <string name="pref_hide_loading_screen">Hide loading screen</string>
 
     <string name="pref_restore_notification">Restore notification</string>
+
+    <string name="pref_restore_gallop_webview">Restore in-app webview</string>
+    <string name="pref_restore_gallop_webview_summary">Show in-app WebView instead of 3rd-party WebView</string>
 
     <string name="pref_static_entries_use_hash">Using hash for static entries</string>
     <string name="pref_static_entries_use_text_id">Using TextId for static entries</string>
