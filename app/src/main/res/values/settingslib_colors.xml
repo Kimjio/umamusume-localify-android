@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material next state on color-->
+    <color name="settingslib_state_on_color">@color/material_dynamic_primary90</color>
+
+    <!-- Material next state off color-->
+    <color name="settingslib_state_off_color">@color/material_dynamic_secondary90</color>
+</resources>

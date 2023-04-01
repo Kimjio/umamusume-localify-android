@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".activity.JsonViewActivity">
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:transitionGroup="true">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fitsSystemWindows="true">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/app_bar"
+                android:layout_width="match_parent"
+                android:layout_height="?actionBarSize"
+                android:elevation="0dp">
+
+            </com.google.android.material.appbar.MaterialToolbar>
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <com.blacksquircle.ui.editorkit.widget.TextProcessor
+            android:id="@+id/code"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:inputType="none"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+        <com.blacksquircle.ui.editorkit.widget.TextScroller
+            android:id="@+id/scroller"
+            android:layout_width="30dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="top|end"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            app:thumbTint="?colorControlNormal" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

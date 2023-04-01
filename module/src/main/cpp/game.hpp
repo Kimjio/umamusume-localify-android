@@ -3,9 +3,13 @@
 #ifndef UMAMUSUMELOCALIFYANDROID_GAME_HPP
 #define UMAMUSUMELOCALIFYANDROID_GAME_HPP
 
+#include <string>
+
 #define Unity2019 "2019.4.21f1"
 #define Unity2019Twn "2019.4.19f1"
 #define Unity2020 "2020.3.24f1"
+
+using namespace std;
 
 namespace Game {
     enum class Region {
@@ -24,13 +28,13 @@ namespace Game {
     inline auto currentGameRegion = Region::UNKNOWN;
     inline auto currentGameStore = Store::Google;
 
-    inline std::string GamePackageName = "jp.co.cygames.umamusume";
-    inline std::string GamePackageNameKor = "com.kakaogames.umamusume";
-    inline std::string GamePackageNameTwnGoogle = "com.komoe.kmumamusumegp";
-    inline std::string GamePackageNameTwnMyCard = "com.komoe.kmumamusumemc";
+    inline auto GamePackageName = "jp.co.cygames.umamusume"s;
+    inline auto GamePackageNameKor = "com.kakaogames.umamusume"s;
+    inline auto GamePackageNameTwnGoogle = "com.komoe.kmumamusumegp"s;
+    inline auto GamePackageNameTwnMyCard = "com.komoe.kmumamusumemc"s;
 
     static bool IsPackageNameEqualsByGameRegion(const char *pkgNm, Region gameRegion) {
-        std::string pkgNmStr = std::string(pkgNm);
+        string pkgNmStr = string(pkgNm);
         if (pkgNmStr.empty()) {
             return false;
         }
@@ -67,7 +71,7 @@ namespace Game {
         return false;
     }
 
-    static std::string GetPackageNameByGameRegionAndGameStore(Region gameRegion, Store gameStore) {
+    static string GetPackageNameByGameRegionAndGameStore(Region gameRegion, Store gameStore) {
         if (gameRegion == Region::JAP)
             return GamePackageName;
         if (gameRegion == Region::KOR)
@@ -81,13 +85,13 @@ namespace Game {
         return "";
     }
 
-    static std::string GetCurrentPackageName() {
+    static string GetCurrentPackageName() {
         return GetPackageNameByGameRegionAndGameStore(currentGameRegion, currentGameStore);
     }
 
     static Region CheckPackageNameByDataPath() {
         if (access(
-                std::string("/data/data/")
+                "/data/data/"s
                         .append(GetPackageNameByGameRegionAndGameStore(Region::JAP,
                                                                        Store::Google)).append(
                         "/cache").data(),
@@ -95,7 +99,7 @@ namespace Game {
             return Region::JAP;
         }
         if (access(
-                std::string("/data/data/")
+                "/data/data/"s
                         .append(GetPackageNameByGameRegionAndGameStore(Region::KOR,
                                                                        Store::Google)).append(
                         "/cache").data(),
@@ -103,7 +107,7 @@ namespace Game {
             return Region::KOR;
         }
         if (access(
-                std::string("/data/data/")
+                "/data/data/"s
                         .append(GetPackageNameByGameRegionAndGameStore(Region::TWN,
                                                                        Store::Google)).append(
                         "/cache").data(),
@@ -111,7 +115,7 @@ namespace Game {
             return Region::TWN;
         }
         if (access(
-                std::string("/data/data/")
+                "/data/data/"s
                         .append(GetPackageNameByGameRegionAndGameStore(Region::TWN,
                                                                        Store::Other)).append(
                         "/cache").data(),

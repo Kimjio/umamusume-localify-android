@@ -1,5 +1,6 @@
 package com.kimjio.umamusumelocalify.settings.preference;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
@@ -15,8 +16,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.preference.DialogPreference;
 import androidx.preference.EditTextPreferenceDialogFragmentCompat;
+import androidx.preference.PreferenceDialogFragmentCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.kimjio.umamusumelocalify.settings.R;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -33,6 +36,7 @@ public class MaterialEditTextPreferenceDialogFragmentCompat extends EditTextPref
         return fragment;
     }
 
+    @SuppressLint("RestrictedApi")
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -70,14 +74,14 @@ public class MaterialEditTextPreferenceDialogFragmentCompat extends EditTextPref
         }
 
         try {
-            Field mWhichButtonClickedField = this.getClass().getDeclaredField("mWhichButtonClicked");
+            Field mWhichButtonClickedField = PreferenceDialogFragmentCompat.class.getDeclaredField("mWhichButtonClicked");
             mWhichButtonClickedField.setAccessible(true);
             mWhichButtonClickedField.setInt(this, DialogInterface.BUTTON_NEGATIVE);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        final MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext())
+        final MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_Material3_Dialog_Centered)
                 .setTitle(dialogTitle)
                 .setIcon(dialogIcon)
                 .setPositiveButton(positiveButtonText, this)
@@ -95,7 +99,7 @@ public class MaterialEditTextPreferenceDialogFragmentCompat extends EditTextPref
         final Dialog dialog = builder.create();
         if (needInputMethod()) {
             try {
-                Method method = this.getClass().getDeclaredMethod("requestInputMethod");
+                Method method = PreferenceDialogFragmentCompat.class.getDeclaredMethod("requestInputMethod", Dialog.class);
                 method.setAccessible(true);
                 method.invoke(this, dialog);
             } catch (Exception e) {

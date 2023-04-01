@@ -18,4 +18,25 @@
     <string name="unknown">Unknown</string>
     <string name="error_occurred">Error occurred</string>
     <string name="no_apps">There are no apps installed.</string>
+    <string name="request">Request</string>
+    <string name="response">Response</string>
+    <string name="expand_all">Expand All</string>
+    <string name="collapse_all">Collapse All</string>
+    <string name="save">Save</string>
+    <string name="save_ok">Saved.</string>
+    <string name="save_format_select">Select a save format</string>
+    <string name="save_format_json" translatable="false">JSON</string>
+    <string name="save_format_msgpack" translatable="false">MessagePack</string>
+
+    <plurals name="show_manual_edit_countdown">
+        <item quantity="one">You are now %1$d step away to edit yourself.</item>
+        <item quantity="other">You are now %1$d steps away to edit yourself.</item>
+    </plurals>
+
+    <string name="deleted">Deleted.</string>
+    <string name="undo">UNDO</string>
+
+    <string name="all">All</string>
+    <string name="filter_response">Response only</string>
+    <string name="filter_request">Request only</string>
 </resources>

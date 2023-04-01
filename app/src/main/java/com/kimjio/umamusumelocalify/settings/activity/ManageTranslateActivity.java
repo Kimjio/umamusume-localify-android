@@ -47,12 +47,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ManageTranslateActivity extends BaseActivity<ManageTranslateActivityBinding> {
-    public static final String EXTRA_PACKAGE_NAME = "package_name";
-
-    public static final String EXTRA_PATH = "path";
-
-    public static final String EXTRA_CONFIG_PATH = "config_path";
-
     private String packageName;
 
     private PreferenceDataStore dataStore;
@@ -70,12 +64,12 @@ public class ManageTranslateActivity extends BaseActivity<ManageTranslateActivit
         if (getIntent().hasExtra(EXTRA_PACKAGE_NAME)) {
             packageName = getIntent().getStringExtra(EXTRA_PACKAGE_NAME);
         } else {
-            finish();
+            finishAfterTransition();
             return;
         }
 
         if (!getIntent().hasExtra(EXTRA_PATH) || !getIntent().hasExtra(EXTRA_CONFIG_PATH)) {
-            finish();
+            finishAfterTransition();
             return;
         }
 

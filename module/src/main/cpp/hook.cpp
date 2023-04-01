@@ -38,7 +38,9 @@ string g_replace_text_db_path;
 bool g_character_system_text_caption = false;
 int g_cyspring_update_mode = -1;
 bool g_hide_now_loading = false;
-std::string g_packet_notifier;
+bool g_dump_msgpack = false;
+bool g_dump_msgpack_request = false;
+string g_packet_notifier;
 
 string text_id_dict;
 
@@ -418,8 +420,16 @@ optional<vector<string>> read_config() {
             }
         }
 
-        if(document.HasMember("packetNotifier")) {
-            g_packet_notifier = std::string(document["packetNotifier"].GetString());
+        if (document.HasMember("dumpMsgPack")) {
+            g_dump_msgpack = document["dumpMsgPack"].GetBool();
+        }
+
+        if (document.HasMember("dumpMsgPackRequest")) {
+            g_dump_msgpack_request = document["dumpMsgPackRequest"].GetBool();
+        }
+
+        if (document.HasMember("packetNotifier")) {
+            g_packet_notifier = document["packetNotifier"].GetString();
         }
     }
 

@@ -3,8 +3,8 @@
 Il2CppDefaults il2cpp_defaults;
 
 
-char *il2cpp_array_addr_with_size(Il2CppArray *array, int32_t size, uintptr_t idx) {
-    return ((char *) array) + kIl2CppSizeOfArray + size * idx;
+int8_t *il2cpp_array_addr_with_size(Il2CppArray *array, int32_t size, uintptr_t idx) {
+    return reinterpret_cast<int8_t *>(array) + kIl2CppSizeOfArray + size * idx;
 }
 
 namespace il2cpp_symbols {
@@ -141,8 +141,8 @@ namespace il2cpp_symbols {
         DEFAULTS_INIT(mono_method_message_class, "System.Runtime.Remoting.Messaging",
                       "MonoMethodMessage");
 
-        il2cpp_defaults.threadpool_perform_wait_callback_method = (MethodInfo *) il2cpp_class_get_method_from_name(
-                il2cpp_defaults.threadpool_wait_callback_class, "PerformWaitCallback", 0);
+        il2cpp_defaults.threadpool_perform_wait_callback_method = const_cast<MethodInfo *>(il2cpp_class_get_method_from_name(
+                il2cpp_defaults.threadpool_wait_callback_class, "PerformWaitCallback", 0));
 #endif
 
         DEFAULTS_INIT_OPTIONAL(sbyte_shared_enum, "System", "SByteEnum");

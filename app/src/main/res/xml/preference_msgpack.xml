@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.kimjio.umamusumelocalify.settings.widget.MainSwitchPreference
+        android:disableDependentsState="true"
+        android:key="dumpMsgPack"
+        android:title="@string/pref_dump_msgpack" />
+
+    <SwitchPreference
+        android:dependency="dumpMsgPack"
+        android:icon="@drawable/ic_request"
+        android:key="dumpMsgPackRequest"
+        android:title="@string/pref_msgpack_dump_request" />
+
+    <EditTextPreference
+        android:dependency="dumpMsgPack"
+        android:dialogIcon="@drawable/ic_notifier_server"
+        android:icon="@drawable/ic_notifier_server"
+        android:key="packetNotifier"
+        android:title="@string/pref_msgpack_notifier_host"
+        app:useSimpleSummaryProvider="true" />
+
+    <Preference
+        android:icon="@drawable/ic_history"
+        android:key="history"
+        android:title="@string/pref_msgpack_history" />
+
+</PreferenceScreen>

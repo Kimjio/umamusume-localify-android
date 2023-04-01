@@ -42,4 +42,8 @@
         <item>2</item>
         <item>3</item>
     </string-array>
+    <string-array name="save_formats" translatable="false">
+        <item>@string/save_format_json</item>
+        <item>@string/save_format_msgpack</item>
+    </string-array>
 </resources>

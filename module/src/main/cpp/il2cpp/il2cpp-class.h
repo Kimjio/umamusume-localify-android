@@ -273,6 +273,9 @@ typedef struct Il2CppObject {
     MonitorData *monitor [[maybe_unused]];
 } Il2CppObject;
 
+#define IL2CPP_ARRAY_MAX_INDEX  (reinterpret_cast<int32_t>(0x7fffffff))
+#define IL2CPP_ARRAY_MAX_SIZE (reinterpret_cast<uint32_t>(0xffffffff))
+
 typedef struct Il2CppArray {
     Il2CppObject obj;
     Il2CppArrayBounds *bounds [[maybe_unused]];

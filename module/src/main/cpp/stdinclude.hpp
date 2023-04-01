@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cinttypes>
 #include <string>
+#include <array>
 #include <vector>
 #include <sstream>
 #include <fstream>
@@ -64,7 +65,6 @@ extern bool g_dump_entries;
 extern bool g_dump_db_entries;
 extern bool g_static_entries_use_hash;
 extern bool g_static_entries_use_text_id_name;
-extern string g_packet_notifier;
 /**
  * -1 Auto (Default behavior)
  * 0 Toon1280, Anti: 0
@@ -97,6 +97,9 @@ extern bool g_character_system_text_caption;
  */
 extern int g_cyspring_update_mode;
 extern bool g_hide_now_loading;
+extern bool g_dump_msgpack;
+extern bool g_dump_msgpack_request;
+extern string g_packet_notifier;
 
 namespace {
     // copy-pasted from https://stackoverflow.com/questions/3418231/replace-part-of-a-string-with-another-string
@@ -115,9 +118,9 @@ namespace {
     }
 
     string GetNativeBridgeLibrary() {
-        char nativeBridge[PROP_VALUE_MAX];
-        __system_property_get("ro.dalvik.vm.native.bridge", nativeBridge);
-        return string(nativeBridge);
+        auto nativeBridge = array<char, PROP_VALUE_MAX>();
+        __system_property_get("ro.dalvik.vm.native.bridge", nativeBridge.data());
+        return string(nativeBridge.data());
     }
 
     bool IsABIRequiredNativeBridge() {
@@ -129,11 +132,11 @@ namespace {
     }
 
     bool IsRunningOnNativeBridge() {
-        char systemAbi[PROP_VALUE_MAX];
-        __system_property_get("ro.product.cpu.abi", systemAbi);
-        char isaArm[PROP_VALUE_MAX];
-        __system_property_get("ro.dalvik.vm.isa.arm", isaArm);
-        return ((systemAbi == "x86"s || systemAbi == "x86_64"s) || isaArm == "x86"s) &&
+        auto systemAbi = array<char, PROP_VALUE_MAX>();
+        __system_property_get("ro.product.cpu.abi", systemAbi.data());
+        auto isaArm = array<char, PROP_VALUE_MAX>();
+        __system_property_get("ro.dalvik.vm.isa.arm", isaArm.data());
+        return ((systemAbi.data() == "x86"s || systemAbi.data() == "x86_64"s) || isaArm.data() == "x86"s) &&
                (ABI == "armeabi-v7a"s || ABI == "arm64-v8a"s);
     }
 }

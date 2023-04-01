@@ -13,6 +13,7 @@
     </queries>
 
     <application
+        android:name=".app.SettingsApplication"
         android:allowBackup="true"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
@@ -21,6 +22,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UmamusumeLocalifyAndroid"
         tools:targetApi="tiramisu">
+        <property
+            android:name="android.window.PROPERTY_ACTIVITY_EMBEDDING_SPLITS_ENABLED"
+            android:value="true" />
+
         <activity
             android:name=".activity.MainActivity"
             android:exported="true">
@@ -34,6 +39,19 @@
             android:name=".activity.ManageTranslateActivity"
             android:exported="false"
             android:label="@string/manage_translate" />
+        <activity
+            android:name=".activity.JsonViewActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.JsonEditActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.MsgPackListActivity"
+            android:label="@string/pref_msgpack_history"
+            android:exported="false" />
+        <activity
+            android:name=".activity.SettingsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

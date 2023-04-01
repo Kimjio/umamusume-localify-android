@@ -1,10 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="pref_module_version">モジュールのバージョン</string>
   <!-- Logger prefs -->
   <string name="pref_cate_logger">ログの取得</string>
   <string name="pref_enable_logger">ログの取得を有効化</string>
   <string name="pref_dump_static_entries">静的エントリをダンプ</string>
   <string name="pref_dump_db_entries">データベースのエントリをダンプ</string>
+  <string name="pref_dump_msgpack">MessagePackダンプ</string>
+  <!-- Dump MessagePack prefs -->
+  <string name="pref_msgpack_dump_request">リクエストダンプ</string>
+  <string name="pref_msgpack_notifier_host">Notifierホスト</string>
+  <string name="pref_msgpack_history">MessagePack記録</string>
   <!-- Graphics prefs -->
   <string name="pref_cate_graphics">グラフィック</string>
   <string name="pref_max_fps">最大FPS値</string>
@@ -28,9 +34,8 @@
   <string name="pref_cate_etc">その他</string>
   <string name="pref_replace_assets_path">置換をするアセットが含まれるフォルダ</string>
   <string name="pref_replace_asset_bundle">アセットバンドルを置き換え</string>
-  <string name="pref_loading_show_orientation_guide">Now Loading...内の画面回転のガイドを表示</string>
-  <string name="pref_hide_loading_screen">Now Loading...の画面を非表示</string>
-  <string name="pref_module_version">モジュールのバージョン</string>
+  <string name="pref_loading_show_orientation_guide">Now Loading…内の画面回転のガイドを表示</string>
+  <string name="pref_hide_loading_screen">Now Loading…の画面を非表示</string>
   <string name="pref_restore_notification">通知を復元する</string>
   <string name="pref_static_entries_use_hash">静的エントリにハッシュを使用する</string>
   <string name="pref_static_entries_use_text_id">静的エントリにテキストIDを使用する</string>

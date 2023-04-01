@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="pref_module_version">Module version</string>
+
     <!-- Logger prefs -->
     <string name="pref_cate_logger">Logger</string>
     <string name="pref_enable_logger">Enable logger</string>
     <string name="pref_dump_static_entries">Dump static entries</string>
     <string name="pref_dump_db_entries">Dump database entries</string>
+    <string name="pref_dump_msgpack">Dump MessagePack</string>
+
+    <!-- Dump MessagePack prefs -->
+    <string name="pref_msgpack_dump_request">Dump request</string>
+    <string name="pref_msgpack_notifier_host">Notifier host</string>
+    <string name="pref_msgpack_history">MessagePack history</string>
 
     <!-- Graphics prefs -->
     <string name="pref_cate_graphics">Graphics</string>
@@ -33,8 +41,6 @@
     <string name="pref_replace_asset_bundle">Asset bundle for replacement</string>
     <string name="pref_loading_show_orientation_guide">Show screen rotation guide while loading</string>
     <string name="pref_hide_loading_screen">Hide loading screen</string>
-
-    <string name="pref_module_version">Module version</string>
 
     <string name="pref_restore_notification">Restore notification</string>
 

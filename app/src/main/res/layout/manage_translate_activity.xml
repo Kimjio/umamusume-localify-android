@@ -20,7 +20,9 @@
                 style="?collapsingToolbarLayoutLargeStyle"
                 android:layout_width="match_parent"
                 android:layout_height="?collapsingToolbarLayoutLargeSize"
-                app:layout_scrollFlags="scroll|snap|exitUntilCollapsed">
+                app:contentScrim="@android:color/transparent"
+                app:layout_scrollFlags="scroll|snap|exitUntilCollapsed"
+                app:statusBarScrim="@android:color/transparent">
 
                 <com.google.android.material.appbar.MaterialToolbar
                     android:id="@+id/app_bar"
@@ -38,6 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginTop="16dp"
             android:indeterminate="true" />
 
         <LinearLayout
@@ -52,9 +55,10 @@
                 android:layout_width="128dp"
                 android:layout_height="128dp"
                 android:layout_gravity="center"
+                android:contentDescription="@string/files_empty"
                 android:src="@drawable/ic_file_empty" />
 
-            <com.google.android.material.textview.MaterialTextView
+            <TextView
                 style="@style/TextAppearance.Material3.BodyLarge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -70,9 +74,10 @@
             android:clipToPadding="false"
             android:fitsSystemWindows="false"
             android:orientation="vertical"
+            android:scrollbars="vertical"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:listitem="@layout/translate_item"/>
+            tools:listitem="@layout/translate_item" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/add_button"

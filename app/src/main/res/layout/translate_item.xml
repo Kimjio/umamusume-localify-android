@@ -7,6 +7,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:selectableItemBackground"
+        android:baselineAligned="false"
         android:gravity="center_vertical"
         android:minHeight="?android:listPreferredItemHeight"
         android:paddingStart="16dip"
@@ -69,11 +70,11 @@
                 android:id="@+id/error_icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:contentDescription="@string/error_occurred"
+                android:paddingHorizontal="4dp"
                 android:src="@drawable/ic_error"
                 android:visibility="gone"
-                android:paddingHorizontal="4dp"
-                android:contentDescription="@string/error_occurred"
-                tools:visibility="visible"/>
+                tools:visibility="visible" />
 
             <com.google.android.material.checkbox.MaterialCheckBox
                 android:id="@+id/use_translate"

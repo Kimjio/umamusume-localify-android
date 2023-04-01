@@ -24,6 +24,12 @@
             android:defaultValue="false"
             android:key="dumpDbEntries"
             android:title="@string/pref_dump_db_entries" />
+
+        <Preference
+            android:icon="@drawable/ic_dump_msgpack"
+            android:key="msgpackDump"
+            android:title="@string/pref_dump_msgpack"
+            android:fragment="com.kimjio.umamusumelocalify.settings.fragment.MsgPackSettingsFragment" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_cate_graphics">

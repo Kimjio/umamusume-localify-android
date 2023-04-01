@@ -28,6 +28,12 @@ import java.util.function.Consumer;
 
 
 public abstract class BaseActivity<VB extends ViewDataBinding> extends AppCompatActivity {
+    public static final String EXTRA_PACKAGE_NAME = "package_name";
+
+    public static final String EXTRA_PATH = "path";
+
+    public static final String EXTRA_CONFIG_PATH = "config_path";
+
     protected VB binding;
 
     @ColorInt
@@ -52,8 +58,9 @@ public abstract class BaseActivity<VB extends ViewDataBinding> extends AppCompat
             decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         }
 
-        Window window = getWindow();
-        window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER | WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+        if (enableBlurOnCreate()) {
+            enableBlur();
+        }
 
         backgroundColor = ((ColorDrawable) getWindow().getDecorView().getBackground()).getColor();
 
@@ -63,7 +70,8 @@ public abstract class BaseActivity<VB extends ViewDataBinding> extends AppCompat
             backgroundColor = ColorUtils.argb(0.7f, Color.red(backgroundColor), Color.green(backgroundColor), Color.blue(backgroundColor));
         }
 
-        getWindow().setBackgroundDrawable(new ColorDrawable(backgroundColor));
+        Window window = getWindow();
+        window.setBackgroundDrawable(new ColorDrawable(backgroundColor));
 
         float density = getResources().getDisplayMetrics().density;
 
@@ -84,6 +92,18 @@ public abstract class BaseActivity<VB extends ViewDataBinding> extends AppCompat
                         }
                     });
         }
+    }
+
+    public void enableBlur() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER | WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+    }
+
+    public void disableBlur() {
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER | WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+    }
+
+    protected boolean enableBlurOnCreate() {
+        return true;
     }
 
     @NonNull
@@ -119,7 +139,7 @@ public abstract class BaseActivity<VB extends ViewDataBinding> extends AppCompat
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         boolean result = false;
         if (item.getItemId() == android.R.id.home) {
-            finish();
+            finishAfterTransition();
             result = true;
         }
         return result || super.onOptionsItemSelected(item);

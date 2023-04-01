@@ -3,7 +3,7 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-  <path
-      android:fillColor="?colorSecondary"
-      android:pathData="m8,18 l-6,-6 6,-6 1.425,1.425 -4.6,4.6L9.4,16.6ZM16,18 L14.575,16.575 19.175,11.975L14.6,7.4 16,6l6,6Z"/>
+    <path
+        android:fillColor="?colorSecondary"
+        android:pathData="m8,18 l-6,-6 6,-6 1.425,1.425 -4.6,4.6L9.4,16.6ZM16,18 L14.575,16.575 19.175,11.975L14.6,7.4 16,6l6,6Z" />
 </vector>
