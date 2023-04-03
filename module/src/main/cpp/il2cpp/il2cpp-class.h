@@ -645,7 +645,9 @@ public:
     bool generateOutOfBounds [[maybe_unused]];
 } TextGenerationSettings_t [[maybe_unused]];
 
-struct Int32Object;
+typedef struct Int32Object {
+    int m_value;
+} Int32Object;
 
 enum class NotificationStyle {
     None,
