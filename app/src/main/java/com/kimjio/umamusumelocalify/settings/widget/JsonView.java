@@ -3,6 +3,8 @@ package com.kimjio.umamusumelocalify.settings.widget;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
@@ -556,6 +558,7 @@ public class JsonView extends RecyclerView {
 
         @Override
         public void onBindViewHolder(@NonNull JsonViewHolder holder, int position) {
+            boolean isNight = (holder.itemView.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
             float density = holder.itemView.getResources().getDisplayMetrics().density;
             JsonItem<?> item = itemList.get(position);
             holder.binding.left.setText(item.name);
@@ -575,6 +578,7 @@ public class JsonView extends RecyclerView {
                 holder.binding.rightPrefix.setText(null);
                 holder.binding.rightSuffix.setText(null);
                 if (item.value == null) {
+                    holder.binding.right.setTextColor(isNight ? 0xffEC7600 : 0xff1232AC);
                     if (item.nameType != JsonItem.NameType.BRACKET) {
                         holder.binding.right.setText(R.string.json_null);
                     } else {
@@ -584,9 +588,15 @@ public class JsonView extends RecyclerView {
                     if (item.value instanceof String) {
                         holder.binding.rightPrefix.setText("\"");
                         holder.binding.rightSuffix.setText("\"");
+                        holder.binding.right.setTextColor(isNight ? 0xff6E875A : 0xff377B2A);
+                    } else if (item.value instanceof Number) {
+                        holder.binding.rightPrefix.setText(null);
+                        holder.binding.rightSuffix.setText(null);
+                        holder.binding.right.setTextColor(isNight ? 0xff6897BB : 0xff284FE2);
                     } else {
                         holder.binding.rightPrefix.setText(null);
                         holder.binding.rightSuffix.setText(null);
+                        holder.binding.right.setTextColor(isNight ? 0xffEC7600 : 0xff1232AC);
                     }
                     holder.binding.right.setText(item.value.toString());
                 }
@@ -609,15 +619,18 @@ public class JsonView extends RecyclerView {
             }
             holder.binding.right.requestLayout();
             if (item.nameType == JsonItem.NameType.ARRAY_INDEX) {
-                holder.binding.left.setTextColor(holder.itemView.getContext().getColor(R.color.material_dynamic_primary40));
+                holder.binding.left.setTextColor(isNight ? 0xff6897BB : 0xff284FE2);
+            } else if (item.nameType == JsonItem.NameType.BRACKET) {
+                holder.binding.left.setTextColor(isNight ? 0xffE8E2B7 : 0xff000000);
             } else {
-                holder.binding.left.setTextColor(holder.itemView.getContext().getColor(R.color.material_dynamic_neutral_variant40));
+                holder.binding.left.setTextColor(isNight ? 0xff6E875A : 0xff377B2A);
             }
             if (item.isExpandable()) {
                 holder.binding.expand.setVisibility(VISIBLE);
             } else {
                 holder.binding.expand.setVisibility(INVISIBLE);
             }
+            holder.binding.expand.setImageTintList(ColorStateList.valueOf(isNight ? 0xffE8E2B7 : 0xff000000));
             if (item instanceof JsonGroupItem && ((JsonGroupItem<?>) item).expanded) {
                 holder.binding.expand.setRotation(180);
             } else {

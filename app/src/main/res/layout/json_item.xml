@@ -11,7 +11,7 @@
             android:id="@+id/left_prefix"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="14sp"
             tools:text="'"/>
 
         <TextView
@@ -25,20 +25,20 @@
             android:id="@+id/left_suffix"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="14sp"
             tools:text="'"/>
 
         <ImageView
             android:id="@+id/expand"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:src="@drawable/ic_expand_more" />
 
         <TextView
             android:id="@+id/right_prefix"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp" />
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/right"
@@ -48,14 +48,14 @@
             android:maxLines="1"
             android:singleLine="true"
             android:textIsSelectable="true"
-            android:textSize="12sp"
+            android:textSize="14sp"
             tools:text=""/>
 
         <TextView
             android:id="@+id/right_suffix"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp" />
+            android:textSize="14sp" />
 
     </LinearLayout>
 </layout>
