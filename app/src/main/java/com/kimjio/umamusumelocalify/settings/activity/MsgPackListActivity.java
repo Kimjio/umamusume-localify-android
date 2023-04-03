@@ -624,7 +624,7 @@ public class MsgPackListActivity extends BaseActivity<MsgPackListActivityBinding
                             });
                         }
                         return new MsgPackFile(documentFile.getName(), documentFile.getUri(), documentFile.length());
-                    })).sorted((a, b) -> (int) (a.timestamp - b.timestamp)).collect(Collectors.groupingBy(file -> new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date(file.timestamp))));
+                    })).filter(file -> Objects.nonNull(file.fileName)).sorted((a, b) -> (int) (a.timestamp - b.timestamp)).collect(Collectors.groupingBy(file -> new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date(file.timestamp))));
                     viewModel.groups = filesMap.entrySet().stream().map(entry -> new MsgPackGroup(entry.getKey(), entry.getValue())).sorted(Comparator.comparing(a -> a.date)).collect(Collectors.toList());
                 }
             }
