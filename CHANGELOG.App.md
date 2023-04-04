@@ -1,3 +1,8 @@
+## 1.5.0
+
+- Add japanese translation
+- Add Dump MsgPack settings
+
 ## 1.4.2
 
 - Add character dialogue caption option

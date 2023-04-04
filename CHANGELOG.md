@@ -1,3 +1,11 @@
+## 2.16.0
+
+- Dump/notify messagepack
+- Show Gallop WebView instead of Kakao WebView on Korean version
+- Show DialogAnnounceEvent on click of story event announcement voice
+- Setting the maximum number of items to donate when donating circle items
+- Fixed an issue where reinstalling an app on an x86 environment might not launch the app
+
 ## 2.15.2
 
 - Enhanced NowLoading fallback logic
