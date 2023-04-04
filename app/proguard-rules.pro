@@ -21,6 +21,10 @@
 -keep class com.kimjio.umamusumelocalify.settings.activity.BaseActivity
 -keep class com.kimjio.umamusumelocalify.settings.fragment.*
 
+-keep class org.msgpack.** { *; }
+
+-dontwarn org.msgpack.**
+-dontwarn com.fasterxml.**
 -dontwarn com.blacksquircle.**
 
 # Uncomment this to preserve the line number information for
@@ -29,4 +33,4 @@
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
--renamesourcefileattribute .java
+# -renamesourcefileattribute .java
