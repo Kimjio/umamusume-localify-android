@@ -19,6 +19,9 @@
 
 -keep class **.databinding.*Binding
 -keep class com.kimjio.umamusumelocalify.settings.activity.BaseActivity
+-keep class com.kimjio.umamusumelocalify.settings.fragment.*
+
+-dontwarn com.blacksquircle.**
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
