@@ -3396,6 +3396,33 @@ void HttpHelper_Initialize_hook(Il2CppObject *httpManager) {
                                                                          DecompressFunc);
 }
 
+void *DialogCircleItemDonate_Initialize_orig = nullptr;
+
+void DialogCircleItemDonate_Initialize_hook(Il2CppObject *thisObj, Il2CppObject *dialog,
+                                            Il2CppObject *itemRequestInfo) {
+    reinterpret_cast<decltype(DialogCircleItemDonate_Initialize_hook) *>(DialogCircleItemDonate_Initialize_orig)(
+            thisObj, dialog, itemRequestInfo);
+    auto donateCountField = il2cpp_class_get_field_from_name(thisObj->klass, "_donateCount");
+    il2cpp_field_set_value(thisObj, donateCountField,
+                           GetInt32Instance(reinterpret_cast<int (*)(Il2CppObject *)>(
+                                                    il2cpp_class_get_method_from_name(
+                                                            thisObj->klass, "CalcDonateItemMax",
+                                                            0)->methodPointer
+                                            )(thisObj)));
+    reinterpret_cast<void (*)(Il2CppObject *)>(
+            il2cpp_class_get_method_from_name(thisObj->klass, "ValidateDonateItemCount",
+                                              0)->methodPointer
+    )(thisObj);
+    reinterpret_cast<void (*)(Il2CppObject *)>(
+            il2cpp_class_get_method_from_name(thisObj->klass, "ApplyDonateItemCountText",
+                                              0)->methodPointer
+    )(thisObj);
+    reinterpret_cast<void (*)(Il2CppObject *)>(
+            il2cpp_class_get_method_from_name(thisObj->klass, "OnClickPlusButton",
+                                              0)->methodPointer
+    )(thisObj);
+}
+
 void dump_all_entries() {
     vector<u16string> static_entries;
     vector<pair<const string, const u16string>> text_id_static_entries;
@@ -3922,6 +3949,9 @@ void hookMethods() {
                                                                                "TapEffectController",
                                                                                "Disable", 0);
 
+    auto DialogCircleItemDonate_Initialize_addr = il2cpp_symbols::get_method_pointer(
+            "umamusume.dll", "Gallop", "DialogCircleItemDonate", "Initialize", 2);
+
     load_from_file = reinterpret_cast<Il2CppObject *(*)(
             Il2CppString *path)>(il2cpp_symbols::get_method_pointer(
             "UnityEngine.AssetBundleModule.dll", "UnityEngine", "AssetBundle", "LoadFromFile", 1));
@@ -4036,6 +4066,8 @@ void hookMethods() {
     } else {
         ADD_HOOK(PartsEpisodeList_SetupStoryExtraEpisodeList)
     }
+
+    ADD_HOOK(DialogCircleItemDonate_Initialize)
 
     ADD_HOOK(CriMana_Player_SetFile)
 
