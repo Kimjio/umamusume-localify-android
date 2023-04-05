@@ -19,7 +19,6 @@ package com.kimjio.umamusumelocalify.settings.widget;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
@@ -29,7 +28,6 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.SwitchCompat;
@@ -48,17 +46,12 @@ public class MainSwitchBar extends LinearLayout implements CompoundButton.OnChec
 
     private final List<OnMainSwitchChangeListener> mSwitchChangeListeners = new ArrayList<>();
 
-    @ColorInt
-    private final int mBackgroundColor;
-    @ColorInt
-    private final int mBackgroundActivatedColor;
-
-    protected TextView mTextView;
-    protected SwitchCompat mSwitch;
     private final Drawable mBackgroundOn;
     private final Drawable mBackgroundOff;
     private final Drawable mBackgroundDisabled;
     private final View mFrameView;
+    protected TextView mTextView;
+    protected SwitchCompat mSwitch;
 
     public MainSwitchBar(Context context) {
         this(context, null);
@@ -77,12 +70,6 @@ public class MainSwitchBar extends LinearLayout implements CompoundButton.OnChec
         super(context, attrs, defStyleAttr, defStyleRes);
 
         LayoutInflater.from(context).inflate(R.layout.settingslib_main_switch_bar, this);
-
-        final TypedArray colorSecondaryA = context.obtainStyledAttributes(
-                new int[]{R.attr.colorSecondary});
-        mBackgroundActivatedColor = colorSecondaryA.getColor(0, 0);
-        mBackgroundColor = context.getColor(R.color.material_grey_600);
-        colorSecondaryA.recycle();
 
         setFocusable(true);
         setClickable(true);
@@ -126,6 +113,13 @@ public class MainSwitchBar extends LinearLayout implements CompoundButton.OnChec
     }
 
     /**
+     * Return the status of the Switch
+     */
+    public boolean isChecked() {
+        return mSwitch.isChecked();
+    }
+
+    /**
      * Update the switch status
      */
     public void setChecked(boolean checked) {
@@ -133,13 +127,6 @@ public class MainSwitchBar extends LinearLayout implements CompoundButton.OnChec
             mSwitch.setChecked(checked);
         }
         setBackground(checked);
-    }
-
-    /**
-     * Return the status of the Switch
-     */
-    public boolean isChecked() {
-        return mSwitch.isChecked();
     }
 
     /**
@@ -207,12 +194,10 @@ public class MainSwitchBar extends LinearLayout implements CompoundButton.OnChec
         mTextView.setEnabled(enabled);
         mSwitch.setEnabled(enabled);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (enabled) {
-                mFrameView.setBackground(isChecked() ? mBackgroundOn : mBackgroundOff);
-            } else {
-                mFrameView.setBackground(mBackgroundDisabled);
-            }
+        if (enabled) {
+            mFrameView.setBackground(isChecked() ? mBackgroundOn : mBackgroundOff);
+        } else {
+            mFrameView.setBackground(mBackgroundDisabled);
         }
     }
 
@@ -226,14 +211,47 @@ public class MainSwitchBar extends LinearLayout implements CompoundButton.OnChec
     }
 
     private void setBackground(boolean isChecked) {
-        if (!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)) {
-            setBackgroundColor(isChecked ? mBackgroundActivatedColor : mBackgroundColor);
-        } else {
-            mFrameView.setBackground(isChecked ? mBackgroundOn : mBackgroundOff);
-        }
+        mFrameView.setBackground(isChecked ? mBackgroundOn : mBackgroundOff);
+    }
+
+    @Override
+    public Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+
+        SavedState ss = new SavedState(superState);
+        ss.mChecked = mSwitch.isChecked();
+        ss.mVisible = isShowing();
+        return ss;
+    }
+
+    @Override
+    public void onRestoreInstanceState(Parcelable state) {
+        SavedState ss = (SavedState) state;
+
+        super.onRestoreInstanceState(ss.getSuperState());
+
+        mSwitch.setChecked(ss.mChecked);
+        setChecked(ss.mChecked);
+        setBackground(ss.mChecked);
+        setVisibility(ss.mVisible ? View.VISIBLE : View.GONE);
+        mSwitch.setOnCheckedChangeListener(ss.mVisible ? this : null);
+
+        requestLayout();
     }
 
     static class SavedState extends BaseSavedState {
+        public static final Parcelable.Creator<SavedState> CREATOR =
+                new Parcelable.Creator<>() {
+                    @Override
+                    public SavedState createFromParcel(Parcel in) {
+                        return new SavedState(in);
+                    }
+
+                    @Override
+                    public SavedState[] newArray(int size) {
+                        return new SavedState[size];
+                    }
+                };
         boolean mChecked;
         boolean mVisible;
 
@@ -265,43 +283,5 @@ public class MainSwitchBar extends LinearLayout implements CompoundButton.OnChec
                     + " checked=" + mChecked
                     + " visible=" + mVisible + "}";
         }
-
-        public static final Parcelable.Creator<SavedState> CREATOR =
-                new Parcelable.Creator<>() {
-                    @Override
-                    public SavedState createFromParcel(Parcel in) {
-                        return new SavedState(in);
-                    }
-
-                    @Override
-                    public SavedState[] newArray(int size) {
-                        return new SavedState[size];
-                    }
-                };
-    }
-
-    @Override
-    public Parcelable onSaveInstanceState() {
-        Parcelable superState = super.onSaveInstanceState();
-
-        SavedState ss = new SavedState(superState);
-        ss.mChecked = mSwitch.isChecked();
-        ss.mVisible = isShowing();
-        return ss;
-    }
-
-    @Override
-    public void onRestoreInstanceState(Parcelable state) {
-        SavedState ss = (SavedState) state;
-
-        super.onRestoreInstanceState(ss.getSuperState());
-
-        mSwitch.setChecked(ss.mChecked);
-        setChecked(ss.mChecked);
-        setBackground(ss.mChecked);
-        setVisibility(ss.mVisible ? View.VISIBLE : View.GONE);
-        mSwitch.setOnCheckedChangeListener(ss.mVisible ? this : null);
-
-        requestLayout();
     }
 }
