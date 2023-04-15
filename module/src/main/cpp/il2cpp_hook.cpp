@@ -847,7 +847,10 @@ MasterCharacterSystemText_CreateOrmByQueryResultWithCharacterId_hook(Il2CppObjec
     )(thisObj, query, characterId);
 }
 
-void ShowCaptionByNotification(Il2CppObject *audioManager, Il2CppObject *elem) {
+uintptr_t currentPlayerHandle;
+
+void
+ShowCaptionByNotification(Il2CppObject *audioManager, Il2CppObject *elem, uintptr_t playerHandle) {
     auto characterIdField = il2cpp_class_get_field_from_name(elem->klass, "CharacterId");
     auto voiceIdField = il2cpp_class_get_field_from_name(elem->klass, "VoiceId");
     auto textField = il2cpp_class_get_field_from_name(elem->klass, "Text");
@@ -900,6 +903,7 @@ void ShowCaptionByNotification(Il2CppObject *audioManager, Il2CppObject *elem) {
         )(audioManager, cueSheet, cueId);
         il2cpp_field_set_value(notification, timeField, &length);
 
+        currentPlayerHandle = playerHandle;
         ShowNotification(uiManager, LineHeadWrap(il2cpp_string_new(u8Text.data()), 32));
 
         il2cpp_field_set_value(notification, timeField, &displayTime);
@@ -952,10 +956,38 @@ void AtomSourceEx_SetParameter_hook(Il2CppObject *thisObj) {
 
                 if (u16string(elemCueSheet->start_char) == u16string(cueSheet->start_char) &&
                     cueId == elemCueId) {
-                    ShowCaptionByNotification(audioManager, elem);
+                    auto playerField = il2cpp_class_get_field_from_name(thisObj->klass,
+                                                                        "<player>k__BackingField");
+                    Il2CppObject *player;
+                    il2cpp_field_get_value(thisObj, playerField, &player);
+
+                    auto handleField = il2cpp_class_get_field_from_name(player->klass, "handle");
+                    uintptr_t handle;
+                    il2cpp_field_get_value(player, handleField, &handle);
+
+                    ShowCaptionByNotification(audioManager, elem, handle);
                     return;
                 }
             }
+        }
+    }
+}
+
+void *CriAtomExPlayer_criAtomExPlayer_Stop_orig = nullptr;
+
+void CriAtomExPlayer_criAtomExPlayer_Stop_hook(uintptr_t playerHandle) {
+    reinterpret_cast<decltype(CriAtomExPlayer_criAtomExPlayer_Stop_hook) *>(CriAtomExPlayer_criAtomExPlayer_Stop_orig)(
+            playerHandle);
+    if (playerHandle == currentPlayerHandle) {
+        currentPlayerHandle = 0;
+        auto uiManager = GetSingletonInstance(
+                il2cpp_symbols::get_class("umamusume.dll", "Gallop", "UIManager"));
+        if (uiManager) {
+            auto HideNotification = reinterpret_cast<void (*)(Il2CppObject *)>(
+                    il2cpp_class_get_method_from_name(uiManager->klass, "HideNotification",
+                                                      0)->methodPointer
+            );
+            HideNotification(uiManager);
         }
     }
 }
@@ -1605,8 +1637,9 @@ void *resources_load_orig = nullptr;
 Il2CppObject *resources_load_hook(Il2CppString *path, Il2CppType *type) {
     string const u8Name = localify::u16_u8(path->start_char);
     if (u8Name == "ui/views/titleview"s) {
-        if (find(replaceAssetNames.begin(), replaceAssetNames.end(),
-                 "assets/title/utx_obj_title_logo_umamusume.png") != replaceAssetNames.end()) {
+        if (find_if(replaceAssetNames.begin(), replaceAssetNames.end(), [](const string &item) {
+            return item.find("utx_obj_title_logo_umamusume") != string::npos;
+        }) != replaceAssetNames.end()) {
             auto *gameObj = reinterpret_cast<decltype(resources_load_hook) *>(resources_load_orig)(
                     path, type);
             auto getComponent = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *,
@@ -1620,7 +1653,7 @@ Il2CppObject *resources_load_hook(Il2CppString *path, Il2CppType *type) {
             il2cpp_field_get_value(component, imgField, &imgCommon);
             auto *texture = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
                     replaceAssets,
-                    il2cpp_string_new("assets/title/utx_obj_title_logo_umamusume.png"),
+                    il2cpp_string_new("utx_obj_title_logo_umamusume.png"),
                     reinterpret_cast<Il2CppType *>(GetRuntimeType("UnityEngine.CoreModule.dll",
                                                                   "UnityEngine", "Texture2D")));
             auto *m_TextureField = il2cpp_class_get_field_from_name(imgCommon->klass->parent,
@@ -1628,6 +1661,13 @@ Il2CppObject *resources_load_hook(Il2CppString *path, Il2CppType *type) {
             il2cpp_field_set_value(imgCommon, m_TextureField, texture);
             return gameObj;
         }
+    }
+    if (u8Name == "TMP Settings"s && !g_replace_to_custom_font) {
+        auto object = reinterpret_cast<decltype(resources_load_hook) *>(resources_load_orig)(path,
+                                                                                             type);
+        auto fontAssetField = il2cpp_class_get_field_from_name(object->klass, "m_defaultFontAsset");
+        il2cpp_field_set_value(object, fontAssetField, GetCustomTMPFont());
+        return object;
     }
     return reinterpret_cast<decltype(resources_load_hook) *>(resources_load_orig)(path, type);
 
@@ -3616,6 +3656,13 @@ void hookMethods() {
             "umamusume.dll", "Gallop", "MasterCharacterSystemText",
             "_CreateOrmByQueryResultWithCharacterId", 2);
 
+    auto CriAtomExPlayer_criAtomExPlayer_Stop_addr =
+            GetUnityVersion() == Unity2020 ? il2cpp_symbols::get_method_pointer(
+                    "CriMw.CriWare.Runtime.dll", "CriWare", "CriAtomExPlayer",
+                    "criAtomExPlayer_Stop", 1)
+                                           : il2cpp_symbols::get_method_pointer(
+                    "Cute.Cri.Assembly.dll", "", "CriAtomExPlayer", "criAtomExPlayer_Stop", 1);
+
     auto AtomSourceEx_SetParameter_addr = il2cpp_symbols::get_method_pointer(
             "Cute.Cri.Assembly.dll", "Cute.Cri", "AtomSourceEx", "SetParameter", 0);
 
@@ -4158,6 +4205,7 @@ void hookMethods() {
     }
 
     if (g_character_system_text_caption) {
+        ADD_HOOK(CriAtomExPlayer_criAtomExPlayer_Stop)
         ADD_HOOK(AtomSourceEx_SetParameter)
     }
 
