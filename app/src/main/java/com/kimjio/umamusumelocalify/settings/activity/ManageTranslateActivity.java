@@ -240,7 +240,13 @@ public class ManageTranslateActivity extends BaseActivity<ManageTranslateActivit
 
     private void onItemRemoved(TranslateFile file) {
         Set<String> set = Objects.requireNonNull(dataStore.getStringSet("dicts", new ArraySet<>()));
-        set.removeIf((item) -> file.path.getPath().contains(item));
+        set.removeIf((item) -> {
+            if (file.path == null) {
+                return item.contains(file.fileName);
+            } else {
+                return file.path.getPath().contains(item);
+            }
+        });
         dataStore.putStringSet("dicts", set);
         if (set.isEmpty()) {
             binding.emptyLayout.setVisibility(View.VISIBLE);
