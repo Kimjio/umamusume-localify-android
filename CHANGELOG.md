@@ -1,3 +1,7 @@
+## 2.16.2
+
+- x86: Fix error where libs are only partially copied
+
 ## 2.16.1
 
 - Immediately hide captions when voice stops

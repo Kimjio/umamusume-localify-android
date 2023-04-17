@@ -44,30 +44,34 @@ if [ "$ABI" = "x86" ]; then
   if [ -d "/data/data/com.komoe.kmumamusumemc" ]; then
     copy_lib "com.komoe.kmumamusumemc"
   fi
-elif [ $ABI = "x86_64" ]; then
+elif [ "$ABI" = "x86_64" ]; then
   if [ -d "/data/data/jp.co.cygames.umamusume" ]; then
-    if get_installed_abi "jp.co.cygames.umamusume" = "armeabi-v7a" ; then
+    INSTALLED_ABI=$(get_installed_abi "jp.co.cygames.umamusume")
+    if [ "$INSTALLED_ABI" = "armeabi-v7a" ]; then
       copy_lib "jp.co.cygames.umamusume"
       else
       copy_lib64 "jp.co.cygames.umamusume"
     fi
   fi
   if [ -d "/data/data/com.kakaogames.umamusume" ]; then
-    if get_installed_abi "com.kakaogames.umamusume" = "armeabi-v7a" ; then
+    INSTALLED_ABI=$(get_installed_abi "com.kakaogames.umamusume")
+    if [ "$INSTALLED_ABI" = "armeabi-v7a" ]; then
       copy_lib "com.kakaogames.umamusume"
       else
       copy_lib64 "com.kakaogames.umamusume"
     fi
   fi
   if [ -d "/data/data/com.komoe.kmumamusumegp" ]; then
-    if get_installed_abi "com.komoe.kmumamusumegp" = "armeabi-v7a" ; then
+    INSTALLED_ABI=$(get_installed_abi "com.komoe.kmumamusumegp")
+    if [ "$INSTALLED_ABI" = "armeabi-v7a" ]; then
       copy_lib "com.komoe.kmumamusumegp"
       else
       copy_lib64 "com.komoe.kmumamusumegp"
     fi
   fi
   if [ -d "/data/data/com.komoe.kmumamusumemc" ]; then
-    if get_installed_abi "com.komoe.kmumamusumemc" = "armeabi-v7a" ; then
+    INSTALLED_ABI=$(get_installed_abi "com.komoe.kmumamusumemc")
+    if [ "$INSTALLED_ABI" = "armeabi-v7a" ]; then
       copy_lib "com.komoe.kmumamusumemc"
       else
       copy_lib64 "com.komoe.kmumamusumemc"
