@@ -1,3 +1,7 @@
+## 2.16.1
+
+- Immediately hide captions when voice stops
+
 ## 2.16.0
 
 - Dump/notify messagepack
