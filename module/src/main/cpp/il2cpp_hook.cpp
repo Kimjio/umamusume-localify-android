@@ -1495,14 +1495,18 @@ void apply_graphics_quality_hook(Il2CppObject *thisObj, int  /*quality*/, bool  
 void *assetbundle_LoadFromFile_orig = nullptr;
 
 Il2CppObject *assetbundle_LoadFromFile_hook(Il2CppString *path) {
-    stringstream pathStream(localify::u16_u8(path->start_char));
-    string segment;
-    vector<string> split;
-    while (getline(pathStream, segment, '/')) {
-        split.push_back(segment);
-    }
-    if (g_replace_assets.find(split[split.size() - 1]) != g_replace_assets.end()) {
-        auto &replaceAsset = g_replace_assets.at(split[split.size() - 1]);
+    string fileName;
+    do {
+        stringstream pathStream(localify::u16_u8(path->start_char));
+        string segment;
+        vector<string> split;
+        while (getline(pathStream, segment, '/')) {
+            split.push_back(segment);
+        }
+        fileName = split.back();
+    } while (false);
+    if (g_replace_assets.find(fileName) != g_replace_assets.end()) {
+        auto &replaceAsset = g_replace_assets.at(fileName);
         replaceAsset.asset = reinterpret_cast<decltype(assetbundle_LoadFromFile_hook) *>(assetbundle_LoadFromFile_orig)(
                 il2cpp_string_new(replaceAsset.path.data()));
         return replaceAsset.asset;
@@ -1515,13 +1519,16 @@ void *assetbundle_load_asset_orig = nullptr;
 
 Il2CppObject *
 assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2CppType *type) {
-    stringstream pathStream(localify::u16_u8(name->start_char));
-    string segment;
-    vector<string> split;
-    while (getline(pathStream, segment, '/')) {
-        split.emplace_back(segment);
-    }
-    auto &fileName = split.back();
+    string fileName;
+    do {
+        stringstream pathStream(localify::u16_u8(name->start_char));
+        string segment;
+        vector<string> split;
+        while (getline(pathStream, segment, '/')) {
+            split.push_back(segment);
+        }
+        fileName = split.back();
+    } while (false);
     if (find_if(replaceAssetNames.begin(), replaceAssetNames.end(), [fileName](const string &item) {
         return item.find(fileName) != string::npos;
     }) != replaceAssetNames.end()) {
@@ -1534,9 +1541,56 @@ assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2
         auto getComponent = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *,
                                                                Il2CppType *)>(il2cpp_class_get_method_from_name(
                 asset->klass, "GetComponent", 1)->methodPointer);
+        auto getComponents = reinterpret_cast<Il2CppArray *(*)(Il2CppObject *, Il2CppType *, bool,
+                                                               bool, bool, bool,
+                                                               Il2CppObject *)>(il2cpp_class_get_method_from_name(
+                asset->klass, "GetComponentsInternal", 6)->methodPointer);
+
+        auto rawImages = getComponents(asset, reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                "umamusume.dll", "Gallop", "RawImageCommon")), true, true, true, false, nullptr);
+
+        if (rawImages && rawImages->max_length) {
+            for (int i = 0; i < rawImages->max_length; i++) {
+                auto rawImage = reinterpret_cast<Il2CppObject *>(rawImages->vector[i]);
+                if (rawImage) {
+                    auto textureField = il2cpp_class_get_field_from_name(rawImage->klass,
+                                                                         "m_Texture");
+                    Il2CppObject *texture;
+                    il2cpp_field_get_value(rawImage, textureField, &texture);
+                    if (texture) {
+                        auto uobject_name = uobject_get_name(texture);
+                        if (uobject_name) {
+                            auto nameU8 = localify::u16_u8(uobject_name->start_char);
+                            if (!nameU8.empty()) {
+                                do {
+                                    stringstream pathStream(nameU8);
+                                    string segment;
+                                    vector<string> split;
+                                    while (getline(pathStream, segment, '/')) {
+                                        split.emplace_back(segment);
+                                    }
+                                    auto &textureName = split.back();
+                                    if (!textureName.empty()) {
+                                        auto texture2D = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
+                                            replaceAssets, il2cpp_string_new(split.back().data()),
+                                            reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                                                    "UnityEngine.CoreModule.dll", "UnityEngine",
+                                                    "Texture2D")));
+                                        if (texture2D) {
+                                            il2cpp_field_set_value(rawImage, textureField, texture2D);
+                                        }
+                                    }
+                                } while (false);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         auto *assetHolder = getComponent(asset, reinterpret_cast<Il2CppType *>(GetRuntimeType(
                 "umamusume.dll", "Gallop", "AssetHolder")));
-        if (assetHolder != nullptr) {
+        if (assetHolder) {
             auto *objectList = reinterpret_cast<Il2CppObject *(*)(
                     Il2CppObject *)>(il2cpp_class_get_method_from_name(assetHolder->klass,
                                                                        "get_ObjectList",
