@@ -101,6 +101,7 @@ extern bool g_dump_msgpack;
 extern bool g_dump_msgpack_request;
 extern string g_packet_notifier;
 extern bool g_restore_gallop_webview;
+extern bool g_use_third_party_news;
 
 namespace {
     // copy-pasted from https://stackoverflow.com/questions/3418231/replace-part-of-a-string-with-another-string

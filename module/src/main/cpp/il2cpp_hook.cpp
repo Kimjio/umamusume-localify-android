@@ -68,15 +68,15 @@ using namespace localify;
 using namespace logger;
 
 const auto WebViewInitScript = R"(
-window.onclick = () => { location.href = 'unity:snd_sfx_UI_decide_m_01'; };
-const zoom = (window.innerWidth || window.screen.width) / 528;
+window.onclick = () => { Unity.call('snd_sfx_UI_decide_m_01'); };
+window.zoomScale = (window.innerWidth || window.screen.width) / 528;
 let { viewport } = document.head.getElementsByTagName('meta');
 if (!viewport) {
     viewport = document.createElement('meta');
     viewport.name = 'viewport';
     document.head.appendChild(viewport);
 }
-viewport.content = `width=device-width, initial-scale=${zoom}, user-scalable=no`;
+viewport.content = `width=device-width, initial-scale=${window.zoomScale}, user-scalable=no`;
 )";
 
 const auto GotoTitleError = "내부적으로 오류가 발생하여 홈으로 이동합니다.\n\n"
@@ -118,18 +118,17 @@ void *(*Array_GetValue)(Il2CppArray *thisObj, long index);
 
 int (*Array_get_Length)(Il2CppObject *thisObj);
 
+/**
+ * @deprecated use GetSingletonInstance
+ */
 Il2CppObject *sceneManager = nullptr;
 
 vector<string> replaceAssetNames;
 
 Il2CppObject *
-GetRuntimeType(const char *assemblyName, const char *namespaze, const char *klassName) {
-    auto dummyObj = (Il2CppObject *) il2cpp_object_new(
-            il2cpp_symbols::get_class(assemblyName, namespaze, klassName));
-    auto (*get_type)(Il2CppObject *thisObj) = reinterpret_cast<Il2CppObject *(*)(
-            Il2CppObject *thisObj)>(il2cpp_symbols::get_method_pointer("mscorlib.dll", "System",
-                                                                       "Object", "GetType", 0));
-    return get_type(dummyObj);
+GetRuntimeType(const char *assemblyName, const char *name_space, const char *klassName) {
+    return il2cpp_type_get_object(
+            il2cpp_class_get_type(il2cpp_symbols::get_class(assemblyName, name_space, klassName)));
 }
 
 template<typename... T, typename R>
@@ -274,9 +273,10 @@ string GetUnityVersion() {
  * @return Int64의 원시 값
  */
 long GetInt64Safety(Int64 *int64Ptr) {
-    auto str = reinterpret_cast<Il2CppString *(*)(Int64 *)>(il2cpp_symbols::get_method_pointer(
+    return reinterpret_cast<long>(il2cpp_object_unbox(reinterpret_cast<Il2CppObject *>(int64Ptr)));
+    /*auto str = reinterpret_cast<Il2CppString *(*)(Int64 *)>(il2cpp_symbols::get_method_pointer(
             "mscorlib.dll", "System", "Int64", "ToString", 0))(int64Ptr);
-    return stol(localify::u16_u8(str->start_char));
+    return stol(localify::u16_u8(str->start_char));*/
 }
 
 Il2CppDelegate *GetButtonCommonOnClickDelegate(Il2CppObject *object) {
@@ -1572,12 +1572,14 @@ assetbundle_load_asset_hook(Il2CppObject *thisObj, Il2CppString *name, const Il2
                                     auto &textureName = split.back();
                                     if (!textureName.empty()) {
                                         auto texture2D = reinterpret_cast<decltype(assetbundle_load_asset_hook) *>(assetbundle_load_asset_orig)(
-                                            replaceAssets, il2cpp_string_new(split.back().data()),
-                                            reinterpret_cast<Il2CppType *>(GetRuntimeType(
-                                                    "UnityEngine.CoreModule.dll", "UnityEngine",
-                                                    "Texture2D")));
+                                                replaceAssets,
+                                                il2cpp_string_new(split.back().data()),
+                                                reinterpret_cast<Il2CppType *>(GetRuntimeType(
+                                                        "UnityEngine.CoreModule.dll", "UnityEngine",
+                                                        "Texture2D")));
                                         if (texture2D) {
-                                            il2cpp_field_set_value(rawImage, textureField, texture2D);
+                                            il2cpp_field_set_value(rawImage, textureField,
+                                                                   texture2D);
                                         }
                                     }
                                 } while (false);
@@ -2523,27 +2525,6 @@ CriMana_Player_SetFile_hook(Il2CppObject *thisObj, Il2CppObject *binder, Il2CppS
             thisObj, binder, moviePath, setMode);
 }
 
-void OpenNewsDialog() {
-    auto webViewManager = GetSingletonInstance(
-            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "WebViewManager"));
-    reinterpret_cast<void (*)(Il2CppObject *, Il2CppDelegate *)>(il2cpp_class_get_method_from_name(
-            webViewManager->klass, "OpenNews", 1)->methodPointer)(webViewManager, nullptr);
-}
-
-void OpenHelpDialog() {
-    auto webViewManager = GetSingletonInstance(
-            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "WebViewManager"));
-    reinterpret_cast<void (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
-            webViewManager->klass, "OpenHelp", 0)->methodPointer)(webViewManager);
-}
-
-void OpenStoryEventHelpDialog() {
-    auto webViewManager = GetSingletonInstance(
-            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "WebViewManager"));
-    reinterpret_cast<void (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
-            webViewManager->klass, "OpenStoryEventHelp", 0)->methodPointer)(webViewManager);
-}
-
 void OpenWebViewDialog(Il2CppString *url, Il2CppString *headerTextArg, u_long closeTextId,
                        Il2CppDelegate *onClose = nullptr) {
     auto dialogData = il2cpp_object_new(
@@ -2567,6 +2548,34 @@ void OpenWebViewDialog(Il2CppString *url, Il2CppString *headerTextArg, u_long cl
                                                               nullptr, nullptr, false);
 }
 
+void OpenNewsDialog() {
+    if (g_use_third_party_news) {
+        OpenWebViewDialog(il2cpp_string_new("https://m.cafe.daum.net/umamusume-kor/Z4os"),
+                          localizeextension_text_hook(GetTextIdByName("Common0081")),
+                          GetTextIdByName("Common0007"));
+    } else {
+        auto webViewManager = GetSingletonInstance(
+                il2cpp_symbols::get_class("umamusume.dll", "Gallop", "WebViewManager"));
+        reinterpret_cast<void (*)(Il2CppObject *,
+                                  Il2CppDelegate *)>(il2cpp_class_get_method_from_name(
+                webViewManager->klass, "OpenNews", 1)->methodPointer)(webViewManager, nullptr);
+    }
+}
+
+void OpenHelpDialog() {
+    auto webViewManager = GetSingletonInstance(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "WebViewManager"));
+    reinterpret_cast<void (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
+            webViewManager->klass, "OpenHelp", 0)->methodPointer)(webViewManager);
+}
+
+void OpenStoryEventHelpDialog() {
+    auto webViewManager = GetSingletonInstance(
+            il2cpp_symbols::get_class("umamusume.dll", "Gallop", "WebViewManager"));
+    reinterpret_cast<void (*)(Il2CppObject *)>(il2cpp_class_get_method_from_name(
+            webViewManager->klass, "OpenStoryEventHelp", 0)->methodPointer)(webViewManager);
+}
+
 void *CriWebViewManager_OnLoadedCallback_orig = nullptr;
 
 void CriWebViewManager_OnLoadedCallback_hook(Il2CppObject *thisObj, Il2CppString *msg) {
@@ -2580,6 +2589,20 @@ void CriWebViewManager_OnLoadedCallback_hook(Il2CppObject *thisObj, Il2CppString
     }
     reinterpret_cast<decltype(CriWebViewManager_OnLoadedCallback_hook) *>(CriWebViewManager_OnLoadedCallback_orig)(
             thisObj, msg);
+}
+
+void *CriWebViewObject_Init_orig = nullptr;
+
+void CriWebViewObject_Init_hook(Il2CppObject *thisObj, Il2CppDelegate *cb, bool transparent,
+                                Il2CppString *ua, Il2CppDelegate *err, Il2CppDelegate *httpErr,
+                                Il2CppDelegate *ld, Il2CppDelegate *started) {
+    string uaU8;
+    if (ua) {
+        uaU8 = localify::u16_u8(ua->start_char);
+    }
+    uaU8.append(" Android ").append(to_string(GetAndroidApiLevel())).append(" KakaoGameSDK/99.99.99");
+    reinterpret_cast<decltype(CriWebViewObject_Init_hook) *>(CriWebViewObject_Init_orig)(
+            thisObj, cb, transparent, il2cpp_string_new(uaU8.data()), err, httpErr, ld, started);
 }
 
 string GetOqupieToken() {
@@ -2692,7 +2715,9 @@ void DialogHomeMenuMain_SetupTrainer_hook(Il2CppObject *thisObj, Il2CppObject *d
     }
 }
 
-void *DialogHomeMenuMain_SetupOther_callback = nullptr;
+void *DialogHomeMenuMain_SetupOther_help_callback = nullptr;
+
+void *DialogHomeMenuMain_SetupOther_serial_callback = nullptr;
 
 void *DialogHomeMenuMain_SetupOther_orig = nullptr;
 
@@ -2704,12 +2729,67 @@ void DialogHomeMenuMain_SetupOther_hook(Il2CppObject *thisObj) {
     il2cpp_field_get_value(thisObj, helpButtonField, &helpButton);
     auto helpCallback = GetButtonCommonOnClickDelegate(helpButton);
     if (helpCallback) {
-        if (!DialogHomeMenuMain_SetupOther_callback) {
+        if (!DialogHomeMenuMain_SetupOther_help_callback) {
             auto newFn = *([]() {
                 OpenHelpDialog();
             });
             DobbyHook(reinterpret_cast<void *>(helpCallback->method_ptr),
-                      reinterpret_cast<void *>(newFn), &DialogHomeMenuMain_SetupOther_callback);
+                      reinterpret_cast<void *>(newFn),
+                      &DialogHomeMenuMain_SetupOther_help_callback);
+        }
+    }
+
+    auto serialButtonField = il2cpp_class_get_field_from_name(thisObj->klass, "_serialButton");
+    Il2CppObject *serialButton;
+    il2cpp_field_get_value(thisObj, serialButtonField, &serialButton);
+    auto serialCallback = GetButtonCommonOnClickDelegate(serialButton);
+    if (serialCallback) {
+        if (!DialogHomeMenuMain_SetupOther_serial_callback) {
+            auto newFn = *([]() {
+                auto dialogData = il2cpp_object_new(
+                        il2cpp_symbols::get_class("umamusume.dll", "Gallop",
+                                                  "DialogCommon/Data"));
+                il2cpp_runtime_object_init(dialogData);
+
+                auto onLeft = CreateDelegate(dialogData,
+                                             *([](Il2CppObject *thisObj, Il2CppObject *) {
+                                                 reinterpret_cast<void (*)()>(
+                                                         il2cpp_symbols::get_method_pointer(
+                                                                 "umamusume.dll", "Gallop",
+                                                                 "DialogSerialInput",
+                                                                 "CreateDialog", -1)
+                                                 )();
+                                             }));
+                auto onRight = CreateDelegate(dialogData,
+                                              *([](Il2CppObject *thisObj, Il2CppObject *) {
+                                                  reinterpret_cast<void (*)()>(DialogHomeMenuMain_SetupOther_serial_callback)();
+                                              }));
+
+                dialogData = reinterpret_cast<Il2CppObject *(*)(Il2CppObject *thisObj,
+                                                                Il2CppString *headerTextArg,
+                                                                Il2CppString *message,
+                                                                Il2CppDelegate *onRight,
+                                                                unsigned long leftTextId,
+                                                                unsigned long rightTextId,
+                                                                Il2CppDelegate *onLeft,
+                                                                int dialogFormType)>(
+                        il2cpp_class_get_method_from_name(dialogData->klass,
+                                                          "SetSimpleTwoButtonMessage",
+                                                          7)->methodPointer
+                )(dialogData,
+                  localizeextension_text_hook(GetTextIdByName("Menu0136")),
+                  il2cpp_string_new("Kakao Games 쿠폰 입력 창을 열겠습니까?"),
+                  onRight, GetTextIdByName("Common0002"), GetTextIdByName("Common0001"),
+                  onLeft, 2);
+
+                reinterpret_cast<Il2CppObject *(*)(
+                        Il2CppObject *data)>(il2cpp_symbols::get_method_pointer(
+                        "umamusume.dll", "Gallop", "DialogManager", "PushDialog", 1))(
+                        dialogData);
+            });
+            DobbyHook(reinterpret_cast<void *>(serialCallback->method_ptr),
+                      reinterpret_cast<void *>(newFn),
+                      &DialogHomeMenuMain_SetupOther_serial_callback);
         }
     }
 }
@@ -3987,6 +4067,9 @@ void hookMethods() {
     auto CriWebViewManager_OnLoadedCallback_addr = il2cpp_symbols::get_method_pointer(
             "Cute.Core.Assembly.dll", "Cute.Core", "WebViewManager", "OnLoadedCallback", 1);
 
+    auto CriWebViewObject_Init_addr = il2cpp_symbols::get_method_pointer(
+            "Cute.Core.Assembly.dll", "", "WebViewObject", "Init", 7);
+
     auto DialogHomeMenuMain_SetupTrainer_addr = il2cpp_symbols::get_method_pointer("umamusume.dll",
                                                                                    "Gallop",
                                                                                    "DialogHomeMenuMain",
@@ -4164,6 +4247,8 @@ void hookMethods() {
         ADD_HOOK(DialogHomeMenuMain_SetupTrainer)
 
         ADD_HOOK(CriWebViewManager_OnLoadedCallback)
+
+        ADD_HOOK(CriWebViewObject_Init)
     } else {
         ADD_HOOK(PartsEpisodeList_SetupStoryExtraEpisodeList)
     }

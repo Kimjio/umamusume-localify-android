@@ -42,6 +42,7 @@ bool g_dump_msgpack = false;
 bool g_dump_msgpack_request = false;
 string g_packet_notifier;
 bool g_restore_gallop_webview = true;
+bool g_use_third_party_news = false;
 
 string text_id_dict;
 
@@ -73,6 +74,26 @@ bool isGame(const char *pkgNm) {
     return env->NewStringUTF(Module::moduleVersionName);
 }*/
 
+optional<vector<string>> read_config();
+
+HOOK_DEF(bool, il2cpp_init, const char *domain_name) {
+    const bool result = orig_il2cpp_init(domain_name);
+
+    auto dict = read_config();
+
+    logger::init_logger();
+    il2cpp_hook_init(il2cpp_handle);
+    if (dict.has_value()) {
+        localify::load_textdb(get_application_version(), &dict.value());
+    }
+    if (!text_id_dict.empty()) {
+        localify::load_textId_textdb(text_id_dict);
+    }
+    il2cpp_hook();
+    DobbyDestroy(addr_il2cpp_init);
+    return result;
+}
+
 bool isCriWareInit = false;
 
 enum class ProcessStatus {
@@ -86,6 +107,10 @@ ProcessStatus dlopen_process(const char *name, void *handle) {
         if (name != nullptr && strstr(name, "libil2cpp.so")) {
             il2cpp_handle = handle;
             LOGI("Got il2cpp handle!");
+            addr_il2cpp_init = dlsym(il2cpp_handle, "il2cpp_init");
+            DobbyHook(addr_il2cpp_init,
+                      reinterpret_cast<void *>(new_il2cpp_init),
+                      reinterpret_cast<void **>(&orig_il2cpp_init));
             return ProcessStatus::INIT;
         }
     }
@@ -433,9 +458,13 @@ optional<vector<string>> read_config() {
             g_packet_notifier = document["packetNotifier"].GetString();
         }
 
-        if (Game::currentGameRegion == Game::Region::KOR &&
-            document.HasMember("restoreGallopWebview")) {
-            g_restore_gallop_webview = document["restoreGallopWebview"].GetBool();
+        if (Game::currentGameRegion == Game::Region::KOR) {
+            if (document.HasMember("restoreGallopWebview")) {
+                g_restore_gallop_webview = document["restoreGallopWebview"].GetBool();
+            }
+            if (document.HasMember("useThirdPartyNews")) {
+                g_use_third_party_news = document["useThirdPartyNews"].GetBool();
+            }
         }
     }
 
@@ -575,26 +604,9 @@ void hack_thread(void *arg [[maybe_unused]]) {
             }
         }
     }
-    if (IsABIRequiredNativeBridge()) {
+    /*if (IsABIRequiredNativeBridge()) {
         return;
-    }
-    while (!il2cpp_handle) {
-        sleep(1);
-    }
-    // prevent crash
-    sleep(1);
-
-    auto dict = read_config();
-
-    logger::init_logger();
-    il2cpp_hook_init(il2cpp_handle);
-    if (dict.has_value()) {
-        localify::load_textdb(get_application_version(), &dict.value());
-    }
-    if (!text_id_dict.empty()) {
-        localify::load_textId_textdb(text_id_dict);
-    }
-    il2cpp_hook();
+    }*/
 }
 
 /*void hack_settings_thread(void *arg [[maybe_unused]]) {
