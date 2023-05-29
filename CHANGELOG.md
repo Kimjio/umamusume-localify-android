@@ -1,3 +1,8 @@
+## 2.17.0
+
+- Enhanced to allow for more Texture2D replacements
+- Add use third party news option (KOR only)
+
 ## 2.16.2
 
 - x86: Fix error where libs are only partially copied
