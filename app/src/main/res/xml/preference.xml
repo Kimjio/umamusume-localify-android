@@ -181,6 +181,14 @@
             app:isPreferenceVisible="false"
             tools:isPreferenceVisible="true" />
 
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="useThirdPartyNews"
+            android:summary="@string/pref_use_third_party_news_summary"
+            android:title="@string/pref_use_third_party_news"
+            app:isPreferenceVisible="false"
+            tools:isPreferenceVisible="true" />
+
         <com.kimjio.umamusumelocalify.settings.preference.FolderPickerPreference
             android:icon="@drawable/ic_replace_assets_folder"
             android:key="replaceAssetsPath"

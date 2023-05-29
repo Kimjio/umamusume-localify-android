@@ -56,6 +56,18 @@ public class SettingsFragment extends BaseSettingsFragment {
 
         TwoStatePreference restoreGallopWebviewPreference = Objects.requireNonNull(findPreference("restoreGallopWebview"));
         restoreGallopWebviewPreference.setVisible(Constants.PKG_KOR.equals(packageName));
+        TwoStatePreference useThirdPartyNewsPreference = Objects.requireNonNull(findPreference("useThirdPartyNews"));
+        useThirdPartyNewsPreference.setVisible(Constants.PKG_KOR.equals(packageName));
+
+        restoreGallopWebviewPreference.setOnPreferenceChangeListener((preference, newValue) -> {
+            boolean value = (boolean) newValue;
+            useThirdPartyNewsPreference.setEnabled(value);
+            return true;
+        });
+
+        boolean restoreGallopWebview = dataStore.getBoolean("restoreGallopWebview", false);
+
+        useThirdPartyNewsPreference.setEnabled(restoreGallopWebview);
 
         String moduleVersion = ModuleUtils.getModuleVersion();
         Preference versionPreference = Objects.requireNonNull(findPreference("version"));
@@ -149,6 +161,8 @@ public class SettingsFragment extends BaseSettingsFragment {
         restoreNotificationPreference.setVisible(Constants.PKG_KOR.equals(packageName));*/
         TwoStatePreference restoreGallopWebviewPreference = Objects.requireNonNull(findPreference("restoreGallopWebview"));
         restoreGallopWebviewPreference.setVisible(Constants.PKG_KOR.equals(packageName));
+        TwoStatePreference useThirdPartyNewsPreference = Objects.requireNonNull(findPreference("useThirdPartyNews"));
+        useThirdPartyNewsPreference.setVisible(Constants.PKG_KOR.equals(packageName));
         super.changeDataSource(packageName, parentPath, path);
     }
 

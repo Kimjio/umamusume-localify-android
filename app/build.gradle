@@ -11,8 +11,8 @@ android {
         applicationId "com.kimjio.umamusumelocalify.settings"
         minSdk rootProject.ext.minSdkVersion
         targetSdk rootProject.ext.targetSdkVersion
-        versionCode 13
-        versionName "1.5.2"
+        versionCode 14
+        versionName "1.6.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -20,6 +20,7 @@ android {
     buildTypes {
         debug {
             pseudoLocalesEnabled true
+            jniDebuggable true
         }
         release {
             pseudoLocalesEnabled true
@@ -64,8 +65,8 @@ dependencies {
     implementation 'it.xabaras.android:recyclerview-swipedecorator:1.4'
     implementation 'org.msgpack:msgpack-core:0.9.3'
     implementation 'org.msgpack:jackson-dataformat-msgpack:0.9.3'
-    implementation 'com.blacksquircle.ui:editorkit:2.5.0'
-    implementation 'com.blacksquircle.ui:language-json:2.5.0'
+    implementation 'com.blacksquircle.ui:editorkit:2.7.0'
+    implementation 'com.blacksquircle.ui:language-json:2.7.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'

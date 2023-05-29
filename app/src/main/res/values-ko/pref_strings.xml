@@ -42,6 +42,9 @@
     <string name="pref_restore_gallop_webview">인앱 WebView 복원</string>
     <string name="pref_restore_gallop_webview_summary">타사 WebView 대신 인앱 WebView를 표시합니다</string>
 
+    <string name="pref_use_third_party_news">타사 공지 사용</string>
+    <string name="pref_use_third_party_news_summary">인앱 공지 대신 타사 공지를 사용합니다</string>
+
     <string name="pref_static_entries_use_hash">정적 항목 로드 시 해시 사용</string>
     <string name="pref_static_entries_use_text_id">정적 항목 로드 시 TextId 사용</string>
     <string name="pref_text_id_file">TextId 파일</string>
