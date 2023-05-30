@@ -36,17 +36,17 @@ void _append_exception_trace_messages(
         jmethodID a_mid_frame_toString) {
     // Get the array of StackTraceElements.
     auto frames =
-            (jobjectArray) a_jni_env.CallObjectMethod(
+            static_cast<jobjectArray>(a_jni_env.CallObjectMethod(
                     a_exception,
-                    a_mid_throwable_getStackTrace);
-    jsize frames_length = a_jni_env.GetArrayLength(frames);
+                    a_mid_throwable_getStackTrace));
+    const jsize frames_length = a_jni_env.GetArrayLength(frames);
 
     // Add Throwable.toString() before descending
     // stack trace messages.
     if (frames) {
         auto msg_obj =
-                (jstring) a_jni_env.CallObjectMethod(a_exception,
-                                                     a_mid_throwable_toString);
+                static_cast<jstring>(a_jni_env.CallObjectMethod(a_exception,
+                                                                a_mid_throwable_toString));
         const char *msg_str = a_jni_env.GetStringUTFChars(msg_obj, nullptr);
 
         // If this is not the top-of-the-trace then
@@ -71,8 +71,8 @@ void _append_exception_trace_messages(
             // the error message.
             jobject frame = a_jni_env.GetObjectArrayElement(frames, i);
             auto msg_obj =
-                    (jstring) a_jni_env.CallObjectMethod(frame,
-                                                         a_mid_frame_toString);
+                    static_cast<jstring>(a_jni_env.CallObjectMethod(frame,
+                                                                    a_mid_frame_toString));
 
             const char *msg_str = a_jni_env.GetStringUTFChars(msg_obj, nullptr);
 
@@ -89,9 +89,9 @@ void _append_exception_trace_messages(
     // stack trace messages from the cause.
     if (frames) {
         auto cause =
-                (jthrowable) a_jni_env.CallObjectMethod(
+                static_cast<jthrowable>(a_jni_env.CallObjectMethod(
                         a_exception,
-                        a_mid_throwable_getCause);
+                        a_mid_throwable_getCause));
         if (cause) {
             _append_exception_trace_messages(a_jni_env,
                                              a_error_msg,
@@ -123,25 +123,25 @@ void dex_load_and_invoke(
     jobject o_dex_class_loader = env->NewObject(
             c_dex_class_loader,
             m_dex_class_loader,
-            env->NewDirectByteBuffer((void *) dex_block, dex_length),
+            env->NewDirectByteBuffer(const_cast<void *>(dex_block), dex_length),
             o_system_class_loader
     );
 
     find_method(m_load_class, c_class_loader, "loadClass",
                 "(Ljava/lang/String;)Ljava/lang/Class;");
-    auto c_loader = (jclass) env->CallObjectMethod(
+    auto c_loader = static_cast<jclass>(env->CallObjectMethod(
             o_dex_class_loader,
             m_load_class,
             new_string("com.kimjio.umamusumelocalify.Hooker")
-    );
+    ));
 
     JNINativeMethod methods[] = {
             {.name = "doHook",
                     .signature = "(Ljava/lang/reflect/Member;Ljava/lang/reflect/Method;)Ljava/lang/reflect/Method;",
-                    .fnPtr = (void *) doHook},
+                    .fnPtr = reinterpret_cast<void *>(doHook)},
             {.name = "doUnhook",
                     .signature = "(Ljava/lang/reflect/Member;)Z",
-                    .fnPtr = (void *) doUnhook}
+                    .fnPtr = reinterpret_cast<void *>(doUnhook)}
     };
 
     env->RegisterNatives(c_loader, methods, 2);

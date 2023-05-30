@@ -40,12 +40,12 @@ public class SettingsActivity extends BaseActivity<SettingsActivityBinding> {
         Uri path = getIntent().getParcelableExtra(EXTRA_PATH);
         Uri configPath = getIntent().getParcelableExtra(EXTRA_CONFIG_PATH);
 
-        if (!getIntent().hasExtra(EXTRA_FRAGMENT_NAME)) {
+        String fragmentName = getIntent().getStringExtra(EXTRA_FRAGMENT_NAME);
+
+        if (fragmentName == null) {
             finishAfterTransition();
             return;
         }
-
-        String fragmentName = getIntent().getStringExtra(EXTRA_FRAGMENT_NAME);
 
         Bundle bundle = getIntent().getBundleExtra(EXTRA_FRAGMENT_ARGS);
         if (bundle == null) {
