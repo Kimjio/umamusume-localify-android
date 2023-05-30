@@ -14,15 +14,15 @@
 #include "zygoteloader/dex.hpp"
 #include "zygoteloader/main.h"
 
-#define _uintval(p)               reinterpret_cast<uintptr_t>(p)
-#define _ptr(p)                   reinterpret_cast<void *>(p)
+#define _u_int_val(p)               reinterpret_cast<uintptr_t>(p)
+#define _ptr(p)                   (reinterpret_cast<void *>(p))
 #define _align_up(x, n)           (((x) + ((n) - 1)) & ~((n) - 1))
 #define _align_down(x, n)         ((x) & -(n))
 #define _page_size                4096
 #define _page_align(n)            _align_up(static_cast<uintptr_t>(n), _page_size)
 #define _ptr_align(x)             _ptr(_align_down(reinterpret_cast<uintptr_t>(x), _page_size))
-#define _make_rwx(p, n)           ::mprotect(_ptr_align(p), \
-                                              _page_align(_uintval(p) + n) != _page_align(_uintval(p)) ? _page_align(n) + _page_size : _page_align(n), \
+#define make_rwx(p, n)           ::mprotect(_ptr_align(p), \
+                                              _page_align(_u_int_val(p) + (n)) != _page_align(_u_int_val(p)) ? _page_align(n) + _page_size : _page_align(n), \
                                               PROT_READ | PROT_WRITE | PROT_EXEC)
 
 enum FileCommand : int {
@@ -33,10 +33,8 @@ using zygisk::Api;
 using zygisk::AppSpecializeArgs;
 using zygisk::ServerSpecializeArgs;
 
-string moduleApi = "zygisk";
-
 void *InlineHooker(void *target, void *hooker) {
-    _make_rwx(target, _page_size);
+    make_rwx(target, _page_size);
     void *origin_call;
     if (DobbyHook(target, hooker, &origin_call) == RS_SUCCESS) {
         return origin_call;
@@ -49,7 +47,7 @@ bool InlineUnhooker(void *func) {
     return DobbyDestroy(func) == RT_SUCCESS;
 }
 
-static void handleFileRequest(int client) {
+void handleFileRequest(int client) {
     static pthread_mutex_t initializeLock = PTHREAD_MUTEX_INITIALIZER;
     static int classesDex = -1;
     static int moduleDirectory = -1;
@@ -108,7 +106,7 @@ public:
         env->ReleaseStringUTFChars(args->nice_name, pkgNm);
     }
 
-    void postAppSpecialize(const AppSpecializeArgs *args) override {
+    void postAppSpecialize(const AppSpecializeArgs *) override {
         if (enable_hack /* || enable_settings_hack */) {
             /*if (enable_hack && Game::currentGameRegion == Game::Region::KOR) {
                 SandHook::ElfImg art("libart.so");
@@ -130,19 +128,20 @@ public:
                 }
             }*/
             int ret;
-            pthread_t ntid;
-            if ((ret = pthread_create(&ntid, nullptr,
-                                      reinterpret_cast<void *(*)(void *)>(/* enable_settings_hack
+            pthread_t t;
+            ret = pthread_create(&t, nullptr,
+                                 reinterpret_cast<void *(*)(void *)>(/* enable_settings_hack
                                                                           ? hack_settings_thread
                                                                           :  */hack_thread),
-                                      classesDex))) {
+                                 classesDex);
+            if (ret != 0) {
                 LOGE("can't create thread: %s\n", strerror(ret));
             }
         }
     }
 
     void fetchResources() {
-        int remote = api->connectCompanion();
+        const int remote = api->connectCompanion();
         serializer_write_int(remote, GET_RESOURCES);
         int classesDexFd = -1;
         serializer_read_file_descriptor(remote, &classesDexFd);
@@ -157,7 +156,7 @@ private:
     Resource *classesDex{};
 
     bool isInitialized() {
-        int remote = api->connectCompanion();
+        const int remote = api->connectCompanion();
 
         serializer_write_int(remote, IS_INITIALIZED);
 
@@ -170,9 +169,9 @@ private:
     }
 
     void initialize() {
-        int remote = api->connectCompanion();
+        const int remote = api->connectCompanion();
 
-        int moduleDir = api->getModuleDir();
+        const int moduleDir = api->getModuleDir();
 
         serializer_write_int(remote, INITIALIZE);
         serializer_write_file_descriptor(remote, moduleDir);
@@ -183,8 +182,9 @@ REGISTER_ZYGISK_MODULE(Module)
 
 REGISTER_ZYGISK_COMPANION(handleFileRequest)
 
+extern "C" {
 [[gnu::visibility("default")]] [[gnu::used]]
-static void hook() __attribute__((constructor));
+void hook() __attribute__((constructor));
 
 void hook() {
     if (IsRunningOnNativeBridge()) {
@@ -194,10 +194,12 @@ void hook() {
             return;
         }
         int ret;
-        pthread_t ntid;
-        if ((ret = pthread_create(&ntid, nullptr,
-                                  reinterpret_cast<void *(*)(void *)>(hack_thread), nullptr))) {
+        pthread_t t;
+        ret = pthread_create(&t, nullptr,
+                             reinterpret_cast<void *(*)(void *)>(hack_thread), nullptr);
+        if (ret != 0) {
             LOGE("can't create thread: %s\n", strerror(ret));
         }
     }
+}
 }

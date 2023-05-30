@@ -6,8 +6,6 @@ else ()
     project(${MODULE_NAME})
 endif ()
 
-add_definitions(-DRIRU_MODULE)
-
 configure_file(template/config.cpp config.cpp)
 
 macro(SET_OPTION option value)
@@ -62,18 +60,8 @@ target_compile_definitions(sqlite3 PUBLIC SQLITE_ENABLE_BATCH_ATOMIC_WRITE)
 target_compile_definitions(sqlite3 PUBLIC SQLITE_TEMP_STORE=3)
 target_compile_definitions(sqlite3 PUBLIC SQLITE_USE_URI=1)
 
-if (${API} STREQUAL "zygisk")
-    add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp jwt/jwt.cpp logger/logger.cpp notifier/notifier.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
-    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static hmac_sha256 httplib)
-elseif (${API} STREQUAL "riru")
-    find_package(riru REQUIRED CONFIG)
-
-    add_library(${MODULE_NAME} SHARED main_riru.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp jwt/jwt.cpp logger/logger.cpp notifier/notifier.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
-    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static hmac_sha256 httplib riru::riru)
-else ()
-    add_library(${MODULE_NAME} SHARED main_zygisk.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp jwt/jwt.cpp logger/logger.cpp notifier/notifier.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
-    target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static hmac_sha256 httplib)
-endif ()
+add_library(${MODULE_NAME} SHARED main.cpp hook.cpp il2cpp/il2cpp_symbols.cpp il2cpp_hook.cpp localify/localify.cpp jwt/jwt.cpp logger/logger.cpp notifier/notifier.cpp elf_util.cpp zygoteloader/serializer.c zygoteloader/dex.cpp zygoteloader/main.c ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
+target_link_libraries(${MODULE_NAME} log dobby SQLiteCpp sqlite3 lsplant_static hmac_sha256 httplib)
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_custom_command(TARGET ${MODULE_NAME} POST_BUILD

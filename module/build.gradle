@@ -35,27 +35,12 @@ android {
             buildConfigField("String", "API", "\"$name\"")
         }
 
-        register("Riru") {
-            dimension = "api"
-            externalNativeBuild {
-                cmake {
-                    arguments += "-DMODULE_VERSION=$moduleVersionCode"
-                    arguments += "-DMODULE_VERSION_NAME:STRING=$moduleVersion"
-                    arguments += "-DRIRU_MODULE=true"
-                    arguments += "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion"
-                    arguments += "-DRIRU_MODULE_MIN_API_VERSION=$moduleMinRiruApiVersion"
-                }
-            }
-        }
-
         register("Zygisk") {
             dimension = "api"
             externalNativeBuild {
                 cmake {
                     arguments += "-DMODULE_VERSION=$moduleVersionCode"
                     arguments += "-DMODULE_VERSION_NAME:STRING=$moduleVersion"
-                    arguments += "-DRIRU_MODULE_API_VERSION=-1"
-                    arguments += "-DRIRU_MODULE_MIN_API_VERSION=-1"
                 }
             }
         }
@@ -68,10 +53,6 @@ repositories {
 }
 
 dependencies {
-    // This is prefab aar which contains "riru.h"
-    // If you want to use older versions of AGP,
-    // you can copy this file from https://github.com/RikkaApps/Riru/blob/master/riru/src/main/cpp/include_riru/riru.h
-    implementation 'dev.rikka.ndk:riru:26.0.0'
 }
 
 afterEvaluate {
@@ -94,7 +75,7 @@ afterEvaluate {
             into magiskDir
 
             from(templatePath) {
-                exclude "riru.sh", "module.prop", 'system.prop', "customize.sh", "service.sh"
+                exclude "module.prop", 'system.prop', "customize.sh", "service.sh"
             }
             from(templatePath) {
                 include 'module.prop'
@@ -106,8 +87,7 @@ afterEvaluate {
                         author     : moduleAuthor,
                         description: "$moduleDescription $flavorCapped version.",
                         updateJson : "${moduleUpdateJson}-${flavorLowered}.json",
-                        requirement: flavorLowered == "riru" ? "Requires Riru $moduleMinRiruVersionName or above installed" :
-                                flavorLowered == "zygisk" ? "Requires Magisk 24.0+ and Zygisk enabled" : null,
+                        requirement: "Requires Magisk 24.0+ and Zygisk enabled",
                         api        : flavorCapped
                 ])
                 filter(FixCrLfFilter.class,
@@ -139,20 +119,6 @@ afterEvaluate {
                 ])
                 filter(FixCrLfFilter.class,
                         eol: FixCrLfFilter.CrLf.newInstance("lf"))
-            }
-            if (flavorLowered == "riru") {
-                from(templatePath) {
-                    include "riru.sh"
-                    filter(ReplaceTokens.class, tokens: [
-                            "MODULE_LIB_NAME"                  : moduleLibraryName,
-                            "RIRU_MODULE_API_VERSION"          : moduleRiruApiVersion.toString(),
-                            "RIRU_MODULE_MIN_API_VERSION"      : moduleMinRiruApiVersion.toString(),
-                            "RIRU_MODULE_MIN_RIRU_VERSION_NAME": moduleMinRiruVersionName,
-                            "RIRU_MODULE_DEBUG"                : buildTypeLowered == "debug" ? "true" : "false"
-                    ])
-                    filter(FixCrLfFilter.class,
-                            eol: FixCrLfFilter.CrLf.newInstance("lf"))
-                }
             }
             from("$buildDir/intermediates/stripped_native_libs/$variantLowered/out/lib") {
                 into 'lib'
