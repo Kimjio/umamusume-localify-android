@@ -2160,16 +2160,16 @@ void CanvasScaler_set_referenceResolution_hook(Il2CppObject *thisObj, Vector2_t 
 void *SetResolution_orig = nullptr;
 
 void SetResolution_hook(int w, int h, bool fullscreen, bool forceUpdate) {
-    if (!resolutionIsSet || GetUnityVersion() == Unity2020) {
+    if (!resolutionIsSet || GetUnityVersion().starts_with(Unity2020)) {
         if (sceneManager ||
-            (GetUnityVersion() == Unity2019 || GetUnityVersion() == Unity2019Twn) && w < h) {
+            (GetUnityVersion().starts_with(Unity2019)) && w < h) {
             resolutionIsSet = true;
         }
         reinterpret_cast<decltype(SetResolution_hook) * > (SetResolution_orig)(w, h, fullscreen,
                                                                                forceUpdate);
         if (g_force_landscape) {
-            if ((GetUnityVersion() == Unity2019 || GetUnityVersion() == Unity2019Twn) ||
-                (w < h && GetUnityVersion() == Unity2020)) {
+            if ((GetUnityVersion().starts_with(Unity2019)) ||
+                (w < h && GetUnityVersion().starts_with(Unity2020))) {
                 reinterpret_cast<decltype(set_resolution_hook) * > (set_resolution_orig)(h, w,
                                                                                          fullscreen);
             }
@@ -3791,7 +3791,7 @@ void hookMethods() {
             "_CreateOrmByQueryResultWithCharacterId", 2);
 
     auto CriAtomExPlayer_criAtomExPlayer_Stop_addr =
-            GetUnityVersion() == Unity2020 ? il2cpp_symbols::get_method_pointer(
+            GetUnityVersion().starts_with(Unity2020) ? il2cpp_symbols::get_method_pointer(
                     "CriMw.CriWare.Runtime.dll", "CriWare", "CriAtomExPlayer",
                     "criAtomExPlayer_Stop", 1)
                                            : il2cpp_symbols::get_method_pointer(
@@ -4059,7 +4059,7 @@ void hookMethods() {
                                                                           "FixedUpdate", 0);
 
     auto CriMana_Player_SetFile_addr =
-            GetUnityVersion() == Unity2020 ? il2cpp_symbols::get_method_pointer(
+            GetUnityVersion().starts_with(Unity2020) ? il2cpp_symbols::get_method_pointer(
                     "CriMw.CriWare.Runtime.dll", "CriWare.CriMana", "Player", "SetFile", 3)
                                            : il2cpp_symbols::get_method_pointer(
                     "Cute.Cri.Assembly.dll", "CriMana", "Player", "SetFile", 3);
@@ -4259,7 +4259,7 @@ void hookMethods() {
 
     ADD_HOOK(GameSystem_FixedUpdate)
 
-    /*if (GetUnityVersion() == Unity2020) {
+    /*if (GetUnityVersion().starts_with(Unity2020)) {
         ADD_HOOK(DialogCommon_Close)
     }*/
 
@@ -4277,7 +4277,7 @@ void hookMethods() {
 
     ADD_HOOK(SafetyNet_OnError)
 
-    if (GetUnityVersion() == Unity2020) {
+    if (GetUnityVersion().starts_with(Unity2020)) {
         ADD_HOOK(NowLoading_Show2)
         if (g_hide_now_loading) {
             ADD_HOOK(NowLoading_Hide2)

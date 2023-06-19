@@ -5,9 +5,8 @@
 
 #include <string>
 
-#define Unity2019 "2019.4.21f1"
-#define Unity2019Twn "2019.4.19f1"
-#define Unity2020 "2020.3.24f1"
+#define Unity2019 "2019.4."s
+#define Unity2020 "2020.3."s
 
 using namespace std;
 
