@@ -879,7 +879,8 @@ ShowCaptionByNotification(Il2CppObject *audioManager, Il2CppObject *elem, uintpt
     if (uiManager && u16string(cueSheet->start_char).find(u"_home_") == string::npos &&
         u16string(cueSheet->start_char).find(u"_tc_") == string::npos &&
         u16string(cueSheet->start_char).find(u"_title_") == string::npos &&
-        u16string(cueSheet->start_char).find(u"_gacha_") == string::npos && voiceId != 95001 &&
+        u16string(cueSheet->start_char).find(u"_gacha_") == string::npos &&
+        u16string(cueSheet->start_char).find(u"_kakao_") == string::npos && voiceId != 95001 &&
         (characterId < 9000 || voiceId == 70000)) {
         auto ShowNotification = reinterpret_cast<void (*)(Il2CppObject *, Il2CppString *)>(
                 il2cpp_class_get_method_from_name(uiManager->klass, "ShowNotification",
