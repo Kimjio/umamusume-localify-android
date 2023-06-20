@@ -557,51 +557,36 @@ enum class ScreenOrientation {
 // UnityEngine.Color
 typedef struct Color_t {
 public:
-    // System.Single UnityEngine.Color::r
-    float r;
-    // System.Single UnityEngine.Color::g
-    float g;
-    // System.Single UnityEngine.Color::b
-    float b;
-    // System.Single UnityEngine.Color::a
-    float a;
+    float r, g, b, a;
 } Color_t;
 
 // UnityEngine.Vector2
 typedef struct Vector2_t {
 public:
-    // System.Single UnityEngine.Vector2::x
-    float x;
-    // System.Single UnityEngine.Vector2::y
-    float y;
+    float x, y;
 } Vector2_t;
 
 // UnityEngine.Vector2Int
 struct Vector2Int_t {
 public:
-    // System.Int32 UnityEngine.Vector2Int::m_X
-    int x;
-    // System.Int32 UnityEngine.Vector2Int::m_Y
-    int y;
+    int x, y;
 };
 
 // UnityEngine.Vector3
 typedef struct Vector3_t {
 public:
-    // System.Single UnityEngine.Vector3::x
-    float x;
-    // System.Single UnityEngine.Vector3::y
-    float y;
-    // System.Single UnityEngine.Vector3::z
-    float z;
+    float x, y, z;
 } Vector3_t [[maybe_unused]];
 
 struct Rect_t {
 public:
-    short x;
-    short y;
-    short width;
-    short height;
+    short x, y, width, height;
+};
+
+
+struct Quaternion_t {
+public:
+    float w, x, y, z;
 };
 
 // UnityEngine.TextGenerationSettings

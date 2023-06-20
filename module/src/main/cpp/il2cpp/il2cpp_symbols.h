@@ -10,6 +10,9 @@
 
 #undef DO_API
 
+#include "il2cpp-api-functions.hpp"
+
+
 namespace il2cpp_symbols {
     void init(Il2CppDomain *domain);
 
@@ -17,6 +20,13 @@ namespace il2cpp_symbols {
 
     Il2CppMethodPointer get_method_pointer(const char *assemblyName, const char *namespaze,
                                            const char *klassName, const char *name, int argsCount);
+
+    template<typename T>
+    T get_method_pointer(const char *assemblyName, const char *namespaze,
+                         const char *klassName, const char *name, int argsCount) {
+        return reinterpret_cast<T>(get_method_pointer(assemblyName, namespaze, klassName, name,
+                                                      argsCount));
+    }
 
     const MethodInfo *get_method(const char *assemblyName, const char *namespaze,
                                  const char *klassName, const char *name, int argsCount);
