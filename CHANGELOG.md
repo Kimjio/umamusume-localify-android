@@ -1,3 +1,7 @@
+## 3.1.0
+
+- Update sources from [Windows version](https://github.com/Kimjio/umamusume-localify)
+
 ## 3.0.0
 
 - Update sources from [Windows version](https://github.com/Kimjio/umamusume-localify)
