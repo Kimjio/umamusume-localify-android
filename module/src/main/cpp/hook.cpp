@@ -942,8 +942,8 @@ namespace {
                                                     UnityEngine::FullScreenMode::FullScreenWindow,
                                                     &refreshRate);
 
-        WaitForEndOfFrame(*[]() {
-            WaitForEndOfFrame(*[]() {
+        WaitForEndOfFrame(*[] {
+            WaitForEndOfFrame(*[] {
                 const auto contentWidth = UnityEngine::Screen::width();
                 const auto contentHeight = UnityEngine::Screen::height();
 
@@ -1089,8 +1089,8 @@ namespace {
                 _contentWidth = contentWidth;
                 _contentHeight = contentHeight;
 
-                WaitForEndOfFrame(*[]() {
-                    auto tapEffectController = GetSingletonInstance(
+                WaitForEndOfFrame(*[] {
+                    const auto tapEffectController = GetSingletonInstance(
                             il2cpp_symbols::get_class("umamusume.dll", "Gallop",
                                                       "TapEffectController"));
 
@@ -1118,27 +1118,27 @@ namespace {
                                                            : Gallop::LowResolutionCameraUtil::DrawDirection::Landscape);
                     }
 
-                    auto director = Gallop::Live::Director::Instance();
+                    const auto director = Gallop::Live::Director::Instance();
                     if (director) {
                         il2cpp_symbols::get_method_pointer<void (*)(Il2CppObject *, int)>(director,
                                                                                           "SetupOrientation",
                                                                                           1)(
                                 director, isPortrait ? 2 : 1);
 
-                        auto ChampionsTextControllerField = il2cpp_class_get_field_from_name(
+                        const auto ChampionsTextControllerField = il2cpp_class_get_field_from_name(
                                 director, "ChampionsTextController");
                         Il2CppObject *ChampionsTextController;
                         il2cpp_field_get_value(director, ChampionsTextControllerField,
                                                &ChampionsTextController);
 
                         if (ChampionsTextController) {
-                            auto _flashPlayerField = il2cpp_class_get_field_from_name(
+                            const auto _flashPlayerField = il2cpp_class_get_field_from_name(
                                     ChampionsTextController->klass, "_flashPlayer");
                             Il2CppObject *_flashPlayer;
                             il2cpp_field_get_value(ChampionsTextController, _flashPlayerField,
                                                    &_flashPlayer);
 
-                            auto root = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
+                            const auto root = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
                                     Il2CppObject *)>(_flashPlayer->klass, "get_Root", 0)(
                                     _flashPlayer);
 
@@ -1162,9 +1162,9 @@ namespace {
 #ifdef _MSC_VER
                             auto width = ratio_16_9 * availableHeight;
 #else
-                            auto width = availableWidth;
+                            const auto width = availableWidth;
 #endif
-                            auto height = availableHeight;
+                            const auto height = availableHeight;
 
 #ifdef _MSC_VER
                             if (width > availableWidth)
@@ -1183,11 +1183,11 @@ namespace {
                         }
 
 
-                        auto liveFlashController = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
+                        const auto liveFlashController = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
                                 Il2CppObject *)>(director, "get_LiveFlashController", 0)(director);
 
                         if (liveFlashController) {
-                            auto _flashPlayerField = il2cpp_class_get_field_from_name(
+                            const auto _flashPlayerField = il2cpp_class_get_field_from_name(
                                     liveFlashController->klass, "_flashPlayer");
 
                             if (_flashPlayerField) {
@@ -1195,7 +1195,7 @@ namespace {
                                 il2cpp_field_get_value(liveFlashController, _flashPlayerField,
                                                        &_flashPlayer);
 
-                                auto root = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
+                                const auto root = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
                                         Il2CppObject *)>(_flashPlayer->klass, "get_Root", 0)(
                                         _flashPlayer);
 
@@ -1221,9 +1221,9 @@ namespace {
 #ifdef _MSC_VER
                                 auto width = ratio_16_9 * availableHeight;
 #else
-                                auto width = availableWidth;
+                                const auto width = availableWidth;
 #endif
-                                auto height = availableHeight;
+                                const auto height = availableHeight;
 
 #ifdef _MSC_VER
                                 if (width > availableWidth)
@@ -1287,17 +1287,17 @@ namespace {
                 return;
             }
 
-            il2cppstring sceneName = sceneManager.GetCurrentSceneIdName()->chars;
+            const il2cppstring sceneName = sceneManager.GetCurrentSceneIdName()->chars;
 
             if (sceneName == IL2CPP_STRING("Live")) {
                 auto controller = sceneManager.GetCurrentViewController();
 
                 if (controller && controller->klass->name == "LiveViewController"s) {
-                    auto director = Gallop::Live::Director::Instance();
+                    const auto director = Gallop::Live::Director::Instance();
                     if (director) {
                         auto LiveCurrentTime = il2cpp_symbols::get_method_pointer<float (*)(
                                 Il2CppObject *)>(director, "get_LiveCurrentTime", 0)(director);
-                        auto LiveTotalTime = il2cpp_symbols::get_method_pointer<float (*)(
+                        const auto LiveTotalTime = il2cpp_symbols::get_method_pointer<float (*)(
                                 Il2CppObject *)>(director, "get_LiveTotalTime", 0)(director);
 
                         updateMediaProgress(GetJNIEnv(), GetActivity(),
@@ -1309,11 +1309,11 @@ namespace {
                         auto textCommon = Localify::UIParts::GetTextCommon("live_slider");
 
                         if (textCommon) {
-                            auto timeMin = static_cast<int>(LiveCurrentTime / 60);
-                            auto timeSec = static_cast<int>(fmodf(LiveCurrentTime, 60));
+                            const auto timeMin = static_cast<int>(LiveCurrentTime / 60);
+                            const auto timeSec = static_cast<int>(fmodf(LiveCurrentTime, 60));
 
-                            auto timeMinIl2Cpp = to_string(timeMin);
-                            auto timeSecIl2Cpp = to_string(timeSec);
+                            const auto timeMinIl2Cpp = to_string(timeMin);
+                            const auto timeSecIl2Cpp = to_string(timeSec);
 
                             stringstream str;
                             str << setw(2) << setfill('0') << timeSecIl2Cpp;
@@ -1326,11 +1326,11 @@ namespace {
                                 "live_slider_total");
 
                         if (textCommonTotal) {
-                            auto timeMin = static_cast<int>(LiveTotalTime / 60);
-                            auto timeSec = static_cast<int>(fmodf(LiveTotalTime, 60));
+                            const auto timeMin = static_cast<int>(LiveTotalTime / 60);
+                            const auto timeSec = static_cast<int>(fmodf(LiveTotalTime, 60));
 
-                            auto timeMinIl2Cpp = to_string(timeMin);
-                            auto timeSecIl2Cpp = to_string(timeSec);
+                            const auto timeMinIl2Cpp = to_string(timeMin);
+                            const auto timeSecIl2Cpp = to_string(timeSec);
 
                             stringstream str;
                             str << setw(2) << setfill('0') << timeSecIl2Cpp;
@@ -1471,7 +1471,7 @@ namespace {
         static auto tickFrameDelegate = CreateDelegateStatic(TickFrame);
 
         try {
-            auto GameSystem = Gallop::GameSystem::Instance();
+            const auto GameSystem = Gallop::GameSystem::Instance();
             if (GameSystem) {
                 il2cpp_symbols::get_method_pointer<void (*)(Il2CppObject *, Il2CppDelegate *)>(
                         "umamusume.dll", "Gallop", "MonoBehaviourExtension", "WaitForEndFrame", 2)(
@@ -1489,83 +1489,93 @@ namespace {
             Gallop::Localize::DumpAllEntries();
         }
 
-        auto env = GetJNIEnv();
-        auto activity = GetActivity();
+        const auto env = GetJNIEnv();
+        const auto activity = GetActivity();
 
         if (config::freeform_window) {
             register_callback(env, activity);
 
-            auto windowMetricsCalculatorClass = env->GetObjectClass(
+            const auto windowMetricsCalculatorClass = env->GetObjectClass(
                     windowMetricsCalculator);
 
-            auto computeId = env->GetMethodID(windowMetricsCalculatorClass,
+            const auto computeId = env->GetMethodID(windowMetricsCalculatorClass,
                                               "computeCurrentWindowMetrics",
                                               "(Landroid/app/Activity;)Landroidx/window/layout/WindowMetrics;");
             env->DeleteLocalRef(windowMetricsCalculatorClass);
 
-            auto metrics = env->CallObjectMethod(windowMetricsCalculator, computeId,
+            const auto metrics = env->CallObjectMethod(windowMetricsCalculator, computeId,
                                                  activity);
-            auto metricsClass = env->GetObjectClass(metrics);
+            const auto metricsClass = env->GetObjectClass(metrics);
 
-            auto getRectId = env->GetMethodID(metricsClass, "getBounds",
+            const auto getRectId = env->GetMethodID(metricsClass, "getBounds",
                                               "()Landroid/graphics/Rect;");
-            auto rect = env->CallObjectMethod(metrics, getRectId);
+            const auto rect = env->CallObjectMethod(metrics, getRectId);
 
             env->DeleteLocalRef(metrics);
             env->DeleteLocalRef(metricsClass);
 
-            auto rectClass = env->GetObjectClass(rect);
+            const auto rectClass = env->GetObjectClass(rect);
 
-            auto widthId = env->GetMethodID(rectClass, "width", "()I");
+            const auto widthId = env->GetMethodID(rectClass, "width", "()I");
             jint width = env->CallIntMethod(rect, widthId);
 
-            auto heightId = env->GetMethodID(rectClass, "height", "()I");
+            const auto heightId = env->GetMethodID(rectClass, "height", "()I");
             jint height = env->CallIntMethod(rect, heightId);
 
             env->DeleteLocalRef(rect);
             env->DeleteLocalRef(rectClass);
 
             auto insets = getDisplayCutoutInsets(env, activity);
-            auto insetsClass = env->GetObjectClass(insets);
-            auto leftField = env->GetFieldID(insetsClass, "left", "I");
-            auto topField = env->GetFieldID(insetsClass, "top", "I");
-            auto rightField = env->GetFieldID(insetsClass, "right", "I");
-            auto bottomField = env->GetFieldID(insetsClass, "bottom", "I");
+            const auto insetsClass = env->GetObjectClass(insets);
+            const auto leftField = env->GetFieldID(insetsClass, "left", "I");
+            const auto topField = env->GetFieldID(insetsClass, "top", "I");
+            const auto rightField = env->GetFieldID(insetsClass, "right", "I");
+            const auto bottomField = env->GetFieldID(insetsClass, "bottom", "I");
 
-            auto left = env->GetIntField(insets, leftField);
-            auto top = env->GetIntField(insets, topField);
-            auto right = env->GetIntField(insets, rightField);
-            auto bottom = env->GetIntField(insets, bottomField);
+            const auto left = env->GetIntField(insets, leftField);
+            const auto top = env->GetIntField(insets, topField);
+            const auto right = env->GetIntField(insets, rightField);
+            const auto bottom = env->GetIntField(insets, bottomField);
 
             env->DeleteLocalRef(insets);
 
             insets = getCaptionBarInsets(env, activity);
 
-            auto captionBarLeft = env->GetIntField(insets, leftField);
-            auto captionBarTop = env->GetIntField(insets, topField);
-            auto captionBarRight = env->GetIntField(insets, rightField);
-            auto captionBarBottom = env->GetIntField(insets, bottomField);
+            const auto captionBarLeft = env->GetIntField(insets, leftField);
+            const auto captionBarTop = env->GetIntField(insets, topField);
+            const auto captionBarRight = env->GetIntField(insets, rightField);
+            const auto captionBarBottom = env->GetIntField(insets, bottomField);
 
             env->DeleteLocalRef(insets);
 
             insets = getCaptionBarInsetsIgnoringVisibility(env, activity);
 
-            auto captionBarIgnoringVisibilityLeft = env->GetIntField(insets, leftField);
-            auto captionBarIgnoringVisibilityTop = env->GetIntField(insets, topField);
-            auto captionBarIgnoringVisibilityRight = env->GetIntField(insets, rightField);
-            auto captionBarIgnoringVisibilityBottom = env->GetIntField(insets, bottomField);
+            const auto captionBarIgnoringVisibilityLeft = env->GetIntField(insets, leftField);
+            const auto captionBarIgnoringVisibilityTop = env->GetIntField(insets, topField);
+            const auto captionBarIgnoringVisibilityRight = env->GetIntField(insets, rightField);
+            const auto captionBarIgnoringVisibilityBottom = env->GetIntField(insets, bottomField);
 
             env->DeleteLocalRef(insets);
             env->DeleteLocalRef(insetsClass);
 
-            if (captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight > 0 &&
-                captionBarLeft + captionBarRight == 0) {
-                width -= captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight;
-            }
+            if (config::freeform_window_include_caption_bar_padding) {
+                if (captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight > 0 &&
+                    captionBarLeft + captionBarRight == 0) {
+                    width -= captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight;
+                }
 
-            if (captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom > 0 &&
-                captionBarTop + captionBarBottom == 0) {
-                height -= captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom;
+                if (captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom > 0 &&
+                    captionBarTop + captionBarBottom == 0) {
+                    height -= captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom;
+                }
+            } else {
+                if (captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight > 0) {
+                    width -= captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight;
+                }
+
+                if (captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom > 0) {
+                    height -= captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom;
+                }
             }
 
             if (!isEdgeToEdgeEnabled(env, activity)) {
@@ -1583,7 +1593,7 @@ namespace {
 
         if (!config::unlock_live_chara) {
             try {
-                auto path = il2cpp_symbols::get_method_pointer<Il2CppString *(*)()>(
+                const auto path = il2cpp_symbols::get_method_pointer<Il2CppString *(*)()>(
                         "Cute.Core.Assembly.dll", "Cute.Core", "Device", "GetPersistentDataPath",
                         0)()->chars;
 
@@ -1592,7 +1602,7 @@ namespace {
                     filesystem::remove_all(path + il2cppstring(IL2CPP_STRING(R"(\master)")));
                 }
             } catch (const exception &ex) {
-                wcerr << L"Failed to remove master_orig.mdb: " << ex.what() << endl;
+                LOGW("Failed to remove master_orig.mdb: %s", ex.what());
             }
         }
 
@@ -1607,8 +1617,8 @@ namespace {
 
         auto action = CreateDelegateWithClassStatic(
                 il2cpp_class_from_type(activeSceneChangedField->type),
-                *([](void *, UnityEngine::SceneManagement::Scene scene,
-                     UnityEngine::SceneManagement::Scene scene1) {
+                *([](void *, const UnityEngine::SceneManagement::Scene scene,
+                     const UnityEngine::SceneManagement::Scene scene1) {
 
                     auto sceneManager = Gallop::SceneManager::Instance();
 
@@ -1618,18 +1628,18 @@ namespace {
 
                     il2cppstring sceneName = sceneManager.GetCurrentSceneIdName()->chars;
 
-                    auto uiManager = Gallop::UIManager::Instance();
+                    const auto uiManager = Gallop::UIManager::Instance();
 
-                    auto env = GetJNIEnv();
-                    auto activity = GetActivity();
+                    const auto env = GetJNIEnv();
+                    const auto activity = GetActivity();
 
                     if (sceneName == IL2CPP_STRING("Live")) {
                         showMediaNotification(env, activity);
 
-                        auto loadSettings = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)()>(
+                        const auto loadSettings = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)()>(
                                 "umamusume.dll", "Gallop.Live", "Director", "get_LoadSettings",
                                 IgnoreNumberOfArguments)();
-                        auto musicId = il2cpp_class_get_method_from_name_type<int (*)(
+                        const auto musicId = il2cpp_class_get_method_from_name_type<int (*)(
                                 Il2CppObject *)>(loadSettings->klass, "get_MusicId",
                                                  0)->methodPointer(loadSettings);
 
@@ -1653,10 +1663,10 @@ namespace {
                         }
 
                         if (config::freeform_window) {
-                            int width = UnityEngine::Screen::width();
-                            int height = UnityEngine::Screen::height();
+                            const auto width = UnityEngine::Screen::width();
+                            const auto height = UnityEngine::Screen::height();
 
-                            bool isVirt = width < height;
+                            const auto isVirt = width < height;
                             Gallop::Screen::OriginalScreenWidth(width);
                             Gallop::Screen::OriginalScreenHeight(height);
                         }
@@ -1668,13 +1678,13 @@ namespace {
                         }
 
                         if (config::unlock_live_chara) {
-                            auto charaList = MsgPackModify::GetCharaList();
+                            const auto charaList = MsgPackModify::GetCharaList();
 
-                            auto workDataManager = GetSingletonInstance(
+                            const auto workDataManager = GetSingletonInstance(
                                     il2cpp_symbols::get_class("umamusume.dll", "Gallop",
                                                               "WorkDataManager"));
 
-                            auto workCharaData = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
+                            const auto workCharaData = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
                                     Il2CppObject *)>(workDataManager->klass, "get_CharaData", 0)(
                                     workDataManager);
 
@@ -1686,36 +1696,36 @@ namespace {
                                                                            "Gallop", "UserChara");
                             }
 
-                            for (auto &chara: charaList) {
-                                auto userChara = il2cpp_object_new(UserCharaClass);
+                            for (const auto &chara: charaList) {
+                                const auto userChara = il2cpp_object_new(UserCharaClass);
 
-                                auto chara_id_field = il2cpp_class_get_field_from_name(
+                                const auto chara_id_field = il2cpp_class_get_field_from_name(
                                         userChara->klass, "chara_id");
-                                int chara_id = chara["chara_id"].int32_value();
+                                auto chara_id = chara["chara_id"].int32_value();
                                 il2cpp_field_set_value(userChara, chara_id_field, &chara_id);
 
-                                auto training_num_field = il2cpp_class_get_field_from_name(
+                                const auto training_num_field = il2cpp_class_get_field_from_name(
                                         userChara->klass, "training_num");
-                                int training_num = chara["training_num"].int32_value();
+                                auto training_num = chara["training_num"].int32_value();
                                 il2cpp_field_set_value(userChara, training_num_field,
                                                        &training_num);
 
-                                auto love_point_field = il2cpp_class_get_field_from_name(
+                                const auto love_point_field = il2cpp_class_get_field_from_name(
                                         userChara->klass, "love_point");
-                                int love_point = chara["love_point"].int32_value();
+                                auto love_point = chara["love_point"].int32_value();
                                 il2cpp_field_set_value(userChara, love_point_field, &love_point);
 
-                                auto love_point_pool_field = il2cpp_class_get_field_from_name(
+                                const auto love_point_pool_field = il2cpp_class_get_field_from_name(
                                         userChara->klass, "love_point_pool");
                                 if (love_point_pool_field) {
-                                    int love_point_pool = chara["love_point_pool"].int32_value();
+                                    auto love_point_pool = chara["love_point_pool"].int32_value();
                                     il2cpp_field_set_value(userChara, love_point_pool_field,
                                                            &love_point_pool);
                                 }
 
-                                auto fan_field = il2cpp_class_get_field_from_name(userChara->klass,
+                                const auto fan_field = il2cpp_class_get_field_from_name(userChara->klass,
                                                                                   "fan");
-                                uint64_t fan = chara["fan"].uint64_value();
+                                auto fan = chara["fan"].uint64_value();
                                 il2cpp_field_set_value(userChara, fan_field, &fan);
 
                                 il2cpp_symbols::get_method_pointer<void (*)(Il2CppObject *,
@@ -1727,25 +1737,25 @@ namespace {
                     }
 
                     if (sceneName == IL2CPP_STRING("Live") && config::champions_live_show_text) {
-                        auto loadSettings = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)()>(
+                        const auto loadSettings = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)()>(
                                 "umamusume.dll", "Gallop.Live", "Director", "get_LoadSettings",
                                 IgnoreNumberOfArguments)();
-                        auto musicId = il2cpp_symbols::get_method_pointer<int (*)(Il2CppObject *)>(
+                        const auto musicId = il2cpp_symbols::get_method_pointer<int (*)(Il2CppObject *)>(
                                 loadSettings->klass, "get_MusicId", 0)(loadSettings);
 
                         if (musicId == 1054) {
-                            auto raceInfo = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
+                            const auto raceInfo = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
                                     Il2CppObject *)>(loadSettings->klass, "get_raceInfo", 0)(
                                     loadSettings);
 
-                            auto resourceId = il2cpp_symbols::get_method_pointer<int (*)(
+                            const auto resourceId = il2cpp_symbols::get_method_pointer<int (*)(
                                     Il2CppObject *)>(raceInfo->klass,
                                                      "get_ChampionsMeetingResourceId", 0)(raceInfo);
 
                             if (resourceId == 0) {
-                                auto charaNameArray = il2cpp_array_new_type<Il2CppString *>(
+                                const auto charaNameArray = il2cpp_array_new_type<Il2CppString *>(
                                         il2cpp_defaults.string_class, 9);
-                                auto trainerNameArray = il2cpp_array_new_type<Il2CppString *>(
+                                const auto trainerNameArray = il2cpp_array_new_type<Il2CppString *>(
                                         il2cpp_defaults.string_class, 9);
 
                                 il2cpp_symbols::get_method_pointer<void (*)(Il2CppObject *,
@@ -1766,20 +1776,20 @@ namespace {
                                         raceInfo->klass, "set_TrainerNameArrayForChampionsText", 1)(
                                         raceInfo, nullptr);
 
-                                auto charaInfoList = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
+                                const auto charaInfoList = il2cpp_symbols::get_method_pointer<Il2CppObject *(*)(
                                         Il2CppObject *)>(loadSettings->klass,
                                                          "get_CharacterInfoList", 0)(loadSettings);
 
-                                FieldInfo *itemsField = il2cpp_class_get_field_from_name(
+                                const auto itemsField = il2cpp_class_get_field_from_name(
                                         charaInfoList->klass, "_items");
                                 Il2CppArraySize_t<Il2CppObject *> *charaInfoArr;
                                 il2cpp_field_get_value(charaInfoList, itemsField, &charaInfoArr);
 
                                 for (int i = 0; i < 9; i++) {
-                                    auto info = charaInfoArr->vector[i];
-                                    auto charaId = il2cpp_symbols::get_method_pointer<int (*)(
+                                    const auto info = charaInfoArr->vector[i];
+                                    const auto charaId = il2cpp_symbols::get_method_pointer<int (*)(
                                             Il2CppObject *)>(info->klass, "get_CharaId", 0)(info);
-                                    auto mobId = il2cpp_symbols::get_method_pointer<int (*)(
+                                    const auto mobId = il2cpp_symbols::get_method_pointer<int (*)(
                                             Il2CppObject *)>(info->klass, "get_MobId", 0)(info);
 
                                     Il2CppString *charaName;
@@ -1809,196 +1819,196 @@ namespace {
                 }));
         il2cpp_field_static_set_value(activeSceneChangedField, action);
     }
-}
 
-static void *il2cpp_handle = nullptr;
+    static void *il2cpp_handle = nullptr;
 
-static bool dlopen_process(const char *name, void *handle) {
-    if (!il2cpp_handle) {
-        if (name != nullptr && strstr(name, "libil2cpp.so")) {
-            il2cpp_handle = handle;
-            LOGI("Got il2cpp handle: %p", handle);
+    static bool dlopen_process(const char *name, void *handle) {
+        if (!il2cpp_handle) {
+            if (name != nullptr && strstr(name, "libil2cpp.so")) {
+                il2cpp_handle = handle;
+                LOGI("Got il2cpp handle: %p", handle);
 
-            config::read_config_init();
+                config::read_config_init();
 
-            il2cpp_init_addr = dlsym(il2cpp_handle, "il2cpp_init");
-            il2cpp_symbols::init(il2cpp_handle);
-            DobbyHook(il2cpp_init_addr, reinterpret_cast<void *>(il2cpp_init_hook),
-                      &il2cpp_init_orig);
+                il2cpp_init_addr = dlsym(il2cpp_handle, "il2cpp_init");
+                il2cpp_symbols::init(il2cpp_handle);
+                DobbyHook(il2cpp_init_addr, reinterpret_cast<void *>(il2cpp_init_hook),
+                          &il2cpp_init_orig);
 
-            thread init_thread([]() {
-                logger::init_logger();
-                local::load_textdb(&config::dicts);
+                thread init_thread([] {
+                    logger::init_logger();
+                    local::load_textdb(&config::dicts);
 
-                if (!config::text_id_dict.empty()) {
-                    local::load_textId_textdb(config::text_id_dict);
-                }
-            });
-            init_thread.detach();
-            return true;
+                    if (!config::text_id_dict.empty()) {
+                        local::load_textId_textdb(config::text_id_dict);
+                    }
+                });
+                init_thread.detach();
+                return true;
+            }
         }
+        return false;
     }
-    return false;
-}
 
-HOOK_DEF(void*, do_dlopen, const char *name, int flags) {
-    void *handle = orig_do_dlopen(name, flags);
-    if (dlopen_process(name, handle)) {
-        DobbyDestroy(addr_do_dlopen);
-    }
-    return handle;
-}
-
-HOOK_DEF(void*, do_dlopen_V24, const char *name, int flags,
-         const void *extinfo [[maybe_unused]],
-         void *caller_addr [[maybe_unused]]) {
-    void *handle = orig_do_dlopen_V24(name, flags, extinfo, caller_addr);
-    if (dlopen_process(name, handle)) {
-        DobbyDestroy(addr_do_dlopen_V24);
-    }
-    return handle;
-}
-
-HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
-         struct native_bridge_namespace_t *ns) {
-    LOGD("NativeBridgeLoadLibraryExt_V30: %s", filename);
-    if (string(filename).find(string("libmain.so")) != string::npos) {
-        auto nativeBridge = dlopen("libnativebridge.so", RTLD_NOW);
-        auto *NativeBridgeError = reinterpret_cast<bool (*)()>(dlsym(nativeBridge,
-                                                                     "NativeBridgeError"));
-        auto *NativeBridgeGetError = reinterpret_cast<char *(*)()>(dlsym(nativeBridge,
-                                                                         "NativeBridgeGetError"));
-        auto *NativeBridgeGetTrampoline = reinterpret_cast<void *(*)(void *handle,
-                                                                     const char *name,
-                                                                     const char *shorty,
-                                                                     uint32_t len)>(dlsym(
-                nativeBridge, "NativeBridgeGetTrampoline"));
-
-        stringstream path_armV8;
-        path_armV8 << "/data/data/" << Game::GetCurrentPackageName().data() << "/arm64-v8a.so";
-        stringstream path_armV7;
-        path_armV7 << "/data/data/" << Game::GetCurrentPackageName().data()
-                   << "/armeabi-v7a.so";
-
-        string path;
-
-        if (access(path_armV8.str().data(), F_OK) != -1) {
-            path = path_armV8.str();
-        } else if (access(path_armV7.str().data(), F_OK) != -1) {
-            path = path_armV7.str();
+    HOOK_DEF(void*, do_dlopen, const char *name, int flags) {
+        void *handle = orig_do_dlopen(name, flags);
+        if (dlopen_process(name, handle)) {
+            DobbyDestroy(addr_do_dlopen);
         }
+        return handle;
+    }
 
-        if (!path.empty()) {
-            void *lib = orig_NativeBridgeLoadLibraryExt_V30(path.data(), RTLD_NOW, ns);
-            if (NativeBridgeError()) {
-                if (auto error_bridge = NativeBridgeGetError()) {
-                    LOGW("error_bridge: %s", error_bridge);
-                }
+    HOOK_DEF(void*, do_dlopen_V24, const char *name, int flags,
+             const void *extinfo [[maybe_unused]],
+             void *caller_addr [[maybe_unused]]) {
+        void *handle = orig_do_dlopen_V24(name, flags, extinfo, caller_addr);
+        if (dlopen_process(name, handle)) {
+            DobbyDestroy(addr_do_dlopen_V24);
+        }
+        return handle;
+    }
+
+    HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V30, const char *filename, int flag,
+             struct native_bridge_namespace_t *ns) {
+        LOGD("NativeBridgeLoadLibraryExt_V30: %s", filename);
+        if (string(filename).find(string("libmain.so")) != string::npos) {
+            auto nativeBridge = dlopen("libnativebridge.so", RTLD_NOW);
+            auto *NativeBridgeError = reinterpret_cast<bool (*)()>(dlsym(nativeBridge,
+                                                                         "NativeBridgeError"));
+            auto *NativeBridgeGetError = reinterpret_cast<char *(*)()>(dlsym(nativeBridge,
+                                                                             "NativeBridgeGetError"));
+            auto *NativeBridgeGetTrampoline = reinterpret_cast<void *(*)(void *handle,
+                                                                         const char *name,
+                                                                         const char *shorty,
+                                                                         uint32_t len)>(dlsym(
+                    nativeBridge, "NativeBridgeGetTrampoline"));
+
+            stringstream path_armV8;
+            path_armV8 << "/data/data/" << Game::GetCurrentPackageName().data() << "/arm64-v8a.so";
+            stringstream path_armV7;
+            path_armV7 << "/data/data/" << Game::GetCurrentPackageName().data()
+                       << "/armeabi-v7a.so";
+
+            string path;
+
+            if (access(path_armV8.str().data(), F_OK) != -1) {
+                path = path_armV8.str();
+            } else if (access(path_armV7.str().data(), F_OK) != -1) {
+                path = path_armV7.str();
             }
 
-            auto hook = reinterpret_cast<void (*)(JNIEnv *,
-                                                  Resource *)>(NativeBridgeGetTrampoline(
-                    lib, "hook", "VLL", 3));
-            hook(env, classesDex);
-
-            DobbyDestroy(addr_NativeBridgeLoadLibraryExt_V30);
-        }
-    }
-
-    return orig_NativeBridgeLoadLibraryExt_V30(filename, flag, ns);
-}
-
-HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V26, const char *filename, int flag,
-         struct native_bridge_namespace_t *ns) {
-    if (string(filename).find(string("libmain.so")) != string::npos) {
-        auto nativeBridge = dlopen("libnativebridge.so", RTLD_NOW);
-        auto *NativeBridgeError = reinterpret_cast<bool (*)()>(dlsym(nativeBridge,
-                                                                     "_ZN7android17NativeBridgeErrorEv"));
-        auto *NativeBridgeGetError = reinterpret_cast<char *(*)()>(dlsym(nativeBridge,
-                                                                         "_ZN7android20NativeBridgeGetErrorEv"));
-        auto *NativeBridgeGetTrampoline = reinterpret_cast<void *(*)(void *handle,
-                                                                     const char *name,
-                                                                     const char *shorty,
-                                                                     uint32_t len)>(dlsym(
-                nativeBridge, "_ZN7android25NativeBridgeGetTrampolineEPvPKcS2_j"));
-
-        stringstream path_armV8;
-        path_armV8 << "/data/data/" << Game::GetCurrentPackageName().data() << "/arm64-v8a.so";
-        stringstream path_armV7;
-        path_armV7 << "/data/data/" << Game::GetCurrentPackageName().data()
-                   << "/armeabi-v7a.so";
-
-        string path;
-
-        if (access(path_armV8.str().data(), F_OK) != -1) {
-            path = path_armV8.str();
-        } else if (access(path_armV7.str().data(), F_OK) != -1) {
-            path = path_armV7.str();
-        }
-
-        if (!path.empty()) {
-            void *lib = orig_NativeBridgeLoadLibraryExt_V26(path.data(), RTLD_NOW, ns);
-            if (NativeBridgeError()) {
-                if (auto error_bridge = NativeBridgeGetError()) {
-                    LOGW("error_bridge: %s", error_bridge);
+            if (!path.empty()) {
+                void *lib = orig_NativeBridgeLoadLibraryExt_V30(path.data(), RTLD_NOW, ns);
+                if (NativeBridgeError()) {
+                    if (auto error_bridge = NativeBridgeGetError()) {
+                        LOGW("error_bridge: %s", error_bridge);
+                    }
                 }
-            }
 
-            auto hook = reinterpret_cast<void (*)(JNIEnv *,
-                                                  Resource *)>(NativeBridgeGetTrampoline(
-                    lib, "hook", "VLL", 3));
-            hook(env, classesDex);
-            DobbyDestroy(addr_NativeBridgeLoadLibraryExt_V26);
+                auto hook = reinterpret_cast<void (*)(JNIEnv *,
+                                                      Resource *)>(NativeBridgeGetTrampoline(
+                        lib, "hook", "VLL", 3));
+                hook(env, classesDex);
+
+                DobbyDestroy(addr_NativeBridgeLoadLibraryExt_V30);
+            }
         }
+
+        return orig_NativeBridgeLoadLibraryExt_V30(filename, flag, ns);
     }
 
-    return orig_NativeBridgeLoadLibraryExt_V26(filename, flag, ns);
-}
+    HOOK_DEF(void*, NativeBridgeLoadLibraryExt_V26, const char *filename, int flag,
+             struct native_bridge_namespace_t *ns) {
+        if (string(filename).find(string("libmain.so")) != string::npos) {
+            auto nativeBridge = dlopen("libnativebridge.so", RTLD_NOW);
+            auto *NativeBridgeError = reinterpret_cast<bool (*)()>(dlsym(nativeBridge,
+                                                                         "_ZN7android17NativeBridgeErrorEv"));
+            auto *NativeBridgeGetError = reinterpret_cast<char *(*)()>(dlsym(nativeBridge,
+                                                                             "_ZN7android20NativeBridgeGetErrorEv"));
+            auto *NativeBridgeGetTrampoline = reinterpret_cast<void *(*)(void *handle,
+                                                                         const char *name,
+                                                                         const char *shorty,
+                                                                         uint32_t len)>(dlsym(
+                    nativeBridge, "_ZN7android25NativeBridgeGetTrampolineEPvPKcS2_j"));
 
-HOOK_DEF(void*, NativeBridgeLoadLibrary_V21, const char *filename, int flag) {
-    if (string(filename).find(string("libmain.so")) != string::npos) {
-        auto nativeBridge = dlopen("libnativebridge.so", RTLD_NOW);
-        auto *NativeBridgeError = reinterpret_cast<bool (*)()>(dlsym(nativeBridge,
-                                                                     "_ZN7android17NativeBridgeErrorEv"));
-        auto *NativeBridgeGetTrampoline = reinterpret_cast<void *(*)(void *handle,
-                                                                     const char *name,
-                                                                     const char *shorty,
-                                                                     uint32_t len)>(dlsym(
-                nativeBridge, "_ZN7android25NativeBridgeGetTrampolineEPvPKcS2_j"));
+            stringstream path_armV8;
+            path_armV8 << "/data/data/" << Game::GetCurrentPackageName().data() << "/arm64-v8a.so";
+            stringstream path_armV7;
+            path_armV7 << "/data/data/" << Game::GetCurrentPackageName().data()
+                       << "/armeabi-v7a.so";
 
-        stringstream path_armV8;
-        path_armV8 << "/data/data/" << Game::GetCurrentPackageName().data() << "/arm64-v8a.so";
-        stringstream path_armV7;
-        path_armV7 << "/data/data/" << Game::GetCurrentPackageName().data()
-                   << "/armeabi-v7a.so";
+            string path;
 
-        string path;
-
-        if (access(path_armV8.str().data(), F_OK) != -1) {
-            path = path_armV8.str();
-        } else if (access(path_armV7.str().data(), F_OK) != -1) {
-            path = path_armV7.str();
-        }
-
-        if (!path.empty()) {
-            void *lib = orig_NativeBridgeLoadLibrary_V21(path.data(), RTLD_NOW);
-            if (NativeBridgeError()) {
-                LOGW("LoadLibrary failed");
+            if (access(path_armV8.str().data(), F_OK) != -1) {
+                path = path_armV8.str();
+            } else if (access(path_armV7.str().data(), F_OK) != -1) {
+                path = path_armV7.str();
             }
 
-            auto hook = reinterpret_cast<void (*)(JNIEnv *,
-                                                  Resource *)>(NativeBridgeGetTrampoline(
-                    lib, "hook", "VLL", 3));
-            hook(env, classesDex);
-            DobbyDestroy(addr_NativeBridgeLoadLibrary_V21);
+            if (!path.empty()) {
+                void *lib = orig_NativeBridgeLoadLibraryExt_V26(path.data(), RTLD_NOW, ns);
+                if (NativeBridgeError()) {
+                    if (auto error_bridge = NativeBridgeGetError()) {
+                        LOGW("error_bridge: %s", error_bridge);
+                    }
+                }
+
+                auto hook = reinterpret_cast<void (*)(JNIEnv *,
+                                                      Resource *)>(NativeBridgeGetTrampoline(
+                        lib, "hook", "VLL", 3));
+                hook(env, classesDex);
+                DobbyDestroy(addr_NativeBridgeLoadLibraryExt_V26);
+            }
         }
+
+        return orig_NativeBridgeLoadLibraryExt_V26(filename, flag, ns);
     }
 
-    return orig_NativeBridgeLoadLibrary_V21(filename, flag);
+    HOOK_DEF(void*, NativeBridgeLoadLibrary_V21, const char *filename, int flag) {
+        if (string(filename).find(string("libmain.so")) != string::npos) {
+            auto nativeBridge = dlopen("libnativebridge.so", RTLD_NOW);
+            auto *NativeBridgeError = reinterpret_cast<bool (*)()>(dlsym(nativeBridge,
+                                                                         "_ZN7android17NativeBridgeErrorEv"));
+            auto *NativeBridgeGetTrampoline = reinterpret_cast<void *(*)(void *handle,
+                                                                         const char *name,
+                                                                         const char *shorty,
+                                                                         uint32_t len)>(dlsym(
+                    nativeBridge, "_ZN7android25NativeBridgeGetTrampolineEPvPKcS2_j"));
+
+            stringstream path_armV8;
+            path_armV8 << "/data/data/" << Game::GetCurrentPackageName().data() << "/arm64-v8a.so";
+            stringstream path_armV7;
+            path_armV7 << "/data/data/" << Game::GetCurrentPackageName().data()
+                       << "/armeabi-v7a.so";
+
+            string path;
+
+            if (access(path_armV8.str().data(), F_OK) != -1) {
+                path = path_armV8.str();
+            } else if (access(path_armV7.str().data(), F_OK) != -1) {
+                path = path_armV7.str();
+            }
+
+            if (!path.empty()) {
+                void *lib = orig_NativeBridgeLoadLibrary_V21(path.data(), RTLD_NOW);
+                if (NativeBridgeError()) {
+                    LOGW("LoadLibrary failed");
+                }
+
+                auto hook = reinterpret_cast<void (*)(JNIEnv *,
+                                                      Resource *)>(NativeBridgeGetTrampoline(
+                        lib, "hook", "VLL", 3));
+                hook(env, classesDex);
+                DobbyDestroy(addr_NativeBridgeLoadLibrary_V21);
+            }
+        }
+
+        return orig_NativeBridgeLoadLibrary_V21(filename, flag);
+    }
 }
 
 extern "C" void
-onLayoutChange_native(JNIEnv *env, jclass clazz, jobject activity, jobject /*view*/,
+onLayoutChange_native(JNIEnv *env, jclass /*clazz*/, jobject activity, jobject /*view*/,
                       jint /*left*/,
                       jint /*top*/, jint /*right*/, jint /*bottom*/, jint /*oldLeft*/,
                       jint /*oldTop*/, jint /*oldRight*/, jint /*oldBottom*/) {
@@ -2014,27 +2024,27 @@ onLayoutChange_native(JNIEnv *env, jclass clazz, jobject activity, jobject /*vie
         return;
     }
 
-    auto windowMetricsCalculatorClass = env->GetObjectClass(windowMetricsCalculator);
+    const auto windowMetricsCalculatorClass = env->GetObjectClass(windowMetricsCalculator);
 
-    auto computeId = env->GetMethodID(windowMetricsCalculatorClass,
+    const auto computeId = env->GetMethodID(windowMetricsCalculatorClass,
                                       "computeCurrentWindowMetrics",
                                       "(Landroid/app/Activity;)Landroidx/window/layout/WindowMetrics;");
-    auto metrics = env->CallObjectMethod(windowMetricsCalculator, computeId, activity);
+    const auto metrics = env->CallObjectMethod(windowMetricsCalculator, computeId, activity);
 
-    auto metricsClass = env->GetObjectClass(metrics);
+    const auto metricsClass = env->GetObjectClass(metrics);
 
-    auto getRectId = env->GetMethodID(metricsClass, "getBounds", "()Landroid/graphics/Rect;");
-    auto rect = env->CallObjectMethod(metrics, getRectId);
+    const auto getRectId = env->GetMethodID(metricsClass, "getBounds", "()Landroid/graphics/Rect;");
+    const auto rect = env->CallObjectMethod(metrics, getRectId);
 
     env->DeleteLocalRef(metrics);
     env->DeleteLocalRef(metricsClass);
 
-    auto rectClass = env->GetObjectClass(rect);
+    const auto rectClass = env->GetObjectClass(rect);
 
-    auto widthId = env->GetMethodID(rectClass, "width", "()I");
+    const auto widthId = env->GetMethodID(rectClass, "width", "()I");
     jint width = env->CallIntMethod(rect, widthId);
 
-    auto heightId = env->GetMethodID(rectClass, "height", "()I");
+    const auto heightId = env->GetMethodID(rectClass, "height", "()I");
     jint height = env->CallIntMethod(rect, heightId);
 
     env->DeleteLocalRef(rect);
@@ -2047,40 +2057,50 @@ onLayoutChange_native(JNIEnv *env, jclass clazz, jobject activity, jobject /*vie
     auto rightField = env->GetFieldID(insetsClass, "right", "I");
     auto bottomField = env->GetFieldID(insetsClass, "bottom", "I");
 
-    auto left = env->GetIntField(insets, leftField);
-    auto top = env->GetIntField(insets, topField);
-    auto right = env->GetIntField(insets, rightField);
-    auto bottom = env->GetIntField(insets, bottomField);
+    const auto left = env->GetIntField(insets, leftField);
+    const auto top = env->GetIntField(insets, topField);
+    const auto right = env->GetIntField(insets, rightField);
+    const auto bottom = env->GetIntField(insets, bottomField);
 
     env->DeleteLocalRef(insets);
 
     insets = getCaptionBarInsets(env, activity);
 
-    auto captionBarLeft = env->GetIntField(insets, leftField);
-    auto captionBarTop = env->GetIntField(insets, topField);
-    auto captionBarRight = env->GetIntField(insets, rightField);
-    auto captionBarBottom = env->GetIntField(insets, bottomField);
+    const auto captionBarLeft = env->GetIntField(insets, leftField);
+    const auto captionBarTop = env->GetIntField(insets, topField);
+    const auto captionBarRight = env->GetIntField(insets, rightField);
+    const auto captionBarBottom = env->GetIntField(insets, bottomField);
 
     env->DeleteLocalRef(insets);
 
     insets = getCaptionBarInsetsIgnoringVisibility(env, activity);
 
-    auto captionBarIgnoringVisibilityLeft = env->GetIntField(insets, leftField);
-    auto captionBarIgnoringVisibilityTop = env->GetIntField(insets, topField);
-    auto captionBarIgnoringVisibilityRight = env->GetIntField(insets, rightField);
-    auto captionBarIgnoringVisibilityBottom = env->GetIntField(insets, bottomField);
+    const auto captionBarIgnoringVisibilityLeft = env->GetIntField(insets, leftField);
+    const auto captionBarIgnoringVisibilityTop = env->GetIntField(insets, topField);
+    const auto captionBarIgnoringVisibilityRight = env->GetIntField(insets, rightField);
+    const auto captionBarIgnoringVisibilityBottom = env->GetIntField(insets, bottomField);
 
     env->DeleteLocalRef(insets);
     env->DeleteLocalRef(insetsClass);
 
-    if (captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight > 0 &&
-        captionBarLeft + captionBarRight == 0) {
-        width -= captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight;
-    }
+    if (config::freeform_window_include_caption_bar_padding) {
+        if (captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight > 0 &&
+            captionBarLeft + captionBarRight == 0) {
+            width -= captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight;
+        }
 
-    if (captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom > 0 &&
-        captionBarTop + captionBarBottom == 0) {
-        height -= captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom;
+        if (captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom > 0 &&
+            captionBarTop + captionBarBottom == 0) {
+            height -= captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom;
+        }
+    } else {
+        if (captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight > 0) {
+            width -= captionBarIgnoringVisibilityLeft + captionBarIgnoringVisibilityRight;
+        }
+
+        if (captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom > 0) {
+            height -= captionBarIgnoringVisibilityTop + captionBarIgnoringVisibilityBottom;
+        }
     }
 
     if (!isEdgeToEdgeEnabled(env, activity)) {
@@ -2088,17 +2108,17 @@ onLayoutChange_native(JNIEnv *env, jclass clazz, jobject activity, jobject /*vie
         height -= top + bottom;
     }
 
-    auto gameSystem = Gallop::GameSystem::Instance();
+    const auto gameSystem = Gallop::GameSystem::Instance();
 
-    auto ValueTuple2Class = GetGenericClass(
+    const auto ValueTuple2Class = GetGenericClass(
             GetRuntimeType("mscorlib.dll", "System", "ValueTuple`2"),
             GetRuntimeType(il2cpp_defaults.int32_class),
             GetRuntimeType(il2cpp_defaults.int32_class));
     auto tuple = System::ValueTuple<int, int>{width, height};
-    auto boxed = il2cpp_value_box(ValueTuple2Class, &tuple);
+    const auto boxed = il2cpp_value_box(ValueTuple2Class, &tuple);
 
-    auto fn = *[](Il2CppObject *self) {
-        auto tuple = *il2cpp_object_unbox_type<System::ValueTuple<int, int> *>(self);
+    const auto fn = *[](Il2CppObject *self) {
+        const auto tuple = *il2cpp_object_unbox_type<System::ValueTuple<int, int> *>(self);
         ResizeWindow(tuple.Item1, tuple.Item2);
     };
     il2cpp_symbols::get_method_pointer<void (*)(Il2CppObject *, Il2CppDelegate *)>(
@@ -2113,22 +2133,22 @@ onLayoutChange_native(JNIEnv *env, jclass clazz, jobject activity, jobject /*vie
 }
 
 extern "C" void
-handleSetPlayWhenReady_native(JNIEnv *env, jclass clazz, jboolean playWhenReady) {
+handleSetPlayWhenReady_native(JNIEnv *env, jclass /*clazz*/, jboolean playWhenReady) {
     if (playWhenReady) {
-        WaitForEndOfFrame(*[]() {
-            auto controller = Gallop::SceneManager::Instance().GetCurrentViewController();
-            auto hubViewController = GetCurrentHubViewChildController();
+        WaitForEndOfFrame(*[] {
+            const auto controller = Gallop::SceneManager::Instance().GetCurrentViewController();
+            const auto hubViewController = GetCurrentHubViewChildController();
 
             if (hubViewController && hubViewController->klass->name == "HomeViewController"s) {
-                auto topUi = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
+                const auto topUi = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
                         Il2CppObject *, int)>(hubViewController->klass, "GetTopUI",
                                               1)->methodPointer(hubViewController, 10);
                 if (topUi) {
-                    auto data = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
+                    const auto data = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
                             Il2CppObject *)>(topUi->klass, "get_TempSetListPlayingData",
                                              0)->methodPointer(topUi);
 
-                    auto SetListIdField = il2cpp_class_get_field_from_name(data->klass,
+                    const auto SetListIdField = il2cpp_class_get_field_from_name(data->klass,
                                                                            "SetListId");
                     int SetListId;
                     il2cpp_field_get_value(data, SetListIdField, &SetListId);
@@ -2155,12 +2175,12 @@ handleSetPlayWhenReady_native(JNIEnv *env, jclass clazz, jboolean playWhenReady)
             }
         });
     } else {
-        WaitForEndOfFrame(*[]() {
-            auto controller = Gallop::SceneManager::Instance().GetCurrentViewController();
-            auto hubViewController = GetCurrentHubViewChildController();
+        WaitForEndOfFrame(*[] {
+            const auto controller = Gallop::SceneManager::Instance().GetCurrentViewController();
+            const auto hubViewController = GetCurrentHubViewChildController();
 
             if (hubViewController && hubViewController->klass->name == "HomeViewController"s) {
-                if (auto topUi = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
+                if (const auto topUi = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
                         Il2CppObject *, int)>(hubViewController->klass, "GetTopUI",
                                               1)->methodPointer(hubViewController, 10)) {
                     il2cpp_class_get_method_from_name_type<void (*)(Il2CppObject *, bool)>(
@@ -2179,19 +2199,19 @@ handleSetPlayWhenReady_native(JNIEnv *env, jclass clazz, jboolean playWhenReady)
 }
 
 extern "C" void
-handleSeek_native(JNIEnv *env, jclass clazz, jint mediaItemIndex, jlong positionMs,
+handleSeek_native(JNIEnv *env, jclass /*clazz*/, jint mediaItemIndex, jlong positionMs,
                   jint seekCommand) {
     if (seekCommand == 5) {
         Localify::LiveUtils::MoveLivePlayback(static_cast<float>(positionMs) / 1000);
     }
 
     if (seekCommand == 7) {
-        WaitForEndOfFrame(*[]() {
-            auto controller = Gallop::SceneManager::Instance().GetCurrentViewController();
-            auto hubViewController = GetCurrentHubViewChildController();
+        WaitForEndOfFrame(*[] {
+            const auto controller = Gallop::SceneManager::Instance().GetCurrentViewController();
+            const auto hubViewController = GetCurrentHubViewChildController();
 
             if (hubViewController && hubViewController->klass->name == "HomeViewController"s) {
-                auto topUi = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
+                const auto topUi = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
                         Il2CppObject *, int)>(hubViewController->klass, "GetTopUI",
                                               1)->methodPointer(hubViewController, 10);
                 il2cpp_class_get_method_from_name_type<void (*)(Il2CppObject *, bool)>(topUi->klass,
@@ -2203,20 +2223,20 @@ handleSeek_native(JNIEnv *env, jclass clazz, jint mediaItemIndex, jlong position
     }
 
     if (seekCommand == 9) {
-        WaitForEndOfFrame(*[]() {
-            auto controller = Gallop::SceneManager::Instance().GetCurrentViewController();
-            auto hubViewController = GetCurrentHubViewChildController();
+        WaitForEndOfFrame(*[] {
+            const auto controller = Gallop::SceneManager::Instance().GetCurrentViewController();
+            const auto hubViewController = GetCurrentHubViewChildController();
 
             if (hubViewController && hubViewController->klass->name == "HomeViewController"s) {
-                auto topUi = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
+                const auto topUi = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
                         Il2CppObject *, int)>(hubViewController->klass, "GetTopUI",
                                               1)->methodPointer(hubViewController, 10);
 
-                auto data = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
+                const auto data = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
                         Il2CppObject *)>(topUi->klass, "get_TempSetListPlayingData",
                                          0)->methodPointer(topUi);
 
-                auto IsPlayingField = il2cpp_class_get_field_from_name(data->klass, "IsPlaying");
+                const auto IsPlayingField = il2cpp_class_get_field_from_name(data->klass, "IsPlaying");
                 bool IsPlaying;
                 il2cpp_field_get_value(data, IsPlayingField, &IsPlaying);
 
@@ -2227,10 +2247,10 @@ handleSeek_native(JNIEnv *env, jclass clazz, jint mediaItemIndex, jlong position
             }
 
             if (controller && controller->klass->name == "LiveViewController"s) {
-                auto view = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
+                const auto view = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
                         Il2CppObject *)>(controller->klass, "GetViewBase", 0)->methodPointer(
                         controller);
-                auto coroutine = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
+                const auto coroutine = il2cpp_class_get_method_from_name_type<Il2CppObject *(*)(
                         Il2CppObject *)>(controller->klass, "SkipLive", 0)->methodPointer(
                         controller);
 
@@ -2240,7 +2260,7 @@ handleSeek_native(JNIEnv *env, jclass clazz, jint mediaItemIndex, jlong position
     }
 }
 
-void hack_thread(HookArgs *args) {
+void hack_thread(const HookArgs *args) {
     LOGI("%s hack thread: %d", ABI, gettid());
 
     const int api_level = GetAndroidApiLevel();

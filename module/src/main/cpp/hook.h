@@ -8,7 +8,7 @@ struct HookArgs {
     Resource *classesDex;
 };
 
-void hack_thread(HookArgs *args);
+void hack_thread(const HookArgs *args);
 
 extern "C" void
 onLayoutChange_native(JNIEnv *env, jclass clazz, jobject activity, jobject view, jint left,
